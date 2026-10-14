@@ -1,0 +1,83 @@
+{
+    "project": "lol-coach",
+    "description": "Neurosymbolic League of Legends drafting coach: deterministic engine decides (one counter-pick + one synergy-pick with source-tagged traces), OP.GG-derived YAML knowledge graph explains, and a grounded chat agent adapts fuzzy input, orchestrates the engine's tools, and narrates results without hallucinating (the LLM never decides). In-house AWS-Step-Functions-style workflow for traceability of both the draft pipeline and the agent's tool-loop.",
+    "features": [
+        {
+            "id": "backend-scaffold",
+            "name": "Backend scaffold",
+            "description": "pyproject with `pip install -e \".[dev]\"`, src/ layout, Settings config, structured JSON logging configured once in main.py, FastAPI app with /api/health, CLI skeleton, pytest/ruff/mypy wired and green.",
+            "status": "pass",
+            "evidence": "bash init.sh green on Python 3.14.7: ruff 'All checks passed!'; mypy 'Success: no issues found in 7 source files'; pytest '3 passed' (tests/test_health.py, tests/test_logging_setup.py). App boot smoke: create_app() + GET /api/health -> {'status':'ok','service':'lol-coach','version':'0.1.0'}; structured JSON log lines emitted from lolcoach.main."
+        },
+        {
+            "id": "knowledge-graph-pipeline",
+            "name": "Knowledge graph pipeline",
+            "description": "OP.GG MCP Streamable-HTTP client; throttled, resumable fetch into SQLite snapshot; snapshot -> YAML knowledge graph (champions, relations, patches); JSON-Schema + referential-integrity validation; name resolution; tests.",
+            "status": "pass",
+            "evidence": "Full live pull (268/268 pairs, 0 errors, 0 skipped on rerun -> resumable): 173 champions, 268 stat rows, 982 role rows, 1596 matchups, 3216 synergies. `python -m lolcoach.cli build-kg --patch 14.20` -> 173 champions, 2435 relations (754 counters, 1681 synergies) in knowledge/seed/{champions,relations,patches}.yaml; load_ontology() validates schema + referential integrity; NameResolver resolves mf/monkey king/Kai'Sa -> missfortune/wukong/kaisa. Opaque OP.GG typed-repr wire format decoded by dataprovider/typed_repr.py. Tests (24 passing): test_typed_repr, test_fetch (fake caller, guards root/data unwrap + resumability), test_build_kg, test_ontology, test_resolve, test_store. ruff 'All checks passed!'; mypy 'Success: no issues found in 19 source files'."
+        },
+        {
+            "id": "knowledge-graph-review",
+            "name": "Knowledge graph review UI",
+            "description": "`python -m lolcoach.cli kg-report` renders a self-contained offline HTML page (no server, no build) to browse the graph: champion browser with counter/synergy neighbour tables, and an interactive force-directed relation graph.",
+            "status": "pass",
+            "evidence": "`python -m lolcoach.cli kg-report` writes data/kg-report.html (547 KB) embedding the full ontology as JSON; page has a champion search/list + detail tables (Beats / Countered by / Synergies with win%, games, weight, reason) and a canvas force-directed graph with type/position/min-games filters. JSON payload is XSS-escaped against </script> breakout. Tests (4): test_kg_report.py (payload round-trip, script-breakout escaping, counter/synergy split, file write). ruff + mypy clean."
+        },
+        {
+            "id": "deterministic-engine",
+            "name": "Deterministic engine",
+            "description": "Pure engine: DraftState, counter scoring and synergy scoring over the knowledge graph + snapshot, one counter-pick + one synergy-pick, every point emitted as a source-tagged TraceLine. Unit tests on a fixture snapshot.",
+            "status": "pass",
+            "evidence": "src/lolcoach/engine/{draft_state,trace,scoring,explain}.py. evaluate_draft(ontology, state) returns exactly one counter-pick and one synergy-pick, de-duplicated, each with TraceLine(source,text,delta) per contributing relation; deterministic tie-break by slug then role order; honours open_roles and excludes picked/banned champions; DraftState.problems() validates boards. Purity enforced by test_engine.py::test_engine_does_not_import_other_layers (no imports of dataprovider/workflow/server/agent). Live check vs real graph: allies=[jinx], enemies=[ahri,vi,leona] -> counter Qiyana (jungle, counters Vi 53%/+0.022), synergy Twisted Fate (mid, with Jinx 56%/+0.057). Tests (12): test_engine.py. ruff + mypy clean; 40 tests total pass."
+        },
+        {
+            "id": "workflow-state-machine",
+            "name": "Workflow state machine",
+            "description": "In-house Step-Functions-style executor (Task/Choice/Succeed/Fail), immutable event store write-through per transition, draft-eval workflow, execution history API, tests for gapless ordered history and STATE_FAILED-with-traceback.",
+            "status": "pass",
+            "evidence": "src/lolcoach/workflow/{types,events,ddl,store,executor}.py + workflows/draft_eval.py. Workflow.validate() rejects unknown next / missing terminal; WorkflowExecutor rejects unregistered task/predicate keys. Executor writes every event through to data/executions.db (executions + execution_events, UNIQUE(execution_id,seq)); on a raising task it emits STATE_FAILED with traceback then EXECUTION_FAILED and status=failed. draft-eval pipeline: ValidateDraft -> IsValid -> LoadKnowledge -> BuildCandidates -> ScoreCounters -> ScoreSynergies -> AssembleTrace -> PicksExist -> Succeeded/DraftInvalid/NoPicks. Live run (real graph, allies=[jinx] enemies=[ahri,vi,leona]) -> succeeded, 19 gapless events (seq 1..19), preserved to store; counter Qiyana, synergy Twisted Fate. Tests (9): test_workflow.py. ruff + mypy clean; 49 tests total pass. (History HTTP endpoints land with the api milestone.)"
+        },
+        {
+            "id": "api",
+            "name": "FastAPI API",
+            "description": "GET /api/health, GET /api/champions, POST /api/draft/evaluate (runs the workflow, returns recommendation + traces + execution_id), POST /api/chat, POST /api/agent/chat, GET /api/executions, GET /api/executions/{id}.",
+            "status": "pass",
+            "evidence": "src/lolcoach/server/{app,schemas}.py. All routes degrade to 503 on a broken knowledge graph; unknown execution -> 404. /api/draft/evaluate runs build_draft_eval through WorkflowExecutor against executions.db and returns counter/synergy/traces; /api/agent/chat runs build_agent_chat and returns reply/mode/board/tool_calls/recommendation. Tests (8): tests/test_api.py (roster >100 with jinx, evaluate records a gapless execution, invalid draft recorded as failed, unknown 404, offline chat, agent-chat round trip + supplied board + unresolved names). ruff + mypy clean; 85 tests total pass."
+        },
+        {
+            "id": "narrator",
+            "name": "Grounded narrator",
+            "description": "Provider-neutral LangChain client (Claude/OpenAI) whose input is engine/tool output; narrate() explains one recommendation, narrate_final() a whole agent tool-loop; system prompt forbids any fact/number absent from the input; unsourced_champions() grounding guard; offline deterministic fallback without a key.",
+            "status": "pass",
+            "evidence": "src/lolcoach/agent/{llm,narrator}.py. agent/llm.py is a provider-neutral client (LlmMessage/LlmReply/ImagePart, provider-native vision blocks) selected by LOL_COACH_LLM_PROVIDER; build_client() returns None without a key -> offline. narrate_final() applies unsourced_champions(text, allowed, ontology): any known champion in the reply that appears in no tool result is discarded in favour of offline_final_text(). Tests (8): tests/test_narrator.py (offline names picks + cites only record numbers, empty record, offline final summarizes suggest_pick, fallback without evidence, guard ignores allowed sources). ruff + mypy clean."
+        },
+        {
+            "id": "agent-chat",
+            "name": "Chat agent (adapter + orchestration)",
+            "description": "Chat-first front door: an agent that turns fuzzy human input (shorthand, typos, prose, a draft image) into the engine's strict input, orchestrates the deterministic tools (set_board, suggest_pick, explain_matchup, get_champion) as a traced workflow tool-loop (<=8 round-trips), and narrates the result. The LLM never decides picks.",
+            "status": "pass",
+            "evidence": "src/lolcoach/agent/{tools,agent}.py + workflow/workflows/agent_chat.py + POST /api/agent/chat. Tools: set_board resolves aliases/typos/casing via NameResolver; suggest_pick wraps the pure engine and is the ONLY pick source; explain_matchup/get_champion return evidence. choose_action runs the LLM tool-loop when a client exists, else the deterministic offline planner (parse_mentions -> set_board -> suggest_pick). The loop is a workflow (ParseInput -> Think -> Route -> RunTool -loop-> Finalize | MaxSteps) so the Trace Inspector shows the agent's exact call journey. Tests (15): tests/test_agent_tools.py (9) + tests/test_agent_loop.py (6: fuzzy parse + advised pick, gapless call journey, tool-budget MaxSteps, image-offline message, unsourced-champion discard, guard unit). Live: POST /api/agent/chat {\"message\":\"jinx vs their zeri\"} -> board allies=[jinx]/enemies=[zeri], tool_calls=[set_board, suggest_pick], counter Veigar (adc), synergy Twisted Fate (mid); execution 'agent-chat' shows the 23-event loop. ruff + mypy clean; 85 tests total pass."
+        },
+        {
+            "id": "frontend",
+            "name": "React frontend",
+            "description": "Vite + TypeScript + Tailwind. Chat-first UI: agent chat panel (message list, image paste/upload, tool-call chips, inline counter/synergy cards, link to the run's trace), board summary reflecting the agent-parsed state, plus secondary Draft and Trace Inspector tabs.",
+            "status": "pass",
+            "evidence": "frontend/: src/components/{ChatPanel,BoardSummary,DraftBoard,RecommendationCard,TraceInspector,Landing,Badges}.tsx, src/{App,api,types}.ts(x). Default tab is Coach (chat) at /app; the agent-parsed board is shown in BoardSummary and carried between turns; the Trace Inspector tab renders the agent loop. `pnpm build` (tsc --noEmit && vite build) succeeds: 37 modules, dist bundle 169 kB (53 kB gzip). Vite dev server proxies /api to the backend."
+        },
+        {
+            "id": "cicd",
+            "name": "CI/CD",
+            "description": "GitHub Actions CI (ruff, mypy, pytest, frontend tsc+vite build), backend and frontend Dockerfiles, and working init.sh / scripts/benchmark.sh / scripts/cleanup-scanner.sh.",
+            "status": "not-started",
+            "evidence": ""
+        },
+        {
+            "id": "docs",
+            "name": "Documentation",
+            "description": "docs/ARCHITECTURE.md, docs/PRODUCT.md, docs/RELIABILITY.md filled in; feature_list.json populated; session-handoff.md maintained; {{placeholders}} removed from the scaffold.",
+            "status": "pass",
+            "evidence": "AGENTS.md, README.md, docs/{ARCHITECTURE,PRODUCT,RELIABILITY}.md, clean-state-checklist.md all filled; no {{...}} placeholders remain; feature_list.json populated with 9 milestones; session-handoff.md updated 2026-10-14."
+        }
+    ]
+}

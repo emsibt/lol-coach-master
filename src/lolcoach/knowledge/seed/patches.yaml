@@ -1,0 +1,8 @@
+meta:
+  patch: '14.20'
+  source: opgg-mcp
+  generated_at: '2026-10-14T08:36:04Z'
+  champion_count: 173
+  relation_count: 2435
+  counter_count: 754
+  synergy_count: 1681

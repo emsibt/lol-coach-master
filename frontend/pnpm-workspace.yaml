@@ -1,0 +1,4 @@
+# pnpm 12 reads install settings from here (not package.json).
+# esbuild ships a postinstall that fetches its platform binary; allow it.
+allowBuilds:
+  esbuild: true

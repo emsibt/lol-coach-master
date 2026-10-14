@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LoL Coach Knowledge Graph",
+  "type": "object",
+  "required": ["meta", "champions", "relations"],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["patch", "source", "generated_at", "champion_count", "relation_count"],
+      "properties": {
+        "patch": {"type": "string"},
+        "source": {"type": "string"},
+        "generated_at": {"type": "string"},
+        "champion_count": {"type": "integer", "minimum": 0},
+        "relation_count": {"type": "integer", "minimum": 0},
+        "counter_count": {"type": "integer", "minimum": 0},
+        "synergy_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "champions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slug", "name", "champion_id", "key", "positions"],
+        "additionalProperties": false,
+        "properties": {
+          "slug": {"type": "string", "minLength": 1},
+          "name": {"type": "string", "minLength": 1},
+          "champion_id": {"type": "integer"},
+          "key": {"type": "string"},
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["position", "play", "win_rate", "pick_rate", "ban_rate", "roles"],
+              "additionalProperties": false,
+              "properties": {
+                "position": {"enum": ["top", "jungle", "mid", "adc", "support"]},
+                "play": {"type": "integer", "minimum": 0},
+                "win_rate": {"type": "number", "minimum": 0, "maximum": 1},
+                "pick_rate": {"type": "number", "minimum": 0, "maximum": 1},
+                "ban_rate": {"type": "number", "minimum": 0, "maximum": 1},
+                "tier": {"type": ["integer", "null"]},
+                "rank": {"type": ["integer", "null"]},
+                "roles": {"type": "array", "items": {"type": "string"}}
+              }
+            }
+          }
+        }
+      }
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source", "target", "type", "position",
+          "weight", "confidence", "games", "win_rate", "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "source": {"type": "string", "minLength": 1},
+          "target": {"type": "string", "minLength": 1},
+          "type": {"enum": ["counter", "synergy"]},
+          "position": {"enum": ["top", "jungle", "mid", "adc", "support"]},
+          "weight": {"type": "number"},
+          "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+          "games": {"type": "integer", "minimum": 0},
+          "win_rate": {"type": "number", "minimum": 0, "maximum": 1},
+          "reason": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,147 @@
+"""Tests for the HTTP layer (routes wired to the workflow + execution store)."""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+from typing import cast
+
+import pytest
+from fastapi.testclient import TestClient
+
+from lolcoach.config import get_settings
+from lolcoach.server.app import create_app
+from lolcoach.workflow.events import EXECUTION_STARTED, EXECUTION_SUCCEEDED
+
+
+def _dict(value: object) -> dict[str, object]:
+    assert isinstance(value, dict)
+    return cast("dict[str, object]", value)
+
+
+def _list(value: object) -> list[object]:
+    assert isinstance(value, list)
+    return cast("list[object]", value)
+
+
+@pytest.fixture()
+def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
+    monkeypatch.setenv("LOL_COACH_EXECUTIONS_DB", str(tmp_path / "executions.db"))
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    get_settings.cache_clear()
+    with TestClient(create_app()) as test_client:
+        yield test_client
+    get_settings.cache_clear()
+
+
+def _evaluate(client: TestClient, payload: dict[str, object]) -> dict[str, object]:
+    response = client.post("/api/draft/evaluate", json=payload)
+    assert response.status_code == 200
+    body: dict[str, object] = response.json()
+    return body
+
+
+def _chat(client: TestClient, payload: dict[str, object]) -> dict[str, object]:
+    response = client.post("/api/agent/chat", json=payload)
+    assert response.status_code == 200
+    body: dict[str, object] = response.json()
+    return body
+
+
+def test_champions_lists_the_roster(client: TestClient) -> None:
+    response = client.get("/api/champions")
+    assert response.status_code == 200
+    champions = response.json()
+    assert len(champions) > 100
+    slugs = {c["slug"] for c in champions}
+    assert "jinx" in slugs
+    jinx = next(c for c in champions if c["slug"] == "jinx")
+    assert jinx["positions"]
+
+
+def test_evaluate_runs_workflow_and_records_execution(client: TestClient) -> None:
+    body = _evaluate(client, {"allies": ["jinx"], "enemies": ["ahri", "vi"], "open_roles": ["mid"]})
+    assert body["status"] == "succeeded"
+    assert body["counter"] is not None or body["synergy"] is not None
+    execution_id = str(body["execution_id"])
+
+    listing = client.get("/api/executions").json()
+    assert any(row["execution_id"] == execution_id for row in listing)
+    assert listing[0]["status"] == "succeeded"
+
+    detail = client.get(f"/api/executions/{execution_id}").json()
+    assert detail["execution_id"] == execution_id
+    events = detail["events"]
+    assert [e["seq"] for e in events] == list(range(1, len(events) + 1))
+    assert events[0]["type"] == EXECUTION_STARTED
+    assert events[-1]["type"] == EXECUTION_SUCCEEDED
+
+
+def test_invalid_draft_is_recorded_as_failed(client: TestClient) -> None:
+    body = _evaluate(
+        client, {"allies": ["jinx"], "ally_bans": ["jinx"], "open_roles": ["mid"]}
+    )
+    assert body["status"] == "failed"
+    assert body["problems"]
+    assert body["counter"] is None and body["synergy"] is None
+
+    detail = client.get(f"/api/executions/{body['execution_id']}").json()
+    assert detail["status"] == "failed"
+    assert any(e["type"] == "STATE_FAILED" for e in detail["events"])
+
+
+def test_unknown_execution_is_404(client: TestClient) -> None:
+    assert client.get("/api/executions/nope").status_code == 404
+
+
+def test_chat_narrates_offline_without_a_key(client: TestClient) -> None:
+    body = _evaluate(client, {"allies": ["jinx"], "enemies": ["ahri"], "open_roles": ["mid"]})
+    response = client.post("/api/chat", json={"execution_id": body["execution_id"]})
+    assert response.status_code == 200
+    answered = response.json()
+    assert answered["mode"] == "offline"
+    assert answered["reply"]
+
+
+def test_agent_chat_offline_round_trip(client: TestClient) -> None:
+    body = _chat(client, {"message": "jinx vs their zeri"})
+
+    assert body["status"] == "succeeded"
+    assert body["mode"] == "offline"
+    board = _dict(body["board"])
+    assert board["allies"] == ["jinx"]
+    assert board["enemies"] == ["zeri"]
+    names = [_dict(call)["name"] for call in _list(body["tool_calls"])]
+    assert names[:2] == ["set_board", "suggest_pick"]
+    assert body["reply"]
+    assert body["counter"] is not None or body["synergy"] is not None
+
+    detail = client.get(f"/api/executions/{body['execution_id']}").json()
+    assert detail["workflow"] == "agent-chat"
+    assert detail["status"] == "succeeded"
+    assert detail["events"][0]["type"] == EXECUTION_STARTED
+
+
+def test_agent_chat_uses_a_supplied_board(client: TestClient) -> None:
+    body = _chat(
+        client,
+        {"message": "what now?", "board": {"allies": ["jinx"], "enemies": ["zeri"]}},
+    )
+
+    assert body["status"] == "succeeded"
+    names = [_dict(call)["name"] for call in _list(body["tool_calls"])]
+    assert names == ["suggest_pick"]
+
+
+def test_agent_chat_reports_unresolved_names(client: TestClient) -> None:
+    body = _chat(
+        client,
+        {
+            "message": "go",
+            "board": {"allies": ["jinx", "zzzznotachamp"], "enemies": ["zeri"]},
+        },
+    )
+
+    assert "zzzznotachamp" in _list(body["unresolved"])
+    assert _dict(body["board"])["allies"] == ["jinx"]

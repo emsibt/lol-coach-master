@@ -1,0 +1,3559 @@
+meta:
+  patch: '14.20'
+  source: opgg-mcp
+  generated_at: '2026-10-14T08:36:04Z'
+  champion_count: 173
+  relation_count: 2435
+  counter_count: 754
+  synergy_count: 1681
+champions:
+- slug: annie
+  name: Annie
+  champion_id: 1
+  key: Annie
+  positions:
+  - position: mid
+    play: 22524
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 2
+    rank: 23
+    roles:
+    - MAGE
+- slug: olaf
+  name: Olaf
+  champion_id: 2
+  key: Olaf
+  positions:
+  - position: top
+    play: 35485
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.04
+    tier: 2
+    rank: 23
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - TANK
+- slug: galio
+  name: Galio
+  champion_id: 3
+  key: Galio
+  positions:
+  - position: mid
+    play: 49361
+    win_rate: 0.49
+    pick_rate: 0.04
+    ban_rate: 0.02
+    tier: 2
+    rank: 32
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+  - position: support
+    play: 10303
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 4
+    rank: 38
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: twistedfate
+  name: Twisted Fate
+  champion_id: 4
+  key: TwistedFate
+  positions:
+  - position: mid
+    play: 65564
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.01
+    tier: 1
+    rank: 6
+    roles:
+    - MAGE
+    - MARKSMAN
+- slug: xinzhao
+  name: Xin Zhao
+  champion_id: 5
+  key: XinZhao
+  positions:
+  - position: jungle
+    play: 26100
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 4
+    rank: 41
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - SLAYER
+    - TANK
+- slug: urgot
+  name: Urgot
+  champion_id: 6
+  key: Urgot
+  positions:
+  - position: top
+    play: 32089
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 2
+    rank: 24
+    roles:
+    - FIGHTER
+    - TANK
+- slug: leblanc
+  name: LeBlanc
+  champion_id: 7
+  key: Leblanc
+  positions:
+  - position: mid
+    play: 66107
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.17
+    tier: 1
+    rank: 13
+    roles:
+    - MAGE
+  - position: support
+    play: 10204
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.16
+    tier: 5
+    rank: 40
+    roles:
+    - MAGE
+- slug: vladimir
+  name: Vladimir
+  champion_id: 8
+  key: Vladimir
+  positions:
+  - position: top
+    play: 17487
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.06
+    tier: 3
+    rank: 50
+    roles:
+    - MAGE
+  - position: mid
+    play: 53689
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.06
+    tier: 1
+    rank: 18
+    roles:
+    - MAGE
+  - position: adc
+    play: 7010
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.06
+    tier: 4
+    rank: 31
+    roles:
+    - MAGE
+- slug: fiddlesticks
+  name: Fiddlesticks
+  champion_id: 9
+  key: Fiddlesticks
+  positions:
+  - position: jungle
+    play: 26781
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 3
+    rank: 22
+    roles:
+    - MAGE
+  - position: support
+    play: 6287
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 5
+    rank: 42
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: kayle
+  name: Kayle
+  champion_id: 10
+  key: Kayle
+  positions:
+  - position: top
+    play: 27911
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 2
+    rank: 21
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+  - position: mid
+    play: 7163
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 4
+    rank: 51
+    roles:
+    - MAGE
+    - MARKSMAN
+- slug: masteryi
+  name: Master Yi
+  champion_id: 11
+  key: MasterYi
+  positions:
+  - position: top
+    play: 7044
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.14
+    tier: 4
+    rank: 59
+    roles:
+    - FIGHTER
+    - MARKSMAN
+  - position: jungle
+    play: 79853
+    win_rate: 0.5
+    pick_rate: 0.06
+    ban_rate: 0.16
+    tier: 2
+    rank: 7
+    roles:
+    - FIGHTER
+    - MARKSMAN
+- slug: alistar
+  name: Alistar
+  champion_id: 12
+  key: Alistar
+  positions:
+  - position: support
+    play: 65118
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.02
+    tier: 2
+    rank: 9
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: ryze
+  name: Ryze
+  champion_id: 13
+  key: Ryze
+  positions:
+  - position: top
+    play: 6342
+    win_rate: 0.47
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 5
+    rank: 62
+    roles:
+    - MAGE
+  - position: mid
+    play: 26218
+    win_rate: 0.45
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 4
+    rank: 54
+    roles:
+    - MAGE
+- slug: sion
+  name: Sion
+  champion_id: 14
+  key: Sion
+  positions:
+  - position: top
+    play: 34351
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.0
+    tier: 3
+    rank: 36
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+    - TANK
+- slug: sivir
+  name: Sivir
+  champion_id: 15
+  key: Sivir
+  positions:
+  - position: adc
+    play: 54937
+    win_rate: 0.5
+    pick_rate: 0.04
+    ban_rate: 0.02
+    tier: 2
+    rank: 16
+    roles:
+    - MARKSMAN
+- slug: soraka
+  name: Soraka
+  champion_id: 16
+  key: Soraka
+  positions:
+  - position: support
+    play: 61008
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.02
+    tier: 2
+    rank: 14
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: teemo
+  name: Teemo
+  champion_id: 17
+  key: Teemo
+  positions:
+  - position: top
+    play: 53268
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.07
+    tier: 1
+    rank: 7
+    roles:
+    - MAGE
+    - MARKSMAN
+  - position: jungle
+    play: 7227
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.06
+    tier: 5
+    rank: 57
+    roles:
+    - MAGE
+    - MARKSMAN
+  - position: support
+    play: 6459
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.06
+    tier: 5
+    rank: 47
+    roles:
+    - MAGE
+- slug: tristana
+  name: Tristana
+  champion_id: 18
+  key: Tristana
+  positions:
+  - position: adc
+    play: 136792
+    win_rate: 0.51
+    pick_rate: 0.11
+    ban_rate: 0.09
+    tier: 1
+    rank: 2
+    roles:
+    - MARKSMAN
+- slug: warwick
+  name: Warwick
+  champion_id: 19
+  key: Warwick
+  positions:
+  - position: top
+    play: 17941
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 2
+    rank: 27
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - TANK
+  - position: jungle
+    play: 37513
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 3
+    rank: 13
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - TANK
+- slug: nunuwillump
+  name: Nunu & Willump
+  champion_id: 20
+  key: Nunu
+  positions:
+  - position: jungle
+    play: 23401
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 4
+    rank: 38
+    roles:
+    - MAGE
+    - TANK
+- slug: missfortune
+  name: Miss Fortune
+  champion_id: 21
+  key: MissFortune
+  positions:
+  - position: adc
+    play: 69094
+    win_rate: 0.49
+    pick_rate: 0.05
+    ban_rate: 0.01
+    tier: 3
+    rank: 22
+    roles:
+    - MARKSMAN
+    - SLAYER
+- slug: ashe
+  name: Ashe
+  champion_id: 22
+  key: Ashe
+  positions:
+  - position: adc
+    play: 73853
+    win_rate: 0.49
+    pick_rate: 0.06
+    ban_rate: 0.02
+    tier: 3
+    rank: 21
+    roles:
+    - MARKSMAN
+  - position: support
+    play: 9661
+    win_rate: 0.44
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 5
+    rank: 48
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - SLAYER
+- slug: tryndamere
+  name: Tryndamere
+  champion_id: 23
+  key: Tryndamere
+  positions:
+  - position: top
+    play: 40748
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.03
+    tier: 2
+    rank: 26
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: jax
+  name: Jax
+  champion_id: 24
+  key: Jax
+  positions:
+  - position: top
+    play: 73230
+    win_rate: 0.5
+    pick_rate: 0.06
+    ban_rate: 0.1
+    tier: 2
+    rank: 16
+    roles:
+    - FIGHTER
+    - MAGE
+    - TANK
+  - position: jungle
+    play: 11191
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.1
+    tier: 5
+    rank: 55
+    roles:
+    - FIGHTER
+    - MAGE
+    - TANK
+- slug: morgana
+  name: Morgana
+  champion_id: 25
+  key: Morgana
+  positions:
+  - position: support
+    play: 53763
+    win_rate: 0.5
+    pick_rate: 0.04
+    ban_rate: 0.17
+    tier: 3
+    rank: 21
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: zilean
+  name: Zilean
+  champion_id: 26
+  key: Zilean
+  positions:
+  - position: support
+    play: 36970
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 2
+    rank: 17
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: singed
+  name: Singed
+  champion_id: 27
+  key: Singed
+  positions:
+  - position: top
+    play: 28435
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 2
+    rank: 18
+    roles:
+    - MAGE
+    - TANK
+- slug: evelynn
+  name: Evelynn
+  champion_id: 28
+  key: Evelynn
+  positions:
+  - position: jungle
+    play: 29298
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.02
+    tier: 3
+    rank: 24
+    roles:
+    - MAGE
+- slug: twitch
+  name: Twitch
+  champion_id: 29
+  key: Twitch
+  positions:
+  - position: adc
+    play: 69015
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.08
+    tier: 1
+    rank: 7
+    roles:
+    - MAGE
+    - MARKSMAN
+- slug: karthus
+  name: Karthus
+  champion_id: 30
+  key: Karthus
+  positions:
+  - position: jungle
+    play: 17523
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 5
+    rank: 53
+    roles:
+    - MAGE
+  - position: adc
+    play: 6733
+    win_rate: 0.53
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 23
+    roles:
+    - MAGE
+- slug: chogath
+  name: Cho'Gath
+  champion_id: 31
+  key: Chogath
+  positions:
+  - position: top
+    play: 40941
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.08
+    tier: 2
+    rank: 19
+    roles:
+    - MAGE
+    - TANK
+  - position: jungle
+    play: 78872
+    win_rate: 0.51
+    pick_rate: 0.06
+    ban_rate: 0.08
+    tier: 1
+    rank: 3
+    roles:
+    - MAGE
+    - TANK
+- slug: amumu
+  name: Amumu
+  champion_id: 32
+  key: Amumu
+  positions:
+  - position: jungle
+    play: 23903
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 4
+    rank: 34
+    roles:
+    - MAGE
+    - TANK
+  - position: support
+    play: 7855
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 4
+    rank: 35
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: rammus
+  name: Rammus
+  champion_id: 33
+  key: Rammus
+  positions:
+  - position: jungle
+    play: 26454
+    win_rate: 0.53
+    pick_rate: 0.02
+    ban_rate: 0.05
+    tier: 1
+    rank: 2
+    roles:
+    - TANK
+- slug: anivia
+  name: Anivia
+  champion_id: 34
+  key: Anivia
+  positions:
+  - position: top
+    play: 9177
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 3
+    rank: 45
+    roles:
+    - MAGE
+    - TANK
+  - position: mid
+    play: 27220
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.02
+    tier: 2
+    rank: 29
+    roles:
+    - MAGE
+- slug: shaco
+  name: Shaco
+  champion_id: 35
+  key: Shaco
+  positions:
+  - position: jungle
+    play: 53460
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.17
+    tier: 3
+    rank: 9
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - SLAYER
+  - position: support
+    play: 14798
+    win_rate: 0.47
+    pick_rate: 0.01
+    ban_rate: 0.16
+    tier: 5
+    rank: 43
+    roles:
+    - CONTROLLER
+    - MAGE
+    - MARKSMAN
+    - SLAYER
+- slug: drmundo
+  name: Dr. Mundo
+  champion_id: 36
+  key: DrMundo
+  positions:
+  - position: top
+    play: 40284
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 2
+    rank: 25
+    roles:
+    - FIGHTER
+    - TANK
+- slug: sona
+  name: Sona
+  champion_id: 37
+  key: Sona
+  positions:
+  - position: support
+    play: 33032
+    win_rate: 0.52
+    pick_rate: 0.03
+    ban_rate: 0.0
+    tier: 2
+    rank: 16
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: kassadin
+  name: Kassadin
+  champion_id: 38
+  key: Kassadin
+  positions:
+  - position: mid
+    play: 37348
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.03
+    tier: 2
+    rank: 25
+    roles:
+    - MAGE
+- slug: irelia
+  name: Irelia
+  champion_id: 39
+  key: Irelia
+  positions:
+  - position: top
+    play: 57600
+    win_rate: 0.5
+    pick_rate: 0.05
+    ban_rate: 0.13
+    tier: 2
+    rank: 14
+    roles:
+    - FIGHTER
+  - position: mid
+    play: 34783
+    win_rate: 0.49
+    pick_rate: 0.03
+    ban_rate: 0.13
+    tier: 3
+    rank: 41
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+- slug: janna
+  name: Janna
+  champion_id: 40
+  key: Janna
+  positions:
+  - position: support
+    play: 75000
+    win_rate: 0.52
+    pick_rate: 0.06
+    ban_rate: 0.01
+    tier: 1
+    rank: 6
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: gangplank
+  name: Gangplank
+  champion_id: 41
+  key: Gangplank
+  positions:
+  - position: top
+    play: 65845
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.09
+    tier: 1
+    rank: 6
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+- slug: corki
+  name: Corki
+  champion_id: 42
+  key: Corki
+  positions:
+  - position: top
+    play: 9462
+    win_rate: 0.45
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 5
+    rank: 63
+    roles:
+    - FIGHTER
+    - MARKSMAN
+  - position: adc
+    play: 22958
+    win_rate: 0.49
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 4
+    rank: 35
+    roles:
+    - FIGHTER
+    - MARKSMAN
+- slug: karma
+  name: Karma
+  champion_id: 43
+  key: Karma
+  positions:
+  - position: support
+    play: 88033
+    win_rate: 0.49
+    pick_rate: 0.07
+    ban_rate: 0.03
+    tier: 3
+    rank: 19
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: taric
+  name: Taric
+  champion_id: 44
+  key: Taric
+  positions:
+  - position: support
+    play: 15572
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 3
+    rank: 23
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: veigar
+  name: Veigar
+  champion_id: 45
+  key: Veigar
+  positions:
+  - position: mid
+    play: 42970
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 2
+    rank: 27
+    roles:
+    - MAGE
+  - position: adc
+    play: 15307
+    win_rate: 0.53
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 2
+    rank: 14
+    roles:
+    - MAGE
+- slug: trundle
+  name: Trundle
+  champion_id: 48
+  key: Trundle
+  positions:
+  - position: top
+    play: 20592
+    win_rate: 0.49
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 4
+    rank: 53
+    roles:
+    - FIGHTER
+    - TANK
+  - position: jungle
+    play: 8444
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 4
+    rank: 50
+    roles:
+    - FIGHTER
+    - TANK
+- slug: swain
+  name: Swain
+  champion_id: 50
+  key: Swain
+  positions:
+  - position: top
+    play: 7643
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 4
+    rank: 57
+    roles:
+    - MAGE
+    - TANK
+  - position: mid
+    play: 12701
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 3
+    rank: 34
+    roles:
+    - MAGE
+    - TANK
+  - position: adc
+    play: 14990
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 2
+    rank: 18
+    roles:
+    - MAGE
+    - TANK
+  - position: support
+    play: 35135
+    win_rate: 0.48
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 4
+    rank: 36
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: caitlyn
+  name: Caitlyn
+  champion_id: 51
+  key: Caitlyn
+  positions:
+  - position: adc
+    play: 191850
+    win_rate: 0.49
+    pick_rate: 0.15
+    ban_rate: 0.23
+    tier: 1
+    rank: 6
+    roles:
+    - MARKSMAN
+- slug: blitzcrank
+  name: Blitzcrank
+  champion_id: 53
+  key: Blitzcrank
+  positions:
+  - position: support
+    play: 88972
+    win_rate: 0.52
+    pick_rate: 0.07
+    ban_rate: 0.14
+    tier: 1
+    rank: 3
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: malphite
+  name: Malphite
+  champion_id: 54
+  key: Malphite
+  positions:
+  - position: top
+    play: 90776
+    win_rate: 0.52
+    pick_rate: 0.07
+    ban_rate: 0.18
+    tier: 1
+    rank: 1
+    roles:
+    - MAGE
+    - TANK
+  - position: jungle
+    play: 9319
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.16
+    tier: 5
+    rank: 52
+    roles:
+    - MAGE
+    - TANK
+  - position: mid
+    play: 10166
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.17
+    tier: 3
+    rank: 35
+    roles:
+    - MAGE
+    - TANK
+- slug: katarina
+  name: Katarina
+  champion_id: 55
+  key: Katarina
+  positions:
+  - position: mid
+    play: 84412
+    win_rate: 0.5
+    pick_rate: 0.07
+    ban_rate: 0.12
+    tier: 1
+    rank: 10
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+  - position: adc
+    play: 12497
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.12
+    tier: 3
+    rank: 27
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - TANK
+- slug: nocturne
+  name: Nocturne
+  champion_id: 56
+  key: Nocturne
+  positions:
+  - position: jungle
+    play: 48620
+    win_rate: 0.49
+    pick_rate: 0.04
+    ban_rate: 0.09
+    tier: 4
+    rank: 35
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: maokai
+  name: Maokai
+  champion_id: 57
+  key: Maokai
+  positions:
+  - position: jungle
+    play: 6657
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 4
+    rank: 48
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+  - position: support
+    play: 19732
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 4
+    rank: 29
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: renekton
+  name: Renekton
+  champion_id: 58
+  key: Renekton
+  positions:
+  - position: top
+    play: 67733
+    win_rate: 0.5
+    pick_rate: 0.05
+    ban_rate: 0.04
+    tier: 2
+    rank: 20
+    roles:
+    - FIGHTER
+    - TANK
+- slug: jarvaniv
+  name: Jarvan IV
+  champion_id: 59
+  key: JarvanIV
+  positions:
+  - position: jungle
+    play: 75057
+    win_rate: 0.5
+    pick_rate: 0.06
+    ban_rate: 0.01
+    tier: 3
+    rank: 25
+    roles:
+    - FIGHTER
+    - SLAYER
+    - TANK
+- slug: elise
+  name: Elise
+  champion_id: 60
+  key: Elise
+  positions:
+  - position: jungle
+    play: 43476
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 3
+    rank: 16
+    roles:
+    - MAGE
+  - position: support
+    play: 10765
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 4
+    rank: 34
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: orianna
+  name: Orianna
+  champion_id: 61
+  key: Orianna
+  positions:
+  - position: mid
+    play: 37144
+    win_rate: 0.47
+    pick_rate: 0.03
+    ban_rate: 0.0
+    tier: 4
+    rank: 46
+    roles:
+    - MAGE
+- slug: wukong
+  name: Wukong
+  champion_id: 62
+  key: MonkeyKing
+  positions:
+  - position: top
+    play: 12510
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.06
+    tier: 3
+    rank: 43
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+  - position: jungle
+    play: 97819
+    win_rate: 0.52
+    pick_rate: 0.08
+    ban_rate: 0.06
+    tier: 1
+    rank: 1
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: brand
+  name: Brand
+  champion_id: 63
+  key: Brand
+  positions:
+  - position: mid
+    play: 8215
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.03
+    tier: 4
+    rank: 47
+    roles:
+    - MAGE
+  - position: adc
+    play: 6810
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 4
+    rank: 37
+    roles:
+    - MAGE
+  - position: support
+    play: 29818
+    win_rate: 0.49
+    pick_rate: 0.02
+    ban_rate: 0.03
+    tier: 4
+    rank: 32
+    roles:
+    - MAGE
+- slug: leesin
+  name: Lee Sin
+  champion_id: 64
+  key: LeeSin
+  positions:
+  - position: jungle
+    play: 163272
+    win_rate: 0.49
+    pick_rate: 0.13
+    ban_rate: 0.17
+    tier: 2
+    rank: 6
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: vayne
+  name: Vayne
+  champion_id: 67
+  key: Vayne
+  positions:
+  - position: top
+    play: 17041
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.04
+    tier: 4
+    rank: 56
+    roles:
+    - FIGHTER
+    - MARKSMAN
+  - position: adc
+    play: 45548
+    win_rate: 0.49
+    pick_rate: 0.04
+    ban_rate: 0.04
+    tier: 4
+    rank: 34
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - TANK
+- slug: rumble
+  name: Rumble
+  champion_id: 68
+  key: Rumble
+  positions:
+  - position: top
+    play: 18050
+    win_rate: 0.47
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 4
+    rank: 58
+    roles:
+    - MAGE
+- slug: cassiopeia
+  name: Cassiopeia
+  champion_id: 69
+  key: Cassiopeia
+  positions:
+  - position: mid
+    play: 14024
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 4
+    rank: 48
+    roles:
+    - MAGE
+- slug: skarner
+  name: Skarner
+  champion_id: 72
+  key: Skarner
+  positions:
+  - position: jungle
+    play: 13137
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 4
+    rank: 39
+    roles:
+    - FIGHTER
+    - TANK
+- slug: heimerdinger
+  name: Heimerdinger
+  champion_id: 74
+  key: Heimerdinger
+  positions:
+  - position: top
+    play: 15671
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 3
+    rank: 49
+    roles:
+    - MAGE
+- slug: nasus
+  name: Nasus
+  champion_id: 75
+  key: Nasus
+  positions:
+  - position: top
+    play: 55989
+    win_rate: 0.5
+    pick_rate: 0.04
+    ban_rate: 0.17
+    tier: 2
+    rank: 17
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - TANK
+  - position: mid
+    play: 11750
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.17
+    tier: 3
+    rank: 38
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - TANK
+- slug: nidalee
+  name: Nidalee
+  champion_id: 76
+  key: Nidalee
+  positions:
+  - position: jungle
+    play: 38536
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 3
+    rank: 18
+    roles:
+    - MAGE
+- slug: udyr
+  name: Udyr
+  champion_id: 77
+  key: Udyr
+  positions:
+  - position: top
+    play: 7333
+    win_rate: 0.47
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 5
+    rank: 61
+    roles:
+    - FIGHTER
+    - MAGE
+    - TANK
+  - position: jungle
+    play: 24162
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 3
+    rank: 30
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - TANK
+- slug: poppy
+  name: Poppy
+  champion_id: 78
+  key: Poppy
+  positions:
+  - position: top
+    play: 11612
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.04
+    tier: 3
+    rank: 48
+    roles:
+    - FIGHTER
+    - TANK
+  - position: support
+    play: 21467
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.04
+    tier: 3
+    rank: 25
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - SLAYER
+    - TANK
+- slug: gragas
+  name: Gragas
+  champion_id: 79
+  key: Gragas
+  positions:
+  - position: top
+    play: 32088
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 2
+    rank: 30
+    roles:
+    - MAGE
+    - TANK
+  - position: jungle
+    play: 10627
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 4
+    rank: 37
+    roles:
+    - MAGE
+  - position: mid
+    play: 7001
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 37
+    roles:
+    - MAGE
+- slug: pantheon
+  name: Pantheon
+  champion_id: 80
+  key: Pantheon
+  positions:
+  - position: top
+    play: 41373
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.03
+    tier: 2
+    rank: 12
+    roles:
+    - FIGHTER
+    - SLAYER
+  - position: jungle
+    play: 11095
+    win_rate: 0.47
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 5
+    rank: 58
+    roles:
+    - FIGHTER
+    - SLAYER
+  - position: mid
+    play: 10877
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 2
+    rank: 33
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+  - position: support
+    play: 41042
+    win_rate: 0.48
+    pick_rate: 0.03
+    ban_rate: 0.03
+    tier: 4
+    rank: 33
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - SLAYER
+    - TANK
+- slug: ezreal
+  name: Ezreal
+  champion_id: 81
+  key: Ezreal
+  positions:
+  - position: adc
+    play: 140160
+    win_rate: 0.46
+    pick_rate: 0.11
+    ban_rate: 0.04
+    tier: 4
+    rank: 36
+    roles:
+    - FIGHTER
+    - MARKSMAN
+- slug: mordekaiser
+  name: Mordekaiser
+  champion_id: 82
+  key: Mordekaiser
+  positions:
+  - position: top
+    play: 73069
+    win_rate: 0.51
+    pick_rate: 0.06
+    ban_rate: 0.08
+    tier: 1
+    rank: 3
+    roles:
+    - FIGHTER
+    - MAGE
+    - TANK
+- slug: yorick
+  name: Yorick
+  champion_id: 83
+  key: Yorick
+  positions:
+  - position: top
+    play: 35481
+    win_rate: 0.49
+    pick_rate: 0.03
+    ban_rate: 0.06
+    tier: 3
+    rank: 41
+    roles:
+    - FIGHTER
+    - SLAYER
+    - TANK
+- slug: akali
+  name: Akali
+  champion_id: 84
+  key: Akali
+  positions:
+  - position: top
+    play: 33721
+    win_rate: 0.49
+    pick_rate: 0.03
+    ban_rate: 0.17
+    tier: 3
+    rank: 35
+    roles:
+    - MAGE
+  - position: mid
+    play: 72801
+    win_rate: 0.49
+    pick_rate: 0.06
+    ban_rate: 0.17
+    tier: 2
+    rank: 24
+    roles:
+    - MAGE
+- slug: kennen
+  name: Kennen
+  champion_id: 85
+  key: Kennen
+  positions:
+  - position: top
+    play: 24081
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 3
+    rank: 40
+    roles:
+    - MAGE
+    - MARKSMAN
+- slug: garen
+  name: Garen
+  champion_id: 86
+  key: Garen
+  positions:
+  - position: top
+    play: 75848
+    win_rate: 0.51
+    pick_rate: 0.06
+    ban_rate: 0.04
+    tier: 1
+    rank: 4
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+    - TANK
+  - position: mid
+    play: 6652
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.04
+    tier: 3
+    rank: 44
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+    - TANK
+- slug: leona
+  name: Leona
+  champion_id: 89
+  key: Leona
+  positions:
+  - position: support
+    play: 95737
+    win_rate: 0.52
+    pick_rate: 0.08
+    ban_rate: 0.09
+    tier: 1
+    rank: 2
+    roles:
+    - CONTROLLER
+    - TANK
+- slug: malzahar
+  name: Malzahar
+  champion_id: 90
+  key: Malzahar
+  positions:
+  - position: top
+    play: 6982
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.08
+    tier: 4
+    rank: 55
+    roles:
+    - MAGE
+  - position: mid
+    play: 66143
+    win_rate: 0.5
+    pick_rate: 0.05
+    ban_rate: 0.09
+    tier: 2
+    rank: 19
+    roles:
+    - MAGE
+- slug: talon
+  name: Talon
+  champion_id: 91
+  key: Talon
+  positions:
+  - position: jungle
+    play: 74780
+    win_rate: 0.51
+    pick_rate: 0.06
+    ban_rate: 0.1
+    tier: 2
+    rank: 5
+    roles:
+    - FIGHTER
+    - SLAYER
+  - position: mid
+    play: 21539
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.1
+    tier: 2
+    rank: 26
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: riven
+  name: Riven
+  champion_id: 92
+  key: Riven
+  positions:
+  - position: top
+    play: 28585
+    win_rate: 0.49
+    pick_rate: 0.02
+    ban_rate: 0.02
+    tier: 3
+    rank: 44
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: kogmaw
+  name: Kog'Maw
+  champion_id: 96
+  key: KogMaw
+  positions:
+  - position: mid
+    play: 8587
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 45
+    roles:
+    - MAGE
+    - MARKSMAN
+  - position: adc
+    play: 28195
+    win_rate: 0.52
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 1
+    rank: 10
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+- slug: shen
+  name: Shen
+  champion_id: 98
+  key: Shen
+  positions:
+  - position: top
+    play: 43631
+    win_rate: 0.52
+    pick_rate: 0.04
+    ban_rate: 0.01
+    tier: 1
+    rank: 8
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - MAGE
+    - TANK
+  - position: support
+    play: 9049
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 5
+    rank: 45
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - MAGE
+    - TANK
+- slug: lux
+  name: Lux
+  champion_id: 99
+  key: Lux
+  positions:
+  - position: mid
+    play: 51302
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.04
+    tier: 1
+    rank: 15
+    roles:
+    - MAGE
+  - position: support
+    play: 80990
+    win_rate: 0.49
+    pick_rate: 0.07
+    ban_rate: 0.04
+    tier: 3
+    rank: 18
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: xerath
+  name: Xerath
+  champion_id: 101
+  key: Xerath
+  positions:
+  - position: mid
+    play: 54415
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.08
+    tier: 1
+    rank: 17
+    roles:
+    - MAGE
+  - position: adc
+    play: 10201
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.08
+    tier: 3
+    rank: 29
+    roles:
+    - MAGE
+  - position: support
+    play: 35862
+    win_rate: 0.49
+    pick_rate: 0.03
+    ban_rate: 0.08
+    tier: 4
+    rank: 30
+    roles:
+    - MAGE
+- slug: shyvana
+  name: Shyvana
+  champion_id: 102
+  key: Shyvana
+  positions:
+  - position: jungle
+    play: 52196
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.05
+    tier: 3
+    rank: 14
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - TANK
+- slug: ahri
+  name: Ahri
+  champion_id: 103
+  key: Ahri
+  positions:
+  - position: mid
+    play: 115676
+    win_rate: 0.51
+    pick_rate: 0.09
+    ban_rate: 0.03
+    tier: 1
+    rank: 1
+    roles:
+    - MAGE
+- slug: graves
+  name: Graves
+  champion_id: 104
+  key: Graves
+  positions:
+  - position: jungle
+    play: 103329
+    win_rate: 0.49
+    pick_rate: 0.08
+    ban_rate: 0.1
+    tier: 3
+    rank: 12
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: fizz
+  name: Fizz
+  champion_id: 105
+  key: Fizz
+  positions:
+  - position: jungle
+    play: 8538
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.06
+    tier: 5
+    rank: 54
+    roles:
+    - MAGE
+  - position: mid
+    play: 63677
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.07
+    tier: 1
+    rank: 5
+    roles:
+    - MAGE
+- slug: volibear
+  name: Volibear
+  champion_id: 106
+  key: Volibear
+  positions:
+  - position: top
+    play: 55491
+    win_rate: 0.48
+    pick_rate: 0.04
+    ban_rate: 0.02
+    tier: 3
+    rank: 38
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - TANK
+  - position: jungle
+    play: 14347
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 5
+    rank: 51
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - TANK
+- slug: rengar
+  name: Rengar
+  champion_id: 107
+  key: Rengar
+  positions:
+  - position: jungle
+    play: 46299
+    win_rate: 0.48
+    pick_rate: 0.04
+    ban_rate: 0.07
+    tier: 4
+    rank: 46
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: varus
+  name: Varus
+  champion_id: 110
+  key: Varus
+  positions:
+  - position: top
+    play: 11818
+    win_rate: 0.47
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 4
+    rank: 60
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - TANK
+  - position: adc
+    play: 34026
+    win_rate: 0.47
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 5
+    rank: 39
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - SLAYER
+- slug: nautilus
+  name: Nautilus
+  champion_id: 111
+  key: Nautilus
+  positions:
+  - position: support
+    play: 125627
+    win_rate: 0.5
+    pick_rate: 0.1
+    ban_rate: 0.15
+    tier: 2
+    rank: 10
+    roles:
+    - CONTROLLER
+    - TANK
+- slug: viktor
+  name: Viktor
+  champion_id: 112
+  key: Viktor
+  positions:
+  - position: mid
+    play: 113187
+    win_rate: 0.5
+    pick_rate: 0.09
+    ban_rate: 0.14
+    tier: 1
+    rank: 4
+    roles:
+    - MAGE
+  - position: adc
+    play: 32116
+    win_rate: 0.52
+    pick_rate: 0.03
+    ban_rate: 0.14
+    tier: 1
+    rank: 8
+    roles:
+    - MAGE
+- slug: sejuani
+  name: Sejuani
+  champion_id: 113
+  key: Sejuani
+  positions:
+  - position: jungle
+    play: 28405
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 3
+    rank: 20
+    roles:
+    - TANK
+- slug: fiora
+  name: Fiora
+  champion_id: 114
+  key: Fiora
+  positions:
+  - position: top
+    play: 57487
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.06
+    tier: 2
+    rank: 11
+    roles:
+    - FIGHTER
+- slug: ziggs
+  name: Ziggs
+  champion_id: 115
+  key: Ziggs
+  positions:
+  - position: mid
+    play: 8240
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 43
+    roles:
+    - MAGE
+  - position: adc
+    play: 21143
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 3
+    rank: 24
+    roles:
+    - MAGE
+- slug: lulu
+  name: Lulu
+  champion_id: 117
+  key: Lulu
+  positions:
+  - position: support
+    play: 158870
+    win_rate: 0.5
+    pick_rate: 0.13
+    ban_rate: 0.15
+    tier: 1
+    rank: 7
+    roles:
+    - CONTROLLER
+- slug: draven
+  name: Draven
+  champion_id: 119
+  key: Draven
+  positions:
+  - position: adc
+    play: 56295
+    win_rate: 0.5
+    pick_rate: 0.04
+    ban_rate: 0.14
+    tier: 3
+    rank: 20
+    roles:
+    - MARKSMAN
+    - SLAYER
+- slug: hecarim
+  name: Hecarim
+  champion_id: 120
+  key: Hecarim
+  positions:
+  - position: jungle
+    play: 69065
+    win_rate: 0.49
+    pick_rate: 0.06
+    ban_rate: 0.07
+    tier: 3
+    rank: 28
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: khazix
+  name: Kha'Zix
+  champion_id: 121
+  key: Khazix
+  positions:
+  - position: jungle
+    play: 89604
+    win_rate: 0.49
+    pick_rate: 0.07
+    ban_rate: 0.05
+    tier: 3
+    rank: 21
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: darius
+  name: Darius
+  champion_id: 122
+  key: Darius
+  positions:
+  - position: top
+    play: 77518
+    win_rate: 0.49
+    pick_rate: 0.06
+    ban_rate: 0.12
+    tier: 2
+    rank: 15
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+    - TANK
+  - position: jungle
+    play: 8694
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.12
+    tier: 4
+    rank: 47
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+    - TANK
+- slug: jayce
+  name: Jayce
+  champion_id: 126
+  key: Jayce
+  positions:
+  - position: top
+    play: 67902
+    win_rate: 0.48
+    pick_rate: 0.05
+    ban_rate: 0.07
+    tier: 3
+    rank: 37
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+  - position: jungle
+    play: 21134
+    win_rate: 0.47
+    pick_rate: 0.02
+    ban_rate: 0.07
+    tier: 5
+    rank: 56
+    roles:
+    - SLAYER
+  - position: mid
+    play: 9133
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.07
+    tier: 4
+    rank: 53
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: lissandra
+  name: Lissandra
+  champion_id: 127
+  key: Lissandra
+  positions:
+  - position: top
+    play: 6995
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.04
+    tier: 3
+    rank: 46
+    roles:
+    - CONTROLLER
+    - MAGE
+  - position: mid
+    play: 69176
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.04
+    tier: 1
+    rank: 9
+    roles:
+    - MAGE
+- slug: diana
+  name: Diana
+  champion_id: 131
+  key: Diana
+  positions:
+  - position: jungle
+    play: 47376
+    win_rate: 0.5
+    pick_rate: 0.04
+    ban_rate: 0.04
+    tier: 3
+    rank: 31
+    roles:
+    - MAGE
+    - TANK
+  - position: mid
+    play: 42857
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.04
+    tier: 2
+    rank: 21
+    roles:
+    - MAGE
+- slug: quinn
+  name: Quinn
+  champion_id: 133
+  key: Quinn
+  positions:
+  - position: top
+    play: 9979
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 33
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+  - position: jungle
+    play: 16578
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 4
+    rank: 43
+    roles:
+    - MARKSMAN
+    - SLAYER
+- slug: syndra
+  name: Syndra
+  champion_id: 134
+  key: Syndra
+  positions:
+  - position: mid
+    play: 93110
+    win_rate: 0.5
+    pick_rate: 0.07
+    ban_rate: 0.08
+    tier: 1
+    rank: 16
+    roles:
+    - MAGE
+  - position: adc
+    play: 12709
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.08
+    tier: 4
+    rank: 32
+    roles:
+    - MAGE
+- slug: aurelionsol
+  name: Aurelion Sol
+  champion_id: 136
+  key: AurelionSol
+  positions:
+  - position: mid
+    play: 22054
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 3
+    rank: 39
+    roles:
+    - MAGE
+  - position: adc
+    play: 8394
+    win_rate: 0.53
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 26
+    roles:
+    - MAGE
+- slug: kayn
+  name: Kayn
+  champion_id: 141
+  key: Kayn
+  positions:
+  - position: jungle
+    play: 95976
+    win_rate: 0.5
+    pick_rate: 0.08
+    ban_rate: 0.05
+    tier: 3
+    rank: 10
+    roles:
+    - FIGHTER|ASSASSIN
+    - FIGHTER|SLAYER
+    - SLAYER|ASSASSIN
+    - SLAYER|SLAYER
+    - TANK|SLAYER
+- slug: zoe
+  name: Zoe
+  champion_id: 142
+  key: Zoe
+  positions:
+  - position: mid
+    play: 36754
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.04
+    tier: 2
+    rank: 20
+    roles:
+    - MAGE
+  - position: support
+    play: 10646
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.03
+    tier: 5
+    rank: 44
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: zyra
+  name: Zyra
+  champion_id: 143
+  key: Zyra
+  positions:
+  - position: jungle
+    play: 14353
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 3
+    rank: 32
+    roles:
+    - MAGE
+  - position: support
+    play: 30774
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.02
+    tier: 4
+    rank: 27
+    roles:
+    - MAGE
+- slug: kaisa
+  name: Kai'Sa
+  champion_id: 145
+  key: Kaisa
+  positions:
+  - position: adc
+    play: 232969
+    win_rate: 0.5
+    pick_rate: 0.18
+    ban_rate: 0.03
+    tier: 1
+    rank: 5
+    roles:
+    - MAGE
+    - MARKSMAN
+- slug: seraphine
+  name: Seraphine
+  champion_id: 147
+  key: Seraphine
+  positions:
+  - position: adc
+    play: 7047
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.05
+    tier: 4
+    rank: 38
+    roles:
+    - CONTROLLER
+    - MAGE
+  - position: support
+    play: 80222
+    win_rate: 0.5
+    pick_rate: 0.06
+    ban_rate: 0.05
+    tier: 2
+    rank: 12
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: gnar
+  name: Gnar
+  champion_id: 150
+  key: Gnar
+  positions:
+  - position: top
+    play: 44234
+    win_rate: 0.49
+    pick_rate: 0.04
+    ban_rate: 0.01
+    tier: 3
+    rank: 39
+    roles:
+    - FIGHTER
+    - TANK
+- slug: zac
+  name: Zac
+  champion_id: 154
+  key: Zac
+  positions:
+  - position: top
+    play: 6380
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 47
+    roles:
+    - MAGE
+    - TANK
+  - position: jungle
+    play: 34927
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 3
+    rank: 15
+    roles:
+    - MAGE
+    - TANK
+- slug: yasuo
+  name: Yasuo
+  champion_id: 157
+  key: Yasuo
+  positions:
+  - position: top
+    play: 45224
+    win_rate: 0.5
+    pick_rate: 0.04
+    ban_rate: 0.23
+    tier: 2
+    rank: 22
+    roles:
+    - FIGHTER
+    - MARKSMAN
+  - position: mid
+    play: 114728
+    win_rate: 0.5
+    pick_rate: 0.09
+    ban_rate: 0.24
+    tier: 1
+    rank: 7
+    roles:
+    - FIGHTER
+    - MARKSMAN
+  - position: adc
+    play: 28876
+    win_rate: 0.52
+    pick_rate: 0.02
+    ban_rate: 0.23
+    tier: 1
+    rank: 9
+    roles:
+    - FIGHTER
+    - MARKSMAN
+- slug: velkoz
+  name: Vel'Koz
+  champion_id: 161
+  key: Velkoz
+  positions:
+  - position: mid
+    play: 10831
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 40
+    roles:
+    - MAGE
+  - position: adc
+    play: 6454
+    win_rate: 0.53
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 28
+    roles:
+    - MAGE
+  - position: support
+    play: 33326
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 3
+    rank: 24
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: taliyah
+  name: Taliyah
+  champion_id: 163
+  key: Taliyah
+  positions:
+  - position: jungle
+    play: 10233
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 4
+    rank: 36
+    roles:
+    - MAGE
+  - position: mid
+    play: 18199
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 3
+    rank: 42
+    roles:
+    - MAGE
+- slug: camille
+  name: Camille
+  champion_id: 164
+  key: Camille
+  positions:
+  - position: top
+    play: 52243
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.03
+    tier: 2
+    rank: 13
+    roles:
+    - FIGHTER
+  - position: support
+    play: 21099
+    win_rate: 0.46
+    pick_rate: 0.02
+    ban_rate: 0.03
+    tier: 5
+    rank: 46
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - SLAYER
+    - TANK
+- slug: akshan
+  name: Akshan
+  champion_id: 166
+  key: Akshan
+  positions:
+  - position: mid
+    play: 27758
+    win_rate: 0.49
+    pick_rate: 0.02
+    ban_rate: 0.02
+    tier: 3
+    rank: 36
+    roles:
+    - MARKSMAN
+    - SLAYER
+- slug: belveth
+  name: Bel'Veth
+  champion_id: 200
+  key: Belveth
+  positions:
+  - position: jungle
+    play: 30945
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.04
+    tier: 3
+    rank: 19
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - TANK
+- slug: braum
+  name: Braum
+  champion_id: 201
+  key: Braum
+  positions:
+  - position: support
+    play: 69670
+    win_rate: 0.52
+    pick_rate: 0.06
+    ban_rate: 0.06
+    tier: 1
+    rank: 4
+    roles:
+    - CONTROLLER
+    - TANK
+- slug: jhin
+  name: Jhin
+  champion_id: 202
+  key: Jhin
+  positions:
+  - position: adc
+    play: 224895
+    win_rate: 0.5
+    pick_rate: 0.18
+    ban_rate: 0.02
+    tier: 1
+    rank: 3
+    roles:
+    - MARKSMAN
+    - SLAYER
+- slug: kindred
+  name: Kindred
+  champion_id: 203
+  key: Kindred
+  positions:
+  - position: jungle
+    play: 36742
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 4
+    rank: 33
+    roles:
+    - FIGHTER
+    - MARKSMAN
+- slug: zeri
+  name: Zeri
+  champion_id: 221
+  key: Zeri
+  positions:
+  - position: adc
+    play: 56254
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.01
+    tier: 2
+    rank: 13
+    roles:
+    - MARKSMAN
+- slug: jinx
+  name: Jinx
+  champion_id: 222
+  key: Jinx
+  positions:
+  - position: adc
+    play: 214876
+    win_rate: 0.52
+    pick_rate: 0.17
+    ban_rate: 0.09
+    tier: 0
+    rank: 1
+    roles:
+    - MARKSMAN
+- slug: tahmkench
+  name: Tahm Kench
+  champion_id: 223
+  key: TahmKench
+  positions:
+  - position: top
+    play: 24935
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.02
+    tier: 3
+    rank: 34
+    roles:
+    - MAGE
+    - TANK
+  - position: support
+    play: 31759
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.02
+    tier: 3
+    rank: 22
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: briar
+  name: Briar
+  champion_id: 233
+  key: Briar
+  positions:
+  - position: jungle
+    play: 52935
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.09
+    tier: 3
+    rank: 8
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: viego
+  name: Viego
+  champion_id: 234
+  key: Viego
+  positions:
+  - position: jungle
+    play: 104711
+    win_rate: 0.49
+    pick_rate: 0.08
+    ban_rate: 0.07
+    tier: 3
+    rank: 23
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: senna
+  name: Senna
+  champion_id: 235
+  key: Senna
+  positions:
+  - position: support
+    play: 67036
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.01
+    tier: 2
+    rank: 13
+    roles:
+    - CONTROLLER
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: lucian
+  name: Lucian
+  champion_id: 236
+  key: Lucian
+  positions:
+  - position: mid
+    play: 8517
+    win_rate: 0.42
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 5
+    rank: 56
+    roles:
+    - FIGHTER
+    - MARKSMAN
+  - position: adc
+    play: 107642
+    win_rate: 0.49
+    pick_rate: 0.08
+    ban_rate: 0.02
+    tier: 2
+    rank: 15
+    roles:
+    - MARKSMAN
+- slug: zed
+  name: Zed
+  champion_id: 238
+  key: Zed
+  positions:
+  - position: jungle
+    play: 33215
+    win_rate: 0.48
+    pick_rate: 0.03
+    ban_rate: 0.24
+    tier: 4
+    rank: 49
+    roles:
+    - FIGHTER
+    - SLAYER
+  - position: mid
+    play: 100587
+    win_rate: 0.5
+    pick_rate: 0.08
+    ban_rate: 0.24
+    tier: 1
+    rank: 12
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: kled
+  name: Kled
+  champion_id: 240
+  key: Kled
+  positions:
+  - position: top
+    play: 21028
+    win_rate: 0.51
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 3
+    rank: 32
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+    - TANK
+- slug: ekko
+  name: Ekko
+  champion_id: 245
+  key: Ekko
+  positions:
+  - position: jungle
+    play: 56390
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.03
+    tier: 3
+    rank: 11
+    roles:
+    - MAGE
+  - position: mid
+    play: 61150
+    win_rate: 0.52
+    pick_rate: 0.05
+    ban_rate: 0.03
+    tier: 1
+    rank: 3
+    roles:
+    - MAGE
+- slug: qiyana
+  name: Qiyana
+  champion_id: 246
+  key: Qiyana
+  positions:
+  - position: jungle
+    play: 92168
+    win_rate: 0.49
+    pick_rate: 0.07
+    ban_rate: 0.14
+    tier: 3
+    rank: 27
+    roles:
+    - SLAYER
+  - position: mid
+    play: 35471
+    win_rate: 0.49
+    pick_rate: 0.03
+    ban_rate: 0.14
+    tier: 2
+    rank: 31
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: vi
+  name: Vi
+  champion_id: 254
+  key: Vi
+  positions:
+  - position: jungle
+    play: 49860
+    win_rate: 0.48
+    pick_rate: 0.04
+    ban_rate: 0.01
+    tier: 4
+    rank: 42
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+- slug: aatrox
+  name: Aatrox
+  champion_id: 266
+  key: Aatrox
+  positions:
+  - position: top
+    play: 78730
+    win_rate: 0.5
+    pick_rate: 0.06
+    ban_rate: 0.07
+    tier: 2
+    rank: 10
+    roles:
+    - FIGHTER
+    - SLAYER
+  - position: jungle
+    play: 10642
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.07
+    tier: 4
+    rank: 45
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: nami
+  name: Nami
+  champion_id: 267
+  key: Nami
+  positions:
+  - position: support
+    play: 111416
+    win_rate: 0.51
+    pick_rate: 0.09
+    ban_rate: 0.01
+    tier: 1
+    rank: 5
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: azir
+  name: Azir
+  champion_id: 268
+  key: Azir
+  positions:
+  - position: mid
+    play: 22145
+    win_rate: 0.47
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 4
+    rank: 49
+    roles:
+    - MAGE
+- slug: yuumi
+  name: Yuumi
+  champion_id: 350
+  key: Yuumi
+  positions:
+  - position: support
+    play: 70954
+    win_rate: 0.47
+    pick_rate: 0.06
+    ban_rate: 0.08
+    tier: 4
+    rank: 31
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: samira
+  name: Samira
+  champion_id: 360
+  key: Samira
+  positions:
+  - position: adc
+    play: 47107
+    win_rate: 0.5
+    pick_rate: 0.04
+    ban_rate: 0.05
+    tier: 3
+    rank: 25
+    roles:
+    - MARKSMAN
+- slug: thresh
+  name: Thresh
+  champion_id: 412
+  key: Thresh
+  positions:
+  - position: support
+    play: 190106
+    win_rate: 0.52
+    pick_rate: 0.15
+    ban_rate: 0.13
+    tier: 0
+    rank: 1
+    roles:
+    - CONTROLLER
+    - TANK
+- slug: illaoi
+  name: Illaoi
+  champion_id: 420
+  key: Illaoi
+  positions:
+  - position: top
+    play: 31591
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.05
+    tier: 3
+    rank: 31
+    roles:
+    - FIGHTER
+    - TANK
+- slug: reksai
+  name: Rek'Sai
+  champion_id: 421
+  key: RekSai
+  positions:
+  - position: jungle
+    play: 18229
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 26
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - SLAYER
+    - TANK
+- slug: ivern
+  name: Ivern
+  champion_id: 427
+  key: Ivern
+  positions:
+  - position: jungle
+    play: 13858
+    win_rate: 0.52
+    pick_rate: 0.01
+    ban_rate: 0.0
+    tier: 3
+    rank: 29
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: kalista
+  name: Kalista
+  champion_id: 429
+  key: Kalista
+  positions:
+  - position: adc
+    play: 46148
+    win_rate: 0.49
+    pick_rate: 0.04
+    ban_rate: 0.01
+    tier: 4
+    rank: 30
+    roles:
+    - FIGHTER
+    - MARKSMAN
+    - TANK
+- slug: bard
+  name: Bard
+  champion_id: 432
+  key: Bard
+  positions:
+  - position: support
+    play: 57325
+    win_rate: 0.49
+    pick_rate: 0.05
+    ban_rate: 0.02
+    tier: 3
+    rank: 26
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: rakan
+  name: Rakan
+  champion_id: 497
+  key: Rakan
+  positions:
+  - position: support
+    play: 48100
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.0
+    tier: 2
+    rank: 15
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: xayah
+  name: Xayah
+  champion_id: 498
+  key: Xayah
+  positions:
+  - position: adc
+    play: 70647
+    win_rate: 0.52
+    pick_rate: 0.06
+    ban_rate: 0.01
+    tier: 1
+    rank: 4
+    roles:
+    - MARKSMAN
+- slug: ornn
+  name: Ornn
+  champion_id: 516
+  key: Ornn
+  positions:
+  - position: top
+    play: 45993
+    win_rate: 0.52
+    pick_rate: 0.04
+    ban_rate: 0.01
+    tier: 1
+    rank: 2
+    roles:
+    - TANK
+- slug: sylas
+  name: Sylas
+  champion_id: 517
+  key: Sylas
+  positions:
+  - position: top
+    play: 15331
+    win_rate: 0.49
+    pick_rate: 0.01
+    ban_rate: 0.18
+    tier: 3
+    rank: 51
+    roles:
+    - MAGE
+  - position: jungle
+    play: 82971
+    win_rate: 0.49
+    pick_rate: 0.07
+    ban_rate: 0.18
+    tier: 3
+    rank: 17
+    roles:
+    - MAGE
+  - position: mid
+    play: 87916
+    win_rate: 0.48
+    pick_rate: 0.07
+    ban_rate: 0.18
+    tier: 2
+    rank: 28
+    roles:
+    - MAGE
+  - position: support
+    play: 15751
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.18
+    tier: 5
+    rank: 41
+    roles:
+    - MAGE
+    - TANK
+- slug: neeko
+  name: Neeko
+  champion_id: 518
+  key: Neeko
+  positions:
+  - position: support
+    play: 21289
+    win_rate: 0.49
+    pick_rate: 0.02
+    ban_rate: 0.01
+    tier: 4
+    rank: 37
+    roles:
+    - CONTROLLER
+    - MAGE
+    - TANK
+- slug: aphelios
+  name: Aphelios
+  champion_id: 523
+  key: Aphelios
+  positions:
+  - position: adc
+    play: 108255
+    win_rate: 0.5
+    pick_rate: 0.09
+    ban_rate: 0.04
+    tier: 2
+    rank: 12
+    roles:
+    - MARKSMAN
+- slug: rell
+  name: Rell
+  champion_id: 526
+  key: Rell
+  positions:
+  - position: support
+    play: 47873
+    win_rate: 0.52
+    pick_rate: 0.04
+    ban_rate: 0.01
+    tier: 2
+    rank: 8
+    roles:
+    - CONTROLLER
+    - TANK
+- slug: pyke
+  name: Pyke
+  champion_id: 555
+  key: Pyke
+  positions:
+  - position: support
+    play: 73791
+    win_rate: 0.49
+    pick_rate: 0.06
+    ban_rate: 0.25
+    tier: 3
+    rank: 20
+    roles:
+    - FIGHTER
+    - SLAYER
+    - TANK
+- slug: vex
+  name: Vex
+  champion_id: 711
+  key: Vex
+  positions:
+  - position: mid
+    play: 39957
+    win_rate: 0.52
+    pick_rate: 0.03
+    ban_rate: 0.04
+    tier: 1
+    rank: 8
+    roles:
+    - MAGE
+- slug: yone
+  name: Yone
+  champion_id: 777
+  key: Yone
+  positions:
+  - position: top
+    play: 107984
+    win_rate: 0.5
+    pick_rate: 0.09
+    ban_rate: 0.15
+    tier: 1
+    rank: 5
+    roles:
+    - FIGHTER
+    - MARKSMAN
+  - position: mid
+    play: 107086
+    win_rate: 0.5
+    pick_rate: 0.09
+    ban_rate: 0.15
+    tier: 1
+    rank: 2
+    roles:
+    - FIGHTER
+    - MARKSMAN
+- slug: ambessa
+  name: Ambessa
+  champion_id: 799
+  key: Ambessa
+  positions:
+  - position: top
+    play: 42584
+    win_rate: 0.48
+    pick_rate: 0.03
+    ban_rate: 0.05
+    tier: 3
+    rank: 42
+    roles:
+    - FIGHTER
+    - SLAYER
+  - position: jungle
+    play: 8244
+    win_rate: 0.46
+    pick_rate: 0.01
+    ban_rate: 0.04
+    tier: 5
+    rank: 60
+    roles:
+    - FIGHTER
+    - SLAYER
+- slug: mel
+  name: Mel
+  champion_id: 800
+  key: Mel
+  positions:
+  - position: mid
+    play: 28864
+    win_rate: 0.46
+    pick_rate: 0.02
+    ban_rate: 0.11
+    tier: 4
+    rank: 52
+    roles:
+    - MAGE
+  - position: adc
+    play: 9659
+    win_rate: 0.47
+    pick_rate: 0.01
+    ban_rate: 0.11
+    tier: 5
+    rank: 40
+    roles:
+    - MAGE
+  - position: support
+    play: 7863
+    win_rate: 0.43
+    pick_rate: 0.01
+    ban_rate: 0.1
+    tier: 5
+    rank: 49
+    roles:
+    - MAGE
+- slug: yunara
+  name: Yunara
+  champion_id: 804
+  key: Yunara
+  positions:
+  - position: adc
+    play: 131761
+    win_rate: 0.49
+    pick_rate: 0.1
+    ban_rate: 0.08
+    tier: 2
+    rank: 11
+    roles:
+    - MARKSMAN
+- slug: locke
+  name: Locke
+  champion_id: 805
+  key: Locke
+  positions:
+  - position: jungle
+    play: 9214
+    win_rate: 0.46
+    pick_rate: 0.01
+    ban_rate: 0.29
+    tier: 5
+    rank: 59
+    roles:
+    - MAGE
+  - position: mid
+    play: 91176
+    win_rate: 0.5
+    pick_rate: 0.07
+    ban_rate: 0.31
+    tier: 1
+    rank: 11
+    roles:
+    - MAGE
+- slug: sett
+  name: Sett
+  champion_id: 875
+  key: Sett
+  positions:
+  - position: top
+    play: 74762
+    win_rate: 0.5
+    pick_rate: 0.06
+    ban_rate: 0.03
+    tier: 1
+    rank: 9
+    roles:
+    - FIGHTER
+    - TANK
+- slug: lillia
+  name: Lillia
+  champion_id: 876
+  key: Lillia
+  positions:
+  - position: jungle
+    play: 65641
+    win_rate: 0.51
+    pick_rate: 0.05
+    ban_rate: 0.04
+    tier: 2
+    rank: 4
+    roles:
+    - MAGE
+- slug: gwen
+  name: Gwen
+  champion_id: 887
+  key: Gwen
+  positions:
+  - position: top
+    play: 31003
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.03
+    tier: 2
+    rank: 29
+    roles:
+    - MAGE
+  - position: jungle
+    play: 12069
+    win_rate: 0.5
+    pick_rate: 0.01
+    ban_rate: 0.03
+    tier: 4
+    rank: 44
+    roles:
+    - MAGE
+  - position: mid
+    play: 7041
+    win_rate: 0.53
+    pick_rate: 0.01
+    ban_rate: 0.03
+    tier: 2
+    rank: 30
+    roles:
+    - MAGE
+- slug: renataglasc
+  name: Renata Glasc
+  champion_id: 888
+  key: Renata
+  positions:
+  - position: support
+    play: 21226
+    win_rate: 0.5
+    pick_rate: 0.02
+    ban_rate: 0.0
+    tier: 4
+    rank: 28
+    roles:
+    - CONTROLLER
+- slug: aurora
+  name: Aurora
+  champion_id: 893
+  key: Aurora
+  positions:
+  - position: top
+    play: 7613
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.01
+    tier: 3
+    rank: 52
+    roles:
+    - MAGE
+  - position: mid
+    play: 33543
+    win_rate: 0.51
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 2
+    rank: 22
+    roles:
+    - MAGE
+- slug: nilah
+  name: Nilah
+  champion_id: 895
+  key: Nilah
+  positions:
+  - position: adc
+    play: 13594
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 4
+    rank: 33
+    roles:
+    - MARKSMAN
+- slug: ksante
+  name: K'Sante
+  champion_id: 897
+  key: KSante
+  positions:
+  - position: top
+    play: 47153
+    win_rate: 0.47
+    pick_rate: 0.04
+    ban_rate: 0.03
+    tier: 4
+    rank: 54
+    roles:
+    - TANK
+- slug: smolder
+  name: Smolder
+  champion_id: 901
+  key: Smolder
+  positions:
+  - position: mid
+    play: 8430
+    win_rate: 0.44
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 5
+    rank: 55
+    roles:
+    - FIGHTER
+    - MAGE
+    - MARKSMAN
+    - SLAYER
+  - position: adc
+    play: 71992
+    win_rate: 0.49
+    pick_rate: 0.06
+    ban_rate: 0.02
+    tier: 3
+    rank: 19
+    roles:
+    - FIGHTER
+    - MARKSMAN
+- slug: milio
+  name: Milio
+  champion_id: 902
+  key: Milio
+  positions:
+  - position: support
+    play: 86953
+    win_rate: 0.5
+    pick_rate: 0.07
+    ban_rate: 0.05
+    tier: 2
+    rank: 11
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: zaahen
+  name: Zaahen
+  champion_id: 904
+  key: Zaahen
+  positions:
+  - position: top
+    play: 33308
+    win_rate: 0.5
+    pick_rate: 0.03
+    ban_rate: 0.01
+    tier: 2
+    rank: 28
+    roles:
+    - FIGHTER
+- slug: hwei
+  name: Hwei
+  champion_id: 910
+  key: Hwei
+  positions:
+  - position: mid
+    play: 47018
+    win_rate: 0.51
+    pick_rate: 0.04
+    ban_rate: 0.02
+    tier: 1
+    rank: 14
+    roles:
+    - MAGE
+  - position: adc
+    play: 12893
+    win_rate: 0.53
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 2
+    rank: 17
+    roles:
+    - MAGE
+  - position: support
+    play: 8121
+    win_rate: 0.51
+    pick_rate: 0.01
+    ban_rate: 0.02
+    tier: 4
+    rank: 39
+    roles:
+    - CONTROLLER
+    - MAGE
+- slug: naafiri
+  name: Naafiri
+  champion_id: 950
+  key: Naafiri
+  positions:
+  - position: jungle
+    play: 35285
+    win_rate: 0.49
+    pick_rate: 0.03
+    ban_rate: 0.09
+    tier: 4
+    rank: 40
+    roles:
+    - FIGHTER
+    - SLAYER
+  - position: mid
+    play: 8987
+    win_rate: 0.48
+    pick_rate: 0.01
+    ban_rate: 0.09
+    tier: 4
+    rank: 50
+    roles:
+    - FIGHTER
+    - SLAYER
