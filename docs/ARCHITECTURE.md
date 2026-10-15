@@ -25,7 +25,7 @@ is structurally forbidden from adding to it.
                      │ engine/  decisions │   │ agent/  adapter +   │
                      │  counter + synergy │   │  tools + narrator   │
                      │  TraceLine per pt  │   │  LangChain (Claude/ │
-                     └───────┬───────────┘   │  OpenAI) + offline  │
+                     └───────┬───────────┘   │  OpenAI) + grounded │
                              │ reads Ontology (champions + relations)
           ┌──────────────────┴──────────────────┐
           │                                     │
@@ -180,15 +180,17 @@ ParseInput ─► Think (Task) ─► Route (Choice)
   the pure `engine/scoring.py::evaluate_draft` and is **the only source of a
   pick**; `explain_matchup` and `get_champion` return evidence. There is no tool
   that lets the model introduce a champion of its own.
-- `agent/agent.py::choose_action` — with a model client, runs the tool-loop over
-  `langchain` (system prompt: adapt/orchestrate/narrate only, picks come only from
-  `suggest_pick`); without one, a deterministic offline planner (`parse_mentions`
-  → `set_board` → `suggest_pick`). Both emit the same JSON-safe action dict.
+- `agent/agent.py::choose_action` — runs the tool-loop over `langchain` (system
+  prompt: adapt/orchestrate/narrate only, picks come only from `suggest_pick`) and
+  emits a JSON-safe action dict. There is **no offline planner**: a missing client,
+  or any failing provider call, raises `LlmUnavailableError`, which fails the
+  `Think` state and the whole execution. The agent never fabricates an action.
 - `agent/llm.py` — a provider-neutral client (`LlmMessage`/`LlmReply`, vision
   image parts) selected by `LOL_COACH_LLM_PROVIDER`; `build_client` returns `None`
-  when the key or package is missing, which is what flips the whole loop offline.
-  The endpoint is always passed explicitly (`LOL_COACH_LLM_BASE_URL`, else the
-  provider's real API), so an ambient `ANTHROPIC_BASE_URL` cannot redirect it.
+  when the key or package is missing. The endpoint is always passed explicitly
+  (`LOL_COACH_LLM_BASE_URL`, else the provider's real API), so an ambient
+  `ANTHROPIC_BASE_URL` cannot redirect it. `LOL_COACH_LLM_EXTRA_HEADERS` (a JSON
+  object) adds request headers, for gateways/proxies that require them.
 - Every completed tool call is a `ToolStep` carried in workflow `data`, so the
   loop's `Think`/`RunTool` events render the agent's call journey in the Inspector.
 
@@ -206,14 +208,49 @@ Both use the provider-neutral `agent/llm.py` client. `narrate_final` is grounded
 scans the model's reply for any known champion not present in the tool results; on
 a violation the reply is discarded and the deterministic offline summary is
 returned instead. `offline_final_text` builds that summary from the tool payloads
-alone. With no key configured every path degrades to offline — the engine, traces,
-and Trace Inspector never stop working.
+alone.
 
-## Trace Inspector (state-machine UI)
+The two entry points differ on a missing model. `narrate_final` (agent chat)
+**requires** a client: with none configured, none available, a failing call, or a
+blank reply it raises `LlmUnavailableError`, the `Finalize` state fails, and the
+run returns no answer. `POST /api/agent/chat` additionally checks up front and
+returns **503** — without creating an execution — when no LLM is configured at
+all. The draft-eval `narrate` path is unchanged and still falls back to
+`offline_text`. In every case the engine, traces, and Trace Inspector keep
+working.
 
-Every `POST /api/draft/evaluate` creates an execution. The workflow executor
-writes each transition through to `data/executions.db` as it happens, so a crash
-mid-run still leaves a faithful partial history — which is the entire reason the
-executor is in-house. The frontend's Trace Inspector lists executions and renders
-the selected one as an ordered timeline: state name, status, duration, the
-input/output JSON of each step, and any traceback highlighted in red.
+## Trace Inspector (node-graph UI)
+
+Every `POST /api/draft/evaluate` (and every `POST /api/agent/chat`) creates an
+execution. The workflow executor writes each transition through to
+`data/executions.db` as it happens, so a crash mid-run still leaves a faithful
+partial history — which is the entire reason the executor is in-house.
+
+The Inspector renders an execution as an **n8n-style node graph**, not a flat list:
+
+- **Topology from the definition, not the run.** `Workflow.to_dict()`
+  (`workflow/types.py`) serializes the static graph — every state with its type,
+  task key, `next`, choice rules, and default/error targets. `GET
+  /api/executions/{id}` attaches it as `graph` (`server/app.py::_topology`), so the
+  UI draws the *whole* workflow (including branches the run never took) and paints
+  execution state over it. The frontend falls back to inferring nodes from the
+  event stream if `graph` is absent.
+- **Execution overlay.** Events are grouped into per-state occurrences; each node
+  shows status (`succeeded` / `failed` / `running` / `not_run`), duration, visit
+  count (`×N` for loops), and a log-count badge. The taken path is highlighted;
+  untaken branches stay dimmed. This is what makes the agent's `Think ⇄ RunTool`
+  loop legible at a glance.
+- **Per-state logs.** The executor attaches a thread-filtered
+  `logging.Handler` (`_LogCapture` in `workflow/executor.py`) around each state
+  body and persists the drained records on the `STATE_ENTERED`/`STATE_*` event
+  (`Event.logs`, column `execution_events.logs`). The Inspector's node detail panel
+  shows Input / Output / Logs tabs — the logs tab renders the exact
+  `{timestamp, level, logger, message, data?, exception?}` records the state's code
+  emitted. This is the "show me what the code in this step actually did" view.
+- **Rerun.** `POST /api/executions/{id}/rerun` replays the stored `input` through
+  the same workflow definition and returns the new `execution_id` (the Inspector
+  selects it). The original execution is never mutated — history stays immutable.
+
+Schema note: `execution_events.logs` is added by `store.py::_migrate` via
+`PRAGMA table_info` + `ALTER TABLE ADD COLUMN`, so existing databases upgrade in
+place and old rows read back as `[]`.

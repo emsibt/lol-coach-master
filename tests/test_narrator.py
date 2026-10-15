@@ -12,6 +12,7 @@ import re
 import pytest
 
 from lolcoach.agent.agent import ToolStep
+from lolcoach.agent.llm import LlmUnavailableError
 from lolcoach.agent.narrator import (
     Narration,
     narrate,
@@ -121,34 +122,31 @@ def test_offline_final_summarizes_the_suggest_result() -> None:
     assert "Twisted Fate" in text
 
 
-def test_narrate_final_uses_the_fallback_without_evidence(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_narrate_final_requires_a_client(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     get_settings.cache_clear()
     try:
-        narration = narrate_final(
-            "", [], _EMPTY_BOARD, ontology=get_ontology(), fallback="type the picks"
-        )
+        with pytest.raises(LlmUnavailableError):
+            narrate_final("", [], _EMPTY_BOARD, ontology=get_ontology())
     finally:
         get_settings.cache_clear()
-    assert narration.mode == "offline"
-    assert narration.text == "type the picks"
 
 
-def test_narrate_final_falls_back_to_offline_without_a_key(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
-    get_settings.cache_clear()
-    try:
-        narration = narrate_final(
-            "who to pick?", [_suggest_step()], _EMPTY_BOARD, ontology=get_ontology()
+def test_narrate_final_propagates_a_model_failure() -> None:
+    class _BoomClient:
+        provider = "boom"
+
+        def complete(self, _messages: object, _tools: object) -> object:
+            raise RuntimeError("upstream 500")
+
+    with pytest.raises(RuntimeError, match="upstream 500"):
+        narrate_final(
+            "who to pick?",
+            [_suggest_step()],
+            _EMPTY_BOARD,
+            client=_BoomClient(),
+            ontology=get_ontology(),
         )
-    finally:
-        get_settings.cache_clear()
-    assert narration.mode == "offline"
-    assert "Qiyana" in narration.text
 
 
 def test_unsourced_champions_ignores_allowed_sources() -> None:

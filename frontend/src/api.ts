@@ -10,6 +10,7 @@ import type {
   ExecutionDetail,
   ExecutionSummary,
   Health,
+  RerunResponse,
 } from "./types";
 
 // Empty by default: the Vite dev server proxies /api to the backend. Set
@@ -40,6 +41,8 @@ export const api = {
     request<ExecutionSummary[]>(`/api/executions?limit=${limit}`),
   execution: (id: string): Promise<ExecutionDetail> =>
     request<ExecutionDetail>(`/api/executions/${encodeURIComponent(id)}`),
+  rerun: (id: string): Promise<RerunResponse> =>
+    request<RerunResponse>(`/api/executions/${encodeURIComponent(id)}/rerun`, { method: "POST" }),
   chat: (executionId: string, message: string): Promise<ChatResponse> =>
     request<ChatResponse>("/api/chat", {
       method: "POST",

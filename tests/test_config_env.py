@@ -64,6 +64,52 @@ def test_llm_base_url_setting_reads_the_environment(monkeypatch: pytest.MonkeyPa
         get_settings.cache_clear()
 
 
+def test_llm_extra_headers_setting_reads_json(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOL_COACH_LLM_EXTRA_HEADERS", '{"x-opencode-session": "abc"}')
+    get_settings.cache_clear()
+    try:
+        assert get_settings().llm_extra_headers == {"x-opencode-session": "abc"}
+    finally:
+        get_settings.cache_clear()
+
+
+def test_malformed_llm_extra_headers_is_ignored(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LOL_COACH_LLM_EXTRA_HEADERS", "not json")
+    get_settings.cache_clear()
+    try:
+        assert get_settings().llm_extra_headers == {}
+    finally:
+        get_settings.cache_clear()
+
+
+def test_build_client_forwards_extra_headers(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured: dict[str, object] = {}
+
+    class _FakeModel:
+        def invoke(self, _input: object) -> object:  # pragma: no cover - never called
+            return None
+
+        def bind_tools(self, _tools: object) -> object:  # pragma: no cover - never called
+            return self
+
+    def _fake_chat_anthropic(**kwargs: object) -> _FakeModel:
+        captured.update(kwargs)
+        return _FakeModel()
+
+    module = types.ModuleType("langchain_anthropic")
+    module.ChatAnthropic = _fake_chat_anthropic  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "langchain_anthropic", module)
+
+    settings = Settings(
+        llm_provider="anthropic",
+        anthropic_api_key="k",
+        llm_model="m",
+        llm_extra_headers={"x-opencode-session": "abc"},
+    )
+    assert build_client(settings) is not None
+    assert captured["default_headers"] == {"x-opencode-session": "abc"}
+
+
 def test_build_client_sends_the_configured_base_url_not_the_shells(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

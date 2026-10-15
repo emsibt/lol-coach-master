@@ -67,6 +67,15 @@ export interface ExecutionSummary {
   error: string | null;
 }
 
+export interface LogRecord {
+  timestamp: string;
+  level: string;
+  logger: string;
+  message: string;
+  data?: Record<string, unknown> | null;
+  exception?: string | null;
+}
+
 export interface EventRecord {
   seq: number;
   type: string;
@@ -77,12 +86,42 @@ export interface EventRecord {
   error: string | null;
   traceback: string | null;
   duration_ms: number | null;
+  logs: LogRecord[];
+}
+
+export interface ChoiceRule {
+  predicate: string;
+  next: string;
+}
+
+export interface WorkflowState {
+  name: string;
+  type: "task" | "choice" | "succeed" | "fail" | string;
+  task: string | null;
+  next: string | null;
+  choices: ChoiceRule[];
+  default: string | null;
+  error: string | null;
+}
+
+export interface WorkflowGraph {
+  name: string;
+  version: string;
+  start_at: string;
+  states: WorkflowState[];
 }
 
 export interface ExecutionDetail extends ExecutionSummary {
   input: unknown;
   output: unknown;
   events: EventRecord[];
+  graph: WorkflowGraph | null;
+}
+
+export interface RerunResponse {
+  execution_id: string;
+  status: string;
+  error: string | null;
 }
 
 export interface ChatResponse {

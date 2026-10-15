@@ -24,6 +24,14 @@ from lolcoach.values import as_str, opt_dict
 logger = logging.getLogger(__name__)
 
 
+class LlmUnavailableError(RuntimeError):
+    """The LLM was required but could not be reached, or its call failed.
+
+    Raised instead of silently degrading to a fabricated answer: a caller that
+    catches this must fail loudly, not substitute a placeholder reply.
+    """
+
+
 @dataclass(frozen=True, slots=True)
 class ImagePart:
     media_type: str
@@ -180,7 +188,13 @@ _DEFAULT_BASE_URLS = {
 
 
 def _build_langchain_client(
-    module_name: str, class_name: str, provider: str, model_name: str, api_key: str, base_url: str
+    module_name: str,
+    class_name: str,
+    provider: str,
+    model_name: str,
+    api_key: str,
+    base_url: str,
+    extra_headers: dict[str, str],
 ) -> LlmClient | None:
     try:
         module = importlib.import_module(module_name)
@@ -194,7 +208,12 @@ def _build_langchain_client(
     if factory is None:  # pragma: no cover - dependency would be broken
         return None
     model = factory(
-        model=model_name, api_key=api_key, base_url=base_url, temperature=0, max_tokens=1024
+        model=model_name,
+        api_key=api_key,
+        base_url=base_url,
+        temperature=0,
+        max_tokens=1024,
+        default_headers=dict(extra_headers),
     )
     return _LangChainClient(provider, model)
 
@@ -213,6 +232,7 @@ def build_client(settings: Settings) -> LlmClient | None:
         return _build_langchain_client(
             "langchain_anthropic", "ChatAnthropic", "anthropic", settings.llm_model,
             settings.anthropic_api_key, base_url or _DEFAULT_BASE_URLS["anthropic"],
+            settings.llm_extra_headers,
         )
     if settings.llm_provider == "openai":
         if not settings.openai_api_key:
@@ -220,6 +240,7 @@ def build_client(settings: Settings) -> LlmClient | None:
         return _build_langchain_client(
             "langchain_openai", "ChatOpenAI", "openai", settings.llm_model,
             settings.openai_api_key, base_url or _DEFAULT_BASE_URLS["openai"],
+            settings.llm_extra_headers,
         )
     logger.warning(
         "Unknown LLM provider; agent runs offline",

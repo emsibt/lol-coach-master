@@ -75,9 +75,24 @@ Every log entry is a single-line JSON object. The formatter is
 - `INFO` execution succeeded (execution_id, duration_ms)
 - `ERROR` + `exception` state failed / execution failed (execution_id, state, traceback)
 
-**agent** (`lolcoach.agent.narrator`)
-- `INFO` narration produced (execution_id, provider, model, chars)
-- `WARNING` narrator unavailable — offline fallback used
+### Per-state log capture (Trace Inspector)
+
+The executor additionally captures the logs emitted *inside each state body* so
+the Trace Inspector can show them next to that state. While a state runs, a
+thread-filtered `logging.Handler` (`_LogCapture`) is attached to the root logger;
+its records are drained onto the state's event as `Event.logs` and persisted in
+`execution_events.logs`. Each captured record is a JSON-safe dict
+`{timestamp, level, logger, message, data?, exception?}` — the same fields as the
+console line, minus `service`. This is additive: the console/JSON logging path is
+unchanged, and a failing task logs via `logger.exception(...)` *before* the drain
+so its traceback is both printed and attached to the `STATE_FAILED` event.
+
+**agent** (`lolcoach.agent.*`)
+- `WARNING` + `exception` (`agent.agent`) the Think step's model call failed — the
+  error is attached to the `STATE_FAILED` event and the execution fails
+- `WARNING` (`agent.narrator`) narration named an unsourced champion — the reply is
+  dropped for the grounded offline summary
+- `WARNING` (`agent.llm`) the provider or package is unavailable
 
 **server** (`lolcoach.server.app`)
 - `INFO` request handled for the mutating/draft routes (route, execution_id, duration_ms)

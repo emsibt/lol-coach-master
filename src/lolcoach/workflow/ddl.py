@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS execution_events (
     error        TEXT,
     traceback    TEXT,
     duration_ms  INTEGER,
+    logs         TEXT,
     UNIQUE (execution_id, seq)
 );
 

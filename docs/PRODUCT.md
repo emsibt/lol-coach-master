@@ -32,9 +32,14 @@ The agent is deliberately narrow, and that is the point. It exists for the three
 jobs the engine can't do — **adapt** fuzzy human input, **orchestrate** multiple
 tools, and **narrate** the results in coach voice. It is forbidden from deciding:
 the single counter-pick and single synergy-pick come only from the engine's
-`suggest_pick`. The chat degrades gracefully with no model key — a deterministic
-planner drives the same tools and a grounded offline summary answers — so the
-engine and traces never stop working.
+`suggest_pick`.
+
+Chat requires a model. If the configured provider fails at the **Think** step —
+no key, a rejected request, a timeout — the question is marked **failed** and you
+get an error, not an answer. Nothing is written from the model's own League
+knowledge and nothing is faked offline. The engine, the draft board, and the
+Trace Inspector keep working without a key; only the chat answer needs one
+(without any key configured the endpoint responds `503` before starting a run).
 
 ### Draft board
 Set up the live draft state by hand: both teams' picks and bans, and which roles
@@ -61,10 +66,18 @@ what, how many games backed it, and how confident that makes it.
 ### Trace Inspector
 Because both the draft evaluation and the agent's tool-loop run as an in-house
 state machine (AWS-Step-Functions style), every run is recorded as an ordered
-history of states, inputs, outputs, and durations. The Trace Inspector lists past
-executions and shows any run's full timeline — including exactly which tools the
-agent called, and exactly which step failed, if one did. This is the tool for
-"why did the coach say that?" and "why did it break?".
+history of states, inputs, outputs, and durations. The Trace Inspector renders any
+run as an **n8n-style node graph** of the whole workflow: each state is a node
+showing whether it succeeded, failed, is still running, or was never reached; the
+path the run actually took is highlighted and the branches it skipped are dimmed.
+Loops (the agent's `Think ⇄ RunTool`) show as a visit count on the node. Click a
+node and the side panel gives **Input**, **Output**, and **Logs** tabs — the Logs
+tab is the exact `{timestamp, level, logger, message, data}` records the step's
+code emitted while it ran, so you can see what happened *inside* a state, not just
+its result. A **Rerun** button replays a past execution's input through the same
+workflow and opens the fresh run beside it (the original is never modified). This
+is the tool for "why did the coach say that?", "which tool did the agent call?",
+and "why did it break?" — down to the log line.
 
 ### Knowledge graph + statistical snapshot
 A YAML knowledge graph (champions, counter/synergy relations, patch) is generated
@@ -91,7 +104,8 @@ Explicitly out of scope for this build:
 Deliberately **in scope** (moved out of non-goals):
 
 - **Vision / screenshot analysis** — the agent can read champion portraits out of
-  a pasted draft image and reconstruct the board (requires a model key; without
-  one it asks you to type the picks).
+  a pasted draft image and reconstruct the board (requires a model provider and
+  `LOL_COACH_ENABLE_VISION`; without a provider, chat is unavailable and returns
+  `503`).
 - **LLM orchestration** — a multi-step tool-loop (adapt → orchestrate → narrate)
   over the deterministic tools, traced as a workflow so its journey is auditable.

@@ -1,7 +1,8 @@
 """Tests for the agent chat loop (the tools wired into our workflow state machine).
 
-These run fully offline (no model key), so the deterministic planner is exercised
-end to end and the recorded events are the agent's auditable call journey.
+A scripted ``LlmClient`` drives the loop, so the recorded events are the agent's
+auditable call journey. The loop has no offline planner: a missing client or a
+failing model call fails the Think step.
 """
 
 from __future__ import annotations
@@ -10,7 +11,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import cast
 
-from lolcoach.agent.llm import LlmMessage, LlmReply, LlmToolCall
+from lolcoach.agent.llm import LlmClient, LlmMessage, LlmReply, LlmToolCall
 from lolcoach.agent.narrator import unsourced_champions
 from lolcoach.knowledge.ontology import get_ontology
 from lolcoach.workflow.executor import ExecutionResult, WorkflowExecutor
@@ -59,7 +60,7 @@ def _run(
     board: dict[str, list[str]] | None = None,
     image: dict[str, str] | None = None,
     max_tool_calls: int | None = None,
-    client: _FakeClient | None = None,
+    client: LlmClient | None = None,
 ) -> ExecutionResult:
     store = ExecutionStore.connect(tmp_path / "agent.db")
     try:
@@ -77,14 +78,35 @@ def _run(
         store.close()
 
 
-def test_offline_loop_parses_a_fuzzy_message_and_advises(tmp_path: Path) -> None:
-    result = _run(tmp_path, "jinx vs their zeri")
+def _planner() -> _FakeClient:
+    return _FakeClient(
+        actions=[
+            ("set_board", {"allies": ["jinx"], "enemies": ["zeri"]}),
+            ("suggest_pick", {}),
+        ],
+        narration="Take the counter-pick; the tools measured it.",
+    )
+
+
+class _BoomClient:
+    """A client whose call always fails, to prove the Think step fails loudly."""
+
+    provider = "boom"
+
+    def complete(
+        self, _messages: Sequence[LlmMessage], _tools: Sequence[dict[str, object]]
+    ) -> LlmReply:
+        raise RuntimeError("upstream 500")
+
+
+def test_loop_parses_a_fuzzy_message_and_advises(tmp_path: Path) -> None:
+    result = _run(tmp_path, "jinx vs their zeri", client=_planner())
 
     assert result.status == "succeeded"
     board = _dict(result.output["board"])
     assert board["allies"] == ["jinx"]
     assert board["enemies"] == ["zeri"]
-    assert result.output["mode"] == "offline"
+    assert result.output["mode"] == "llm"
     assert str(result.output["reply"]).strip()
 
     recommendation = _dict(result.output["recommendation"])
@@ -96,7 +118,7 @@ def test_offline_loop_parses_a_fuzzy_message_and_advises(tmp_path: Path) -> None
 
 
 def test_loop_events_are_gapless_and_show_the_call_journey(tmp_path: Path) -> None:
-    result = _run(tmp_path, "jinx vs their zeri")
+    result = _run(tmp_path, "jinx vs their zeri", client=_planner())
 
     assert [event.seq for event in result.events] == list(range(1, len(result.events) + 1))
     assert result.events[0].type == "EXECUTION_STARTED"
@@ -110,19 +132,31 @@ def test_loop_events_are_gapless_and_show_the_call_journey(tmp_path: Path) -> No
 
 
 def test_agent_respects_the_tool_budget(tmp_path: Path) -> None:
-    result = _run(tmp_path, "jinx vs their zeri", max_tool_calls=1)
+    result = _run(tmp_path, "jinx vs their zeri", max_tool_calls=1, client=_planner())
 
     assert result.status == "failed"
     assert result.error == "agent exceeded its tool-call budget"
     assert any(event.state_name == "MaxSteps" for event in result.events)
 
 
-def test_image_without_a_model_degrades_to_a_clear_message(tmp_path: Path) -> None:
-    result = _run(tmp_path, "", image={"media_type": "image/png", "data_b64": "AAAA"})
+def test_missing_client_fails_the_think_step(tmp_path: Path) -> None:
+    result = _run(tmp_path, "jinx vs their zeri")  # no client configured
 
-    assert result.status == "succeeded"
-    assert result.output["history"] == []
-    assert "can't read a draft image" in str(result.output["reply"]).lower()
+    assert result.status == "failed"
+    assert result.error is not None and "LlmUnavailableError" in result.error
+    assert any(
+        event.type == "STATE_FAILED" and event.state_name == "Think" for event in result.events
+    )
+    assert result.events[-1].type == "EXECUTION_FAILED"
+    assert result.output.get("reply") is None
+
+
+def test_model_error_fails_the_think_step(tmp_path: Path) -> None:
+    result = _run(tmp_path, "jinx vs their zeri", client=_BoomClient())
+
+    assert result.status == "failed"
+    assert result.error is not None and "LLM call failed" in result.error
+    assert result.output.get("reply") is None
 
 
 def test_narration_naming_an_unsourced_champion_is_discarded(tmp_path: Path) -> None:

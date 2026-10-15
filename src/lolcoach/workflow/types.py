@@ -103,3 +103,37 @@ class Workflow:
             if isinstance(s, ChoiceState)
             for rule in s.choices
         ]
+
+    def to_dict(self) -> dict[str, object]:
+        """A JSON-safe description of the graph, for the Trace Inspector canvas."""
+        return {
+            "name": self.name,
+            "version": self.version,
+            "start_at": self.start_at,
+            "states": [_state_to_dict(state) for state in self.states.values()],
+        }
+
+
+def _state_to_dict(state: State) -> dict[str, object]:
+    base: dict[str, object] = {
+        "name": state.name,
+        "type": "",
+        "task": None,
+        "next": None,
+        "choices": [],
+        "default": None,
+        "error": None,
+    }
+    if isinstance(state, TaskState):
+        base.update(type="task", task=state.task, next=state.next)
+    elif isinstance(state, ChoiceState):
+        base.update(
+            type="choice",
+            choices=[{"predicate": rule.predicate, "next": rule.next} for rule in state.choices],
+            default=state.default,
+        )
+    elif isinstance(state, SucceedState):
+        base.update(type="succeed")
+    else:
+        base.update(type="fail", error=state.error)
+    return base

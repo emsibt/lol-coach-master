@@ -52,7 +52,14 @@ class ExecutionStore:
 
     def init_db(self) -> None:
         self._conn.executescript(DDL)
+        self._migrate()
         self._conn.commit()
+
+    def _migrate(self) -> None:
+        """Add columns introduced after a database was first created."""
+        columns = {row["name"] for row in self._conn.execute("PRAGMA table_info(execution_events)")}
+        if "logs" not in columns:
+            self._conn.execute("ALTER TABLE execution_events ADD COLUMN logs TEXT")
 
     def close(self) -> None:
         self._conn.close()
@@ -76,7 +83,7 @@ class ExecutionStore:
         self._conn.execute(
             "INSERT INTO execution_events"
             " (execution_id, seq, type, state_name, timestamp, input, output, error, traceback,"
-            " duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " duration_ms, logs) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 event.execution_id,
                 event.seq,
@@ -88,6 +95,7 @@ class ExecutionStore:
                 event.error,
                 event.traceback,
                 event.duration_ms,
+                _dump(list(event.logs)),
             ),
         )
         self._conn.commit()
@@ -128,8 +136,8 @@ class ExecutionStore:
 
     def events(self, execution_id: str) -> list[dict[str, object]]:
         rows = self._conn.execute(
-            "SELECT seq, type, state_name, timestamp, input, output, error, traceback, duration_ms"
-            " FROM execution_events WHERE execution_id = ? ORDER BY seq ASC",
+            "SELECT seq, type, state_name, timestamp, input, output, error, traceback, duration_ms,"
+            " logs FROM execution_events WHERE execution_id = ? ORDER BY seq ASC",
             (execution_id,),
         ).fetchall()
         out: list[dict[str, object]] = []
@@ -137,6 +145,7 @@ class ExecutionStore:
             event = dict(row)
             event["input"] = _load(row["input"])
             event["output"] = _load(row["output"])
+            event["logs"] = _load(row["logs"]) or []
             out.append(event)
         return out
 

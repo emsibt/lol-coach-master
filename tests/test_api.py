@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import cast
 
 import pytest
 from fastapi.testclient import TestClient
 
+from lolcoach.agent.llm import LlmMessage, LlmReply, LlmToolCall
 from lolcoach.config import get_settings
 from lolcoach.server.app import create_app
 from lolcoach.workflow.events import EXECUTION_STARTED, EXECUTION_SUCCEEDED
@@ -47,6 +48,38 @@ def _chat(client: TestClient, payload: dict[str, object]) -> dict[str, object]:
     assert response.status_code == 200
     body: dict[str, object] = response.json()
     return body
+
+
+class _FakeClient:
+    """A scripted LlmClient: drives actions when tools are offered, else narrates."""
+
+    provider = "fake"
+
+    def __init__(
+        self, actions: list[tuple[str | None, dict[str, object]]], narration: str
+    ) -> None:
+        self._actions = list(actions)
+        self._narration = narration
+
+    def complete(
+        self, _messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+    ) -> LlmReply:
+        if tools:
+            name, args = self._actions.pop(0) if self._actions else (None, {})
+            if name is None:
+                return LlmReply("done", ())
+            return LlmReply("", (LlmToolCall(id=f"call-{name}", name=name, arguments=args),))
+        return LlmReply(self._narration, ())
+
+
+def _use_client(
+    monkeypatch: pytest.MonkeyPatch,
+    actions: list[tuple[str | None, dict[str, object]]],
+    narration: str = "Take the counter-pick; the tools measured it.",
+) -> None:
+    """Make the app build a scripted client instead of the real one."""
+    fake = _FakeClient(actions, narration)
+    monkeypatch.setattr("lolcoach.server.app.build_client", lambda _settings: fake)
 
 
 def test_champions_lists_the_roster(client: TestClient) -> None:
@@ -104,11 +137,25 @@ def test_chat_narrates_offline_without_a_key(client: TestClient) -> None:
     assert answered["reply"]
 
 
-def test_agent_chat_offline_round_trip(client: TestClient) -> None:
+def test_agent_chat_without_a_key_is_503(client: TestClient) -> None:
+    response = client.post("/api/agent/chat", json={"message": "jinx vs their zeri"})
+
+    assert response.status_code == 503
+    assert "LLM" in response.json()["detail"]
+
+
+def test_agent_chat_uses_the_llm(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    _use_client(
+        monkeypatch,
+        [
+            ("set_board", {"allies": ["jinx"], "enemies": ["zeri"]}),
+            ("suggest_pick", {}),
+        ],
+    )
     body = _chat(client, {"message": "jinx vs their zeri"})
 
     assert body["status"] == "succeeded"
-    assert body["mode"] == "offline"
+    assert body["mode"] == "llm"
     board = _dict(body["board"])
     assert board["allies"] == ["jinx"]
     assert board["enemies"] == ["zeri"]
@@ -123,7 +170,29 @@ def test_agent_chat_offline_round_trip(client: TestClient) -> None:
     assert detail["events"][0]["type"] == EXECUTION_STARTED
 
 
-def test_agent_chat_uses_a_supplied_board(client: TestClient) -> None:
+def test_agent_chat_fails_when_the_model_errors(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class _BoomClient:
+        provider = "boom"
+
+        def complete(self, _messages: object, _tools: object) -> object:
+            raise RuntimeError("upstream 500")
+
+    monkeypatch.setattr("lolcoach.server.app.build_client", lambda _settings: _BoomClient())
+    response = client.post("/api/agent/chat", json={"message": "hi"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "failed"
+    assert body["reply"] == ""
+    assert "LLM call failed" in (body["error"] or "")
+
+
+def test_agent_chat_uses_a_supplied_board(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _use_client(monkeypatch, [("suggest_pick", {})])
     body = _chat(
         client,
         {"message": "what now?", "board": {"allies": ["jinx"], "enemies": ["zeri"]}},
@@ -134,7 +203,10 @@ def test_agent_chat_uses_a_supplied_board(client: TestClient) -> None:
     assert names == ["suggest_pick"]
 
 
-def test_agent_chat_reports_unresolved_names(client: TestClient) -> None:
+def test_agent_chat_reports_unresolved_names(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _use_client(monkeypatch, [("suggest_pick", {})])
     body = _chat(
         client,
         {

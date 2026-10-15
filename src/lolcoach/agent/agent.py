@@ -1,24 +1,30 @@
 """The agent's decision step: which tool to call next, or stop.
 
 This is the *only* place the LLM is consulted, and it is consulted about
-orchestration — not about League. With a client it runs a tool-loop over the
-deterministic tools; without one it falls back to a small deterministic planner
-so the whole feature works key-less. Both paths emit the same JSON-safe action
-dict, which the agent workflow persists and the Trace Inspector renders.
+orchestration — not about League. It runs a tool-loop over the deterministic
+tools and emits a JSON-safe action dict, which the agent workflow persists and
+the Trace Inspector renders.
+
+There is no offline planner: if no client is configured or the model call fails,
+:func:`choose_action` raises and the Think step — and the execution — fails. The
+agent never fabricates an answer.
 """
 
 from __future__ import annotations
 
 import json
 import logging
-import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
-from lolcoach.agent.llm import ImagePart, LlmClient, LlmMessage, LlmToolCall
+from lolcoach.agent.llm import (
+    ImagePart,
+    LlmClient,
+    LlmMessage,
+    LlmToolCall,
+    LlmUnavailableError,
+)
 from lolcoach.agent.tools import Board, tool_specs
 from lolcoach.config import Settings
-from lolcoach.knowledge.ontology import Ontology
-from lolcoach.knowledge.resolve import NameResolver
 from lolcoach.values import as_str, opt_dict
 
 logger = logging.getLogger(__name__)
@@ -43,24 +49,6 @@ Hard rules:
 - Never mention the engine, the knowledge graph, or "the model".
 """
 
-_IMAGE_OFFLINE = (
-    "I can't read a draft image without a model key configured. Type the picks "
-    "(for example: `jinx vs their zeri`) and I'll work from there."
-)
-
-_NO_CHAMPIONS = (
-    "I couldn't find any champion names in that. Tell me who is picked - for "
-    "example `jinx vs their zeri` - or describe our side and theirs."
-)
-
-_WORD_RE = re.compile(r"[a-z0-9']+")
-
-_VS_TOKENS = {"vs", "v", "versus", "against"}
-_ENEMY_TOKENS = {"their", "they", "enemy", "enemies", "them"}
-_ALLY_TOKENS = {"our", "ours", "we", "us", "my", "ally", "allies"}
-_BAN_TOKENS = {"ban", "bans", "banning", "banned"}
-
-
 @dataclass(frozen=True, slots=True)
 class ToolStep:
     """One completed tool call: the request, and its result."""
@@ -79,27 +67,6 @@ class AgentContext:
     image: ImagePart | None = None
     history: tuple[ToolStep, ...] = ()
     turns: tuple[tuple[str, str], ...] = ()
-
-
-@dataclass(slots=True)
-class ParsedInput:
-    """A loose user message reduced to champion slugs per side."""
-
-    allies: list[str] = field(default_factory=list)
-    enemies: list[str] = field(default_factory=list)
-    ally_bans: list[str] = field(default_factory=list)
-    enemy_bans: list[str] = field(default_factory=list)
-
-    def any(self) -> bool:
-        return bool(self.allies or self.enemies or self.ally_bans or self.enemy_bans)
-
-    def as_args(self) -> dict[str, object]:
-        return {
-            "allies": list(self.allies),
-            "enemies": list(self.enemies),
-            "ally_bans": list(self.ally_bans),
-            "enemy_bans": list(self.enemy_bans),
-        }
 
 
 def step_to_dict(step: ToolStep) -> dict[str, object]:
@@ -123,71 +90,26 @@ def step_from_dict(value: object) -> ToolStep:
     )
 
 
-def parse_mentions(text: str, ontology: Ontology) -> ParsedInput:
-    """Greedily resolve champion names in free text and assign them to a side.
-
-    Sides come from the nearest preceding marker: ``vs``/``their``/``enemy`` put
-    us on the enemy side, ``our``/``we`` put us back on ours, and ``ban`` flags
-    the mention as a ban. Champion names are matched longest-first so
-    "twisted fate" beats "fate".
-    """
-    resolver = NameResolver(ontology)
-    words = _WORD_RE.findall(text.lower())
-    consumed: set[int] = set()
-    mentions: list[tuple[int, str]] = []
-    for size in (3, 2, 1):
-        for start in range(len(words) - size + 1):
-            span = range(start, start + size)
-            if any(index in consumed for index in span):
-                continue
-            slug = resolver.resolve(" ".join(words[start : start + size]))
-            if slug is None:
-                continue
-            consumed.update(span)
-            mentions.append((start, slug))
-
-    parsed = ParsedInput()
-    seen: set[str] = set()
-    for index, slug in mentions:
-        if slug in seen:
-            continue
-        seen.add(slug)
-        side, banned = _side_before(words, index)
-        if banned:
-            target = parsed.enemy_bans if side == "enemy" else parsed.ally_bans
-        else:
-            target = parsed.enemies if side == "enemy" else parsed.allies
-        target.append(slug)
-    return parsed
-
-
-def _side_before(words: list[str], index: int) -> tuple[str, bool]:
-    side = "ally"
-    banned = False
-    for token in words[:index]:
-        if token in _VS_TOKENS or token in _ENEMY_TOKENS:
-            side = "enemy"
-        elif token in _ALLY_TOKENS:
-            side = "ally"
-        if token in _BAN_TOKENS:
-            banned = True
-    return side, banned
-
-
 def choose_action(
     context: AgentContext,
     *,
     client: LlmClient | None,
     settings: Settings,
-    ontology: Ontology,
 ) -> dict[str, object]:
-    """Return the next action as a JSON-safe dict: a tool call or a final answer."""
-    if client is not None:
-        try:
-            return _llm_action(context, client, settings)
-        except Exception:  # noqa: BLE001 - any provider failure degrades to offline
-            logger.warning("LLM action failed; falling back to offline planner", exc_info=True)
-    return _offline_action(context, ontology)
+    """Return the next action as a JSON-safe dict: a tool call or a final answer.
+
+    Raises :class:`LlmUnavailableError` when no client is configured or the model
+    call fails, so the Think step fails rather than inventing an action.
+    """
+    if client is None:
+        raise LlmUnavailableError("no LLM client is configured for the agent")
+    try:
+        return _llm_action(context, client, settings)
+    except LlmUnavailableError:
+        raise
+    except Exception as exc:  # noqa: BLE001 - any provider failure fails the Think step
+        logger.exception("LLM action failed at the Think step")
+        raise LlmUnavailableError(f"LLM call failed: {type(exc).__name__}: {exc}") from exc
 
 
 def _llm_action(context: AgentContext, client: LlmClient, settings: Settings) -> dict[str, object]:
@@ -223,40 +145,3 @@ def _llm_action(context: AgentContext, client: LlmClient, settings: Settings) ->
         call = reply.tool_calls[0]
         return {"kind": "tool", "name": call.name, "arguments": call.arguments, "call_id": call.id}
     return {"kind": "final"}
-
-
-def _offline_action(context: AgentContext, ontology: Ontology) -> dict[str, object]:
-    if context.image is not None and not context.question.strip():
-        return {"kind": "final"}
-
-    if not context.history:
-        parsed = parse_mentions(context.question, ontology)
-        if parsed.any():
-            return {"kind": "tool", "name": "set_board", "arguments": parsed.as_args()}
-        if _board_has_picks(context.board):
-            return {"kind": "tool", "name": "suggest_pick", "arguments": {}}
-        return {"kind": "final"}
-
-    last = context.history[-1]
-    if last.name == "set_board":
-        if not _board_has_picks(context.board):
-            return {"kind": "final"}
-        return {"kind": "tool", "name": "suggest_pick", "arguments": {}}
-    return {"kind": "final"}
-
-
-def _board_has_picks(board: Board) -> bool:
-    return bool(board.get("allies") or board.get("enemies"))
-
-
-def offline_hint(context: AgentContext) -> str:
-    """A deterministic, user-facing fallback when no tool produced evidence.
-
-    Used by the offline path and by narration when a run stops without a usable
-    recommendation (for example an image with no readable text).
-    """
-    if context.image is not None and not context.history:
-        return _IMAGE_OFFLINE
-    if not context.history:
-        return _NO_CHAMPIONS
-    return ""

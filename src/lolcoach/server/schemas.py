@@ -82,6 +82,31 @@ class EventOut(BaseModel):
     error: str | None = None
     traceback: str | None = None
     duration_ms: int | None = None
+    logs: list[dict[str, object]] = Field(default_factory=list)
+
+
+class ChoiceRuleOut(BaseModel):
+    predicate: str
+    next: str
+
+
+class WorkflowStateOut(BaseModel):
+    name: str
+    type: str
+    task: str | None = None
+    next: str | None = None
+    choices: list[ChoiceRuleOut] = Field(default_factory=list)
+    default: str | None = None
+    error: str | None = None
+
+
+class WorkflowGraphOut(BaseModel):
+    """The static workflow definition, so the Trace Inspector can draw the graph."""
+
+    name: str
+    version: str
+    start_at: str
+    states: list[WorkflowStateOut] = Field(default_factory=list)
 
 
 class ExecutionDetail(BaseModel):
@@ -95,6 +120,13 @@ class ExecutionDetail(BaseModel):
     input: object | None = None
     output: object | None = None
     events: list[EventOut] = Field(default_factory=list)
+    graph: WorkflowGraphOut | None = None
+
+
+class RerunResponse(BaseModel):
+    execution_id: str
+    status: str
+    error: str | None = None
 
 
 class ChatRequest(BaseModel):

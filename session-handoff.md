@@ -1,5 +1,118 @@
 # Session Handoff
 
+## 2026-10-15 (2) — chat hard-fails instead of faking an answer; provider gateway headers
+
+### What was accomplished
+
+- **Agent chat now requires the model (user directive: "don't mock the value").**
+  The offline planner was deleted outright — `agent/agent.py` lost `parse_mentions`,
+  `ParsedInput`, `_offline_action`, `offline_hint` and their regexes, so
+  `choose_action(context, client=…, settings=…)` runs the LLM tool-loop only. A
+  missing client, or *any* provider failure, raises the new
+  `LlmUnavailableError`; the executor records `STATE_FAILED` on `Think` and the
+  execution ends `failed` with **no reply**. `narrate_final` likewise requires a
+  client (and rejects a blank reply), so the chat never returns a fabricated
+  summary. The anti-hallucination guard (`unsourced_champions`) is unchanged.
+- **503 before starting.** `POST /api/agent/chat` builds the client first and, when
+  no provider is configured, returns `503` without creating an execution. The
+  draft-eval `narrate` path still degrades to offline text.
+- **Gateway/proxy support.** `LOL_COACH_LLM_EXTRA_HEADERS` (a JSON object) is parsed
+  in `config.py` (malformed JSON is logged and ignored) and forwarded as
+  `default_headers` by `agent/llm.py`, which is what lets the client reach the
+  local OpenCode gateway (`{"x-opencode-session":"lol-coach"}`).
+- **Docs.** `ARCHITECTURE.md` (agent/narrator seams, topology diagram),
+  `PRODUCT.md` (chat-requires-a-model, vision non-goal), `RELIABILITY.md` (agent log
+  points), `README.md` and `.env.example` (extra-headers, the empty-key override
+  trap) updated; `feature_list.json` evidence refreshed.
+
+### Decisions
+
+- **Whole chat fails together** — a Think failure fails the run; there is no partial
+  answer path, because a chat answer with no measured basis is worse than an error.
+- **No execution on 503** — a run that cannot possibly succeed should not appear in
+  the Trace Inspector as noise.
+- **`.env` wins over the shell** (`load_dotenv(override=True)`): an *empty*
+  `ANTHROPIC_API_KEY=` line would clear an exported key, so `.env.example` says so
+  explicitly. The app deliberately does **not** inherit `ANTHROPIC_BASE_URL`, so a
+  Claude Code GLM setup in the shell does not reach the app — provider, model,
+  base URL, and headers are all explicit `LOL_COACH_*` settings.
+
+### Verification (green, 2026-10-15)
+
+- `bash init.sh`: ruff clean; mypy "no issues found in 40 source files"; pytest
+  **91 passed** (`test_agent_loop` 7, `test_api` 10, `test_narrator` 8,
+  `test_config_env` 8).
+- **Live end-to-end through the real local proxy:** `POST /api/agent/chat`
+  `{"message":"jinx vs their zeri, who should we pick?"}` → HTTP 200,
+  `status=succeeded`, `mode=llm`, `tool_calls=[set_board, suggest_pick,
+  explain_matchup]`, grounded reply. (Before this change the same request returned a
+  fabricated `mode=offline` answer.)
+- Note: a server still running the old code needs a restart to pick this up.
+
+### What remains
+
+- **Browser visual check** of the Trace Inspector node graph (carried over from the
+  previous entry) — still the outstanding human pass.
+- **cicd** is still the only `not-started` feature.
+
+## 2026-10-15 — Trace Inspector: n8n-style node graph, per-state logs, rerun
+
+### What was accomplished
+
+- **Per-state log capture (backend).** The executor now attaches a
+  thread-filtered `logging.Handler` (`_LogCapture` in `workflow/executor.py`)
+  around each state body, drains it, and persists the records onto the state's
+  event as `Event.logs`. `Event.logs` → `execution_events.logs` column, added by
+  `store.py::_migrate` via `PRAGMA table_info` + `ALTER TABLE ADD COLUMN` (existing
+  DBs upgrade in place; old rows read back `[]`). `_run_task`/`_run_choice` call
+  `logger.exception(...)` *before* the drain so a failure's traceback is attached
+  to the `STATE_FAILED` event. `STATE_ENTERED` now also carries `input`.
+- **Topology API.** `Workflow.to_dict()` (`workflow/types.py`) serializes the
+  static graph; `GET /api/executions/{id}` attaches it as `graph`
+  (`server/app.py::_topology`). New `POST /api/executions/{id}/rerun` replays the
+  stored `input` through the same definition and returns the new `execution_id`.
+- **n8n-style frontend.** New `TraceGraph.tsx`: builds edges from the state
+  definitions (start → start_at, `next`, choice rules + default with predicate
+  labels), DFS back-edge detection, longest-path layering, SVG bezier edges,
+  status-colored nodes with duration / visit count (`×N`) / log badge, and a
+  detail panel with **Input / Output / Logs** tabs (JSON highlighter, log lines,
+  error/traceback). `TraceInspector.tsx` rewritten as an execution sidebar (search
+  + workflow/status filters, per-row duration) with a breadcrumb, hosting the
+  graph and a **Rerun** button.
+
+### Decisions
+
+- **Topology comes from the definition, not the run** — the UI draws branches the
+  run never took (dimmed), which is what makes the agent's `Think ⇄ RunTool` loop
+  legible. Falls back to inferring nodes from events when `graph` is null.
+- **Rerun is additive** — it creates a new execution; history is never mutated.
+- Log capture is **additive** to the existing JSON console logging, not a
+  replacement; no domain module calls `basicConfig`.
+
+### Verification (2026-10-15)
+
+- `bash init.sh` green: ruff, mypy (strict), pytest.
+- `pnpm build` (tsc --noEmit + vite build) succeeds.
+- Live: draft-eval graph = 11 states; agent-chat graph =
+  `ParseInput → Think → Route → {Finalize | MaxSteps | RunTool(default)}` with the
+  `RunTool → Think` loop and `MaxSteps` shown `not_run`; a live `ValidateDraft`
+  event carried `{"level":"INFO","logger":"...draft_eval","message":"Draft
+  validated","data":{"problems":0}}`; rerun returned a new `succeeded` execution.
+- `logs` migration verified on a copy of the real `data/executions.db`.
+
+### What remains
+
+- **Browser visual check** of the new graph UI was not completed this session
+  (the in-app browser page could not be shared — an environment blocker, not a
+  code failure). Backend + build are verified; a human pass over the canvas is the
+  outstanding item.
+- **cicd** is still the only `not-started` feature.
+- **Harness note (self-corrected):** the startup protocol in `AGENTS.md`
+  (read the three docs, run `init.sh`, read `feature_list.json` *before* coding;
+  update docs before code) was not followed while building this feature. Docs
+  (`ARCHITECTURE.md`, `PRODUCT.md`, `RELIABILITY.md`), `feature_list.json`, and
+  this handoff were updated after the fact to close the Definition of Done.
+
 ## 2026-10-14 (5) — API, grounded narrator, frontend, and the chat agent
 
 ### What was accomplished

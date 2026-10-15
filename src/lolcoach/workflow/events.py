@@ -24,3 +24,4 @@ class Event:
     error: str | None = None
     traceback: str | None = None
     duration_ms: int | None = None
+    logs: tuple[dict[str, object], ...] = ()

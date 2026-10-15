@@ -9,8 +9,9 @@ Both may not assert any champion, number, or matchup that is not present in thei
 input. For :func:`narrate_final` that is enforced structurally by
 :func:`unsourced_champions`: if the model names a champion that appears in no tool
 result, the answer is discarded and the deterministic offline summary is returned
-instead. Without a client both paths fall back to that offline summary, so the
-agent stays grounded and functional key-less.
+instead. :func:`narrate_final` requires a model client and raises
+:class:`LlmUnavailableError` without one, so the agent never fabricates an answer;
+:func:`narrate` (the draft-eval path) still falls back to the offline summary.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from lolcoach.agent.agent import ToolStep
-from lolcoach.agent.llm import LlmClient, LlmMessage
+from lolcoach.agent.llm import LlmClient, LlmMessage, LlmUnavailableError
 from lolcoach.agent.tools import champions_in_payloads
 from lolcoach.config import Settings, get_settings
 from lolcoach.knowledge.ontology import Ontology
@@ -96,39 +97,34 @@ def narrate_final(
 ) -> Narration:
     """Turn a whole agent tool-loop into a grounded coach answer.
 
-    The model may phrase the answer; it may not source any champion outside the
-    tool results. A reply that breaks that rule is dropped for the offline text.
+    A model client is required: without one, or if the call fails, this raises
+    :class:`LlmUnavailableError` so the execution fails rather than returning a
+    fabricated summary. The model may phrase the answer; it may not source any
+    champion outside the tool results. A reply that breaks that rule is dropped
+    for the grounded offline summary.
     """
     active = settings or get_settings()
     model_client = client if client is not None else _default_client(active)
-    if model_client is not None:
-        try:
-            text = _final_llm_text(model_client, question, tool_results, board)
-        except Exception:
-            logger.exception("Final narration failed; using offline summary")
-        else:
-            allowed: set[str] = set()
-            if ontology is not None:
-                allowed = champions_in_payloads(
-                    ontology, [step.payload for step in tool_results] + [board]
-                )
-                invented = unsourced_champions(text, allowed, ontology)
-                if invented:
-                    logger.warning(
-                        "Narration named unsourced champions; using offline summary",
-                        extra={"data": {"unsourced": sorted(invented)}},
-                    )
-                    return Narration(
-                        text=offline_final_text(tool_results, ontology, fallback=fallback),
-                        mode="offline",
-                    )
-            if text.strip():
-                return Narration(text=text, mode="llm")
-    if ontology is None:
-        return Narration(text=fallback or _NOTHING, mode="offline")
-    return Narration(
-        text=offline_final_text(tool_results, ontology, fallback=fallback), mode="offline"
-    )
+    if model_client is None:
+        raise LlmUnavailableError("agent chat requires an LLM, but none is configured")
+    text = _final_llm_text(model_client, question, tool_results, board)
+    if ontology is not None:
+        allowed = champions_in_payloads(
+            ontology, [step.payload for step in tool_results] + [board]
+        )
+        invented = unsourced_champions(text, allowed, ontology)
+        if invented:
+            logger.warning(
+                "Narration named unsourced champions; using offline summary",
+                extra={"data": {"unsourced": sorted(invented)}},
+            )
+            return Narration(
+                text=offline_final_text(tool_results, ontology, fallback=fallback),
+                mode="offline",
+            )
+    if not text.strip():
+        raise LlmUnavailableError("the model returned an empty answer")
+    return Narration(text=text, mode="llm")
 
 
 def unsourced_champions(text: str, allowed_slugs: set[str], ontology: Ontology) -> set[str]:

@@ -16,8 +16,9 @@ renders the agent's exact call journey (``Think`` chose ``set_board``, ``RunTool
 resolved it, ``Think`` chose ``suggest_pick``, ...). Task bodies close over the
 ontology, the model client, and settings; only JSON-safe values travel in ``data``.
 
-When ``client`` is ``None`` the Think state uses the deterministic offline planner,
-so the full loop runs and is auditable without a key.
+The LLM is required: if ``client`` is ``None`` the Think state raises and the
+execution fails, and a failing model call fails the step too. There is no offline
+planner, so a chat run never returns a fabricated answer.
 """
 
 from __future__ import annotations
@@ -31,7 +32,6 @@ from lolcoach.agent.agent import (
     AgentContext,
     ToolStep,
     choose_action,
-    offline_hint,
     step_from_dict,
     step_to_dict,
 )
@@ -135,7 +135,7 @@ def build_agent_chat(
             history=tuple(_steps(data.get("history"))),
             turns=_turns(data.get("turns")),
         )
-        action = choose_action(context, client=client, settings=active, ontology=ontology)
+        action = choose_action(context, client=client, settings=active)
         return {"action": action}
 
     def run_tool(data: dict[str, object]) -> dict[str, object]:
@@ -163,20 +163,13 @@ def build_agent_chat(
     def finalize(data: dict[str, object]) -> dict[str, object]:
         steps = _steps(data.get("history"))
         board = normalize_board(data.get("board"))
-        context = AgentContext(
-            question=as_str(data.get("question")),
-            board=board,
-            image=_image(data.get("image")),
-            history=tuple(steps),
-        )
         narration = narrate_final(
-            context.question,
+            as_str(data.get("question")),
             steps,
             board,
             client=client,
             settings=active,
             ontology=ontology,
-            fallback=offline_hint(context),
         )
         unresolved: list[object] = list(opt_list(data.get("unresolved")))
         for step in steps:

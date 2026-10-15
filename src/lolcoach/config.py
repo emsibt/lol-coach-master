@@ -10,12 +10,16 @@ the surrounding shell. It is called once by each entrypoint (``main.py``,
 
 from __future__ import annotations
 
+import json
+import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+logger = logging.getLogger(__name__)
 
 _DEFAULT_MODELS = {"anthropic": "claude-sonnet-5", "openai": "gpt-4o"}
 
@@ -48,6 +52,22 @@ def _env_bool(name: str, default: bool) -> bool:
     return value.strip().lower() in ("1", "true", "yes", "on")
 
 
+def _env_json_object(name: str) -> dict[str, str]:
+    """Parse a JSON object env var into a ``str -> str`` map (empty if unset/bad)."""
+    raw = os.environ.get(name)
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        logger.warning("ignoring malformed JSON in %s", name)
+        return {}
+    if not isinstance(parsed, dict):
+        logger.warning("ignoring non-object JSON in %s", name)
+        return {}
+    return {str(key): str(value) for key, value in parsed.items()}
+
+
 def _env_int(name: str, default: int) -> int:
     value = os.environ.get(name)
     if value in (None, ""):
@@ -72,6 +92,7 @@ class Settings:
     llm_provider: str = "anthropic"
     llm_model: str = "claude-sonnet-5"
     llm_base_url: str = ""
+    llm_extra_headers: dict[str, str] = field(default_factory=dict)
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     max_tool_calls: int = 8
@@ -97,6 +118,7 @@ def get_settings() -> Settings:
         llm_provider=provider,
         llm_model=_env("LOL_COACH_LLM_MODEL", default_model),
         llm_base_url=_env("LOL_COACH_LLM_BASE_URL", ""),
+        llm_extra_headers=_env_json_object("LOL_COACH_LLM_EXTRA_HEADERS"),
         anthropic_api_key=_env("ANTHROPIC_API_KEY", ""),
         openai_api_key=_env("OPENAI_API_KEY", ""),
         max_tool_calls=_env_int("LOL_COACH_MAX_TOOL_CALLS", 8),

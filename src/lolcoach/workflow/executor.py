@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+import threading
 import time
 import traceback
 from collections.abc import Callable, Mapping
@@ -80,6 +81,45 @@ def _utc_now_iso() -> str:
     return datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
 
 
+def _record_to_dict(record: logging.LogRecord) -> dict[str, object]:
+    """A JSON-safe view of one log record, for the Trace Inspector's Logs popup."""
+    entry: dict[str, object] = {
+        "timestamp": _utc_now_iso(),
+        "level": record.levelname,
+        "logger": record.name,
+        "message": record.getMessage(),
+    }
+    data = getattr(record, "data", None)
+    if isinstance(data, dict):
+        entry["data"] = data
+    if record.exc_info:
+        entry["exception"] = "".join(traceback.format_exception(*record.exc_info))
+    return entry
+
+
+class _LogCapture(logging.Handler):
+    """Buffers log records emitted on the executing thread during a run.
+
+    The executor drains this between states so each state's completion event
+    carries exactly the logs its own code produced. Records from other threads
+    (concurrent executions) are ignored.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(level=logging.NOTSET)
+        self._thread = threading.get_ident()
+        self._records: list[dict[str, object]] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.thread == self._thread:
+            self._records.append(_record_to_dict(record))
+
+    def drain(self) -> tuple[dict[str, object], ...]:
+        records = tuple(self._records)
+        self._records.clear()
+        return records
+
+
 class WorkflowExecutor:
     def __init__(
         self,
@@ -113,6 +153,8 @@ class WorkflowExecutor:
         execution_id = uuid4().hex
         events: list[Event] = []
         seq = 0
+        capture = _LogCapture()
+        root_logger = logging.getLogger()
 
         def emit(
             type: str,
@@ -123,6 +165,7 @@ class WorkflowExecutor:
             error: str | None = None,
             tb: str | None = None,
             duration_ms: int | None = None,
+            logs: tuple[dict[str, object], ...] = (),
         ) -> Event:
             nonlocal seq
             seq += 1
@@ -137,6 +180,7 @@ class WorkflowExecutor:
                 error=error,
                 traceback=tb,
                 duration_ms=duration_ms,
+                logs=logs,
             )
             events.append(event)
             self._store.append(event)
@@ -153,33 +197,36 @@ class WorkflowExecutor:
 
         status = "failed"
         error: str | None = None
+        root_logger.addHandler(capture)
         try:
             current = self._workflow.start_at
             for _ in range(self._max_steps):
                 state: State = self._workflow.states[current]
                 if isinstance(state, SucceedState):
-                    emit(STATE_SUCCEEDED, state.name, output=data)
+                    emit(STATE_SUCCEEDED, state.name, output=data, logs=capture.drain())
                     status, error = "succeeded", None
                     break
                 if isinstance(state, FailState):
-                    emit(STATE_FAILED, state.name, error=state.error)
+                    emit(STATE_FAILED, state.name, error=state.error, logs=capture.drain())
                     status, error = "failed", state.error
                     break
-                emit(STATE_ENTERED, state.name)
+                emit(STATE_ENTERED, state.name, input=data)
                 if isinstance(state, TaskState):
-                    self._run_task(state, data, emit)
+                    self._run_task(state, data, emit, capture)
                     if state.next is None:
                         status, error = "succeeded", None
                         break
                     current = state.next
                 elif isinstance(state, ChoiceState):
-                    current = self._run_choice(state, data, emit)
+                    current = self._run_choice(state, data, emit, capture)
                 else:  # pragma: no cover - exhaustive union
                     raise _Abort(state.name, "unknown state type")
             else:
                 raise _Abort(None, "exceeded maximum step count")
         except _Abort as abort:
             status, error = "failed", abort.error
+        finally:
+            root_logger.removeHandler(capture)
 
         final_output = _jsonable(data)
         if status == "succeeded":
@@ -205,28 +252,39 @@ class WorkflowExecutor:
             events=tuple(events),
         )
 
-    def _run_task(self, state: TaskState, data: dict[str, object], emit: Emitter) -> None:
+    def _run_task(
+        self, state: TaskState, data: dict[str, object], emit: Emitter, capture: _LogCapture
+    ) -> None:
         task = self._tasks[state.task]
         started = self._monotonic()
         try:
             result = task(dict(data))
         except Exception as exc:
             tb = traceback.format_exc()
+            logger.exception(
+                "Workflow task failed", extra={"data": {"state": state.name, "task": state.task}}
+            )
             emit(
                 STATE_FAILED,
                 state.name,
                 error=f"{type(exc).__name__}: {exc}",
                 tb=tb,
                 duration_ms=self._elapsed(started),
-            )
-            logger.exception(
-                "Workflow task failed", extra={"data": {"state": state.name, "task": state.task}}
+                logs=capture.drain(),
             )
             raise _Abort(state.name, f"{type(exc).__name__}: {exc}") from exc
         data.update(result)
-        emit(STATE_SUCCEEDED, state.name, output=result, duration_ms=self._elapsed(started))
+        emit(
+            STATE_SUCCEEDED,
+            state.name,
+            output=result,
+            duration_ms=self._elapsed(started),
+            logs=capture.drain(),
+        )
 
-    def _run_choice(self, state: ChoiceState, data: dict[str, object], emit: Emitter) -> str:
+    def _run_choice(
+        self, state: ChoiceState, data: dict[str, object], emit: Emitter, capture: _LogCapture
+    ) -> str:
         started = self._monotonic()
         try:
             chosen: str | None = None
@@ -238,14 +296,15 @@ class WorkflowExecutor:
                 chosen = state.default
         except Exception as exc:
             tb = traceback.format_exc()
+            logger.exception("Workflow predicate failed", extra={"data": {"state": state.name}})
             emit(
                 STATE_FAILED,
                 state.name,
                 error=f"{type(exc).__name__}: {exc}",
                 tb=tb,
                 duration_ms=self._elapsed(started),
+                logs=capture.drain(),
             )
-            logger.exception("Workflow predicate failed", extra={"data": {"state": state.name}})
             raise _Abort(state.name, f"{type(exc).__name__}: {exc}") from exc
 
         if chosen is None:
@@ -254,6 +313,7 @@ class WorkflowExecutor:
                 state.name,
                 error="no choice rule matched and no default",
                 duration_ms=self._elapsed(started),
+                logs=capture.drain(),
             )
             raise _Abort(state.name, "no choice rule matched and no default")
 
@@ -262,6 +322,7 @@ class WorkflowExecutor:
             state.name,
             output={"next": chosen},
             duration_ms=self._elapsed(started),
+            logs=capture.drain(),
         )
         return chosen
 
