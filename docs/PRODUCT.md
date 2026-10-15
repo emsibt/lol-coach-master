@@ -200,6 +200,21 @@ from an OP.GG-derived SQLite snapshot. The graph is data-derived, not hand-autho
 edge weights come from measured win-rate deltas and sample sizes, and each edge
 carries an auto-generated statistical explanation.
 
+### Packaging and CI
+The coach ships as two containers that run together: the API image (uvicorn on
+`python:3.12-slim`, non-root, SQLite data on a mounted volume) and the web image
+(the built SPA served by nginx, which proxies `/api/` to the API). One
+`docker compose up --build` brings the pair up — API on `:8000`, web on `:8080` —
+with the OP.GG snapshot on a named volume that survives rebuilds. The backend
+image boots with the knowledge graph already packaged; only the snapshot is a
+runtime input.
+
+Every change is gated the same way you would verify it locally: GitHub Actions
+runs `ruff`, strict `mypy`, and `pytest` for the backend (Python 3.11 and 3.12),
+`tsc` + `vite build` for the frontend, and builds both images. The backend suite
+is hermetic — no model and no network — so a pull request never needs
+credentials and never spends tokens.
+
 ## Non-goals
 
 Explicitly out of scope for this build:

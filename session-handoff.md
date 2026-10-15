@@ -1,5 +1,65 @@
 # Session Handoff
 
+## 2026-10-15 (7) — CI/CD
+
+### What was accomplished
+
+- **AI observability committed** as `296bdfa "feat: AI observability"` (the work
+  from the previous entry, plus a small `pyproject` extra cleanup).
+- **GitHub Actions CI** (`.github/workflows/ci.yml`), on push-to-`main`, PRs, and
+  manual dispatch, with `cancel-in-progress`:
+  - `backend` — matrix Python **3.11 + 3.12**: `ruff check .`, `mypy src`,
+    `pytest tests -q`. Hermetic, so no secrets and no token spend.
+  - `frontend` — pnpm **12.9.1** + Node **22**: `pnpm install --frozen-lockfile`,
+    `pnpm typecheck`, `pnpm build`.
+  - `docker` — needs both, builds the two images with buildx + GHA layer cache
+    (`push: false`).
+- **Two Dockerfiles.**
+  - `Dockerfile` (API): `python:3.12-slim`, `pip install .`, non-root user
+    (uid 10001), `LOL_COACH_DATA_DIR=/data` volume, `EXPOSE 8000`, stdlib-urllib
+    `HEALTHCHECK` on `/api/health`, `CMD uvicorn lolcoach.main:app`.
+  - `frontend/Dockerfile`: `node:22-alpine` build stage (pnpm 12.9.1, frozen
+    lockfile) → `nginx:1.27-alpine` serving `dist/`. `frontend/nginx.conf` adds
+    the SPA fallback, immutable-asset caching, and an `/api/` proxy to the
+    `backend` service (300s read timeout for slow agent turns).
+- **`docker-compose.yml`** runs backend + frontend together (`:8000` / `:8080`)
+  on a named, rebuild-surviving data volume, with an optional `.env`.
+- **`.dockerignore`** at the root (keeps `README.md`, which `pyproject` reads) and
+  in `frontend/`.
+- Docs: `docs/ARCHITECTURE.md` (CI/CD section + two Processes rows),
+  `docs/PRODUCT.md` ("Packaging and CI"), `docs/RELIABILITY.md` ("Continuous
+  integration"), `README.md` (docker quick-start + stack bullet),
+  `clean-state-checklist.md` (CI/CD checks), and `feature_list.json`
+  (`cicd` -> **pass**).
+
+### What remains / blocker
+
+- **Docker is not installed on this machine**, so the image builds and
+  `docker compose up` were **not executed locally** — they run in the CI `docker`
+  job and on any Docker host. Everything else is verified locally (below).
+- No registry/publish step: CI builds images but does not push. Add a
+  `docker/login-action` + `push: true` step if a registry is wanted later.
+
+### Files modified
+
+- Added: `.github/workflows/ci.yml`, `Dockerfile`, `.dockerignore`,
+  `frontend/Dockerfile`, `frontend/nginx.conf`, `frontend/.dockerignore`,
+  `docker-compose.yml`.
+- Changed: `README.md`, `docs/{ARCHITECTURE,PRODUCT,RELIABILITY}.md`,
+  `feature_list.json`, `clean-state-checklist.md`, `session-handoff.md`.
+
+### Verification
+
+- `bash init.sh` green (Python 3.14.7): ruff `All checks passed!`; mypy src
+  `Success: no issues found in 53 source files`; pytest `211 passed`.
+- `pnpm build` in `frontend/` (`tsc --noEmit && vite build`) emitted `dist/`
+  (index.html + hashed CSS/JS).
+- `pnpm install --frozen-lockfile` reports the lockfile up to date and leaves
+  `pnpm-lock.yaml` untouched (what the changed-line count for CI confirms).
+- `ci.yml` and `docker-compose.yml` parse as valid YAML.
+
+
+
 ## 2026-10-15 (6) — AI observability (Langfuse)
 
 ### What was accomplished

@@ -52,6 +52,16 @@ Run this checklist before committing and at the end of the session.
 - [ ] `feature_list.json` reflects actual feature status
 - [ ] `session-handoff.md` updated if session is ending
 
+## CI/CD
+
+- [ ] `.github/workflows/ci.yml` covers ruff, mypy, pytest, frontend typecheck +
+      build, and both Docker image builds
+- [ ] `frontend/pnpm-lock.yaml` is in sync (CI installs with `--frozen-lockfile`)
+- [ ] (needs Docker) `docker build -t lol-coach-backend .` and
+      `docker build -t lol-coach-frontend frontend` succeed
+- [ ] (needs Docker) `docker compose up --build` serves the API on :8000 and the
+      web app on :8080, with `GET /api/health` reachable through the web proxy
+
 ## Scripts
 
 - [ ] `bash scripts/cleanup-scanner.sh` reports no stale artifacts

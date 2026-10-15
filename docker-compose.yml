@@ -1,0 +1,40 @@
+# Run the built images together: backend API + frontend (nginx, proxying /api).
+#
+#   docker compose up --build
+#   open http://localhost:8080
+#
+# The backend needs a model for chat and a snapshot for the engine. Both are
+# runtime inputs: pass the model key via the environment (a .env file next to
+# this compose file is picked up automatically) and build the snapshot once:
+#
+#   docker compose run --rm backend python -m lolcoach.cli fetch --limit 40
+#   docker compose run --rm backend python -m lolcoach.cli build-kg
+#
+# The data lives on the named volume, so it survives rebuilds.
+services:
+  backend:
+    build: .
+    image: lol-coach-backend:local
+    environment:
+      LOL_COACH_DATA_DIR: /data
+      # Model config comes from the environment / .env (see .env.example).
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - lol-coach-data:/data
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    image: lol-coach-frontend:local
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+volumes:
+  lol-coach-data:

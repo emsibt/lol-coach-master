@@ -287,4 +287,23 @@ request. A setup failure (package or LangChain integration missing) is logged at
 - With credentials set, `tests/test_observability_tracing.py` plus a live smoke
   run against the local stack confirm a trace reaches the Langfuse UI.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` is the gate: the same checks `init.sh` runs, plus the
+frontend build and a container build, on every push to `main`, every pull
+request, and manual dispatch.
+
+| Job | Steps |
+|-----|-------|
+| backend (Python 3.11, 3.12) | `pip install -e ".[dev]"` → `ruff check .` → `mypy src` → `pytest tests -q` |
+| frontend (pnpm 12, Node 22) | `pnpm install --frozen-lockfile` → `pnpm typecheck` → `pnpm build` |
+| docker | builds the backend and frontend images (buildx + layer cache; `push: false`) |
+
+`init.sh` is the local equivalent of the backend job — run it before committing.
+The backend suite is hermetic (no model, no network), so CI holds no secrets and
+spends no tokens; the agent evaluation (`python -m lolcoach.cli eval`) is
+deliberately **not** in CI because it needs a provider. The images are built by
+CI and by `docker compose up --build`; see `docs/ARCHITECTURE.md` (CI/CD) and
+`docker-compose.yml`.
+
 

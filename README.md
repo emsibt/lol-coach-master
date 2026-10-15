@@ -74,6 +74,9 @@ curl -s http://127.0.0.1:8000/api/health      # {"status":"ok",...}
 # evaluate the agent (requires a model) — golden scenarios, rule-based scoring
 python -m lolcoach.cli eval                   # exits non-zero if any scenario fails
 
+# optional: run the whole stack in containers (needs Docker)
+docker compose up --build                     # API on :8000, web on :8080
+
 # optional: AI observability — prompts, tokens, and cost per run (needs Docker)
 bash scripts/langfuse.sh up                   # Langfuse UI on http://localhost:3000
 ```
@@ -204,8 +207,10 @@ prose never widens it.
   per agent run with each call's prompt, completion, token usage, and cost. Lazy
   and opt-in (no credentials ⇒ no-op, no import).
 - **Frontend** — React 18, Vite 6, TypeScript 5, Tailwind 3.
-- **Tooling** — `pytest`, `ruff`, and strict `mypy`, all wired through `init.sh`
-  (CI and container packaging are planned, not yet wired).
+- **Tooling & delivery** — `pytest`, `ruff`, and strict `mypy`, all wired through
+  `init.sh` and enforced in CI (GitHub Actions: backend matrix 3.11/3.12,
+  frontend `tsc` + `vite build`, and both Docker image builds). The API and web
+  ship as two Docker images, run together with `docker compose up --build`.
 
 ## Docs
 

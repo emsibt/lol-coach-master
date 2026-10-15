@@ -90,6 +90,11 @@ cd frontend && pnpm install && pnpm dev     # http://localhost:5173
 
 # verification (what init.sh runs)
 ruff check . && mypy src && pytest tests -q
+
+# containers (optional — CI builds the same two images)
+docker build -t lol-coach-backend .          # API image: uvicorn on :8000
+docker build -t lol-coach-frontend frontend  # SPA image: nginx on :80, proxies /api
+docker compose up --build                    # both: API :8000, web :8080
 ```
 
 Configuration comes from the repo-root `.env` (copy `.env.example`). Each
@@ -97,6 +102,27 @@ entrypoint (`main.py`, `cli.py`) calls `config.load_env()` once before
 `get_settings()`; it loads `.env` with `override=True`, so the credentials you
 paste there win over a stale value in the shell. `get_settings()` itself only
 reads `os.environ`, which keeps it controllable under `monkeypatch` in tests.
+
+### CI/CD
+
+`.github/workflows/ci.yml` runs on every push to `main`, every pull request, and
+on manual dispatch (with `cancel-in-progress`). Three jobs:
+
+- **backend** — matrix Python 3.11 + 3.12: `pip install -e ".[dev]"` →
+  `ruff check .` → `mypy src` → `pytest tests -q`. The suite is hermetic (no
+  model, no network), so CI needs no secrets.
+- **frontend** — pnpm 12.9.1 + Node 22: `pnpm install --frozen-lockfile` →
+  `pnpm typecheck` → `pnpm build`.
+- **docker** — needs both, builds the two images with buildx and a layer cache
+  (`push: false`; CI builds, it does not publish).
+
+The two Dockerfiles are the deployment unit. `Dockerfile` builds the API on
+`python:3.12-slim`, installs the package, drops to a non-root user, mounts
+`/data`, and healthchecks `/api/health` via the stdlib. `frontend/Dockerfile`
+builds the SPA on `node:22-alpine`, then serves `dist/` from `nginx:1.27-alpine`;
+`frontend/nginx.conf` adds the SPA fallback, immutable-asset caching, and an
+`/api/` proxy to the `backend` service. `docker-compose.yml` runs the pair on a
+named data volume.
 
 ## Processes
 
@@ -108,6 +134,8 @@ reads `os.environ`, which keeps it controllable under `monkeypatch` in tests.
 | KG build | `python -m lolcoach.cli build-kg` | — | snapshot.db → `knowledge/seed/*.yaml` (graph + reference) |
 | KG report | `python -m lolcoach.cli kg-report` | — | `knowledge/seed/*.yaml` → `data/kg-report.html` (static, offline) |
 | Langfuse (optional) | `bash scripts/langfuse.sh up` | 3000 | receives the agent's traces; stores them in its own stack |
+| Backend image | `docker compose up backend` | 8000 | same as the API, with `/data` on a named volume |
+| Frontend image | `docker compose up frontend` | 8080 | the API, via nginx `/api/` → `backend:8000` |
 
 `main.py` is the single entrypoint that calls `configure_logging()` exactly once,
 then constructs the FastAPI app. Domain modules only create module-level loggers.

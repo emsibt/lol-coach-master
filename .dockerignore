@@ -1,0 +1,34 @@
+.git
+.github
+.gitignore
+
+# Python build/runtime artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Runtime data (mounted at /data instead) and local secrets
+data/
+.env
+.env.*
+
+# Frontend has its own image/context
+frontend/
+
+# Docs and tooling not needed at runtime (README.md stays: pyproject reads it)
+docs/
+ops/
+evals/
+tests/
+AGENTS.md
+session-handoff.md
+clean-state-checklist.md
