@@ -1,0 +1,87 @@
+# LoL Coach -- agent evaluation suite.
+#
+# Each scenario drives the *real* agent tool-loop (the same workflow the chat
+# front door runs) against a live model, then scores the observable outcome:
+# which tools it called and in what order, whether it resolved the board,
+# whether its answer stayed grounded in the tool results, and whether the pick
+# it narrated came from the deterministic engine.
+#
+# Run it with:
+#   python -m lolcoach.cli eval
+#   python -m lolcoach.cli eval --json data/eval-report.json
+#   python -m lolcoach.cli eval --suite path/to/other.yaml
+#
+# A model is required; without one the command exits non-zero before running
+# anything. Scenarios are scored by rules, not by a second model, so the verdict
+# is the same on every run.
+#
+# Fields under `expect` (all optional):
+#   status               "succeeded" (default) | "failed"
+#   tools_called         tools that must appear, in this relative order
+#   tools_not_called     tools that must not be called at all
+#   max_tool_calls       upper bound on the number of tool calls
+#   board                {allies|enemies|ally_bans|enemy_bans: [slug, ...]} that
+#                        must be present in the resolved board
+#   require_no_unresolved  true -> every name in the message must resolve
+#   recommendation       "required" | "forbidden" | "any" (default)
+#   mode                 "llm" | "offline" | "any" (default)
+#   grounded             true (default) -> reply names no unsourced champion
+#   pick_from_engine     true (default) -> a narrated pick matches the engine
+#   reply_mentions       substrings (case-insensitive) that must appear
+#   reply_excludes       substrings that must not appear
+#   error_contains       substring the execution error must carry
+
+scenarios:
+  - id: fuzzy-pick-request
+    name: Fuzzy input is resolved and the agent advises
+    message: "jinx vs their zeri, what do we pick?"
+    expect:
+      tools_called: [set_board, suggest_pick]
+      board: {allies: [jinx], enemies: [zeri]}
+      require_no_unresolved: true
+      recommendation: required
+      mode: llm
+
+  - id: provided-board-skips-set-board
+    name: A provided board is used without re-parsing it
+    message: "who should we pick into this comp?"
+    board:
+      allies: [jinx]
+      enemies: [leblanc]
+    expect:
+      tools_called: [suggest_pick]
+      tools_not_called: [set_board]
+      recommendation: required
+      mode: llm
+
+  - id: champion-tips-question
+    name: A tips question uses reference data, not a pick
+    message: "how do I play against galio?"
+    expect:
+      tools_called: [get_champion_tips]
+      recommendation: forbidden
+      reply_mentions: [galio]
+
+  - id: build-question
+    name: A build question returns items, not a pick
+    message: "what should I build on ahri mid?"
+    expect:
+      tools_called: [get_champion_build]
+      recommendation: forbidden
+      reply_mentions: [ahri]
+
+  - id: matchup-question
+    name: A matchup question is evidence, not a recommendation
+    message: "how does galio do against ahri in mid?"
+    expect:
+      tools_called: [explain_matchup]
+      recommendation: forbidden
+      reply_mentions: [galio, ahri]
+
+  - id: smalltalk-no-engine-call
+    name: Small talk never reaches for the engine
+    message: "hi, what can you help me with?"
+    expect:
+      tools_not_called: [set_board, suggest_pick]
+      recommendation: forbidden
+      max_tool_calls: 1

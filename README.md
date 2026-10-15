@@ -70,7 +70,14 @@ cd frontend && pnpm install && pnpm dev       # http://localhost:5173 (chat at /
 # verify
 bash init.sh                                  # ruff + mypy + pytest
 curl -s http://127.0.0.1:8000/api/health      # {"status":"ok",...}
+
+# evaluate the agent (requires a model) — golden scenarios, rule-based scoring
+python -m lolcoach.cli eval                   # exits non-zero if any scenario fails
 ```
+
+The agent suite lives in `evals/scenarios.yaml` and drives the real chat
+tool-loop, scoring tool choice, board resolution, grounding, and engine fidelity.
+See [`docs/RELIABILITY.md`](docs/RELIABILITY.md#agent-evaluation).
 
 ### Configure a model
 

@@ -5,6 +5,7 @@
     python -m lolcoach.cli build-kg [--patch X]
     python -m lolcoach.cli kg-report [--out PATH]
     python -m lolcoach.cli reset (--all | --executions | --chat)
+    python -m lolcoach.cli eval [--suite PATH] [--json PATH] [--live]
     python -m lolcoach.cli demo
     python -m lolcoach.cli benchmark --n 200
     python -m lolcoach.cli scan-executions
@@ -130,7 +131,12 @@ def _cmd_reset(args: argparse.Namespace) -> int:
     data_dir = settings.data_dir.resolve()
     targets = []
     if args.all:
-        targets = [settings.snapshot_db, settings.executions_db, settings.chat_db]
+        targets = [
+            settings.snapshot_db,
+            settings.executions_db,
+            settings.chat_db,
+            settings.eval_db,
+        ]
     elif args.executions:
         targets = [settings.executions_db]
     elif args.chat:
@@ -148,6 +154,58 @@ def _cmd_reset(args: argparse.Namespace) -> int:
     data_dir.mkdir(parents=True, exist_ok=True)
     print(f"reset complete: removed {len(targets)} database(s)")
     return _EXIT_OK
+
+
+def _cmd_eval(args: argparse.Namespace) -> int:
+    from lolcoach.agent.llm import build_client
+    from lolcoach.eval.report import format_summary, write_json
+    from lolcoach.eval.runner import EvalError, run_suite
+    from lolcoach.eval.scenarios import ScenarioError, load_scenarios
+    from lolcoach.knowledge.ontology import OntologyError, load_ontology
+    from lolcoach.knowledge.reference import get_reference
+
+    settings = get_settings()
+    if build_client(settings) is None:
+        print("no LLM is configured: set LOL_COACH_LLM_PROVIDER and its API key")
+        return 1
+    try:
+        scenarios = load_scenarios(Path(args.suite) if args.suite else None)
+        ontology = load_ontology()
+    except (ScenarioError, OntologyError) as exc:
+        print(str(exc))
+        return 1
+
+    live = None
+    if args.live:
+        from lolcoach.dataprovider.live import build_live_provider
+
+        live = build_live_provider()
+
+    logger.info(
+        "Running agent evaluation",
+        extra={"data": {"scenarios": len(scenarios), "provider": settings.llm_provider}},
+    )
+    try:
+        report = run_suite(
+            scenarios,
+            ontology=ontology,
+            client_factory=lambda: build_client(settings),
+            store_path=settings.eval_db,
+            settings=settings,
+            reference=get_reference(),
+            live=live,
+        )
+    except EvalError as exc:
+        print(str(exc))
+        return 1
+
+    print(format_summary(report))
+    if args.json_out:
+        out = Path(args.json_out)
+        write_json(report, out)
+        print(f"report written to {out}")
+    print(f"executions persisted to {settings.eval_db} (Trace Inspector)")
+    return _EXIT_OK if report.ok else 1
 
 
 def _not_implemented(command: str) -> int:
@@ -185,12 +243,22 @@ def _build_parser() -> argparse.ArgumentParser:
     p_report.add_argument("--out", default=None, help="output path (default data/kg-report.html)")
     p_report.set_defaults(func=_cmd_kg_report)
 
-    p_reset = sub.add_parser("reset", help="delete runtime data (snapshot, executions, chat)")
+    p_reset = sub.add_parser(
+        "reset", help="delete runtime data (snapshot, executions, chat, eval)"
+    )
     group = p_reset.add_mutually_exclusive_group(required=True)
     group.add_argument("--all", action="store_true")
     group.add_argument("--executions", action="store_true")
     group.add_argument("--chat", action="store_true")
     p_reset.set_defaults(func=_cmd_reset)
+
+    p_eval = sub.add_parser("eval", help="run the agent evaluation suite against a model")
+    p_eval.add_argument(
+        "--suite", default=None, help="scenario YAML (default evals/scenarios.yaml)"
+    )
+    p_eval.add_argument("--json", dest="json_out", default=None, help="write the report as JSON")
+    p_eval.add_argument("--live", action="store_true", help="enable the live (network) tools")
+    p_eval.set_defaults(func=_cmd_eval)
 
     p_demo = sub.add_parser("demo", help="run the flagship draft scenario in the terminal")
     p_demo.set_defaults(func=lambda _a: _not_implemented("demo"))

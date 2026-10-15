@@ -88,6 +88,7 @@ class Settings:
     snapshot_db: Path = Path()
     executions_db: Path = Path()
     chat_db: Path = Path()
+    eval_db: Path = Path()
     opgg_mcp_url: str = "https://mcp-api.op.gg/mcp"
     fetch_interval: float = 1.2
     llm_provider: str = "anthropic"
@@ -121,6 +122,7 @@ def get_settings() -> Settings:
         snapshot_db=Path(_env("LOL_COACH_SNAPSHOT_DB", str(data_dir / "snapshot.db"))),
         executions_db=Path(_env("LOL_COACH_EXECUTIONS_DB", str(data_dir / "executions.db"))),
         chat_db=Path(_env("LOL_COACH_CHAT_DB", str(data_dir / "chat.db"))),
+        eval_db=Path(_env("LOL_COACH_EVAL_DB", str(data_dir / "eval.db"))),
         opgg_mcp_url=_env("LOL_COACH_OPGG_MCP_URL", "https://mcp-api.op.gg/mcp"),
         fetch_interval=float(_env("LOL_COACH_FETCH_INTERVAL", "1.2")),
         llm_provider=provider,

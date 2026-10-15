@@ -1,5 +1,58 @@
 # Session Handoff
 
+## 2026-10-15 (5) — agent evaluation suite
+
+### What was accomplished
+
+- **A golden-scenario eval harness for the chat agent** (`src/lolcoach/eval/`).
+  Each scenario is a YAML record — a message, an optional board/image, and
+  expectations about the *observable* outcome — in the checked-in
+  `evals/scenarios.yaml` (6 scenarios: fuzzy pick request, provided-board skip,
+  tips, build, matchup, smalltalk). `scenarios.py` loads + validates eagerly;
+  `runner.py` executes each through the **production** agent workflow
+  (`build_agent_chat`) with an injected model client, persisting runs to
+  `data/eval.db`; `checks.py` scores the result; `report.py` renders text/JSON.
+- **Rule-based scoring, deliberately not an LLM judge.** The whole point (and the
+  product invariant) is that tool choice and grounding are checkable
+  deterministically, so a verdict is reproducible. Checks: status, `tools_called`
+  (ordered subsequence), `tools_not_called`, tool-call budget, resolved board,
+  `require_no_unresolved`, recommendation required/forbidden, narration
+  `mode` (llm vs the grounded offline fallback), grounding, reply mentions/
+  excludes, and **engine fidelity** (`pick_from_engine`: a narrated pick must
+  equal a fresh `evaluate_draft` over the final board).
+- **Grounding check reuses the runtime guard** (`narrator.allowed_champions` /
+  `unsourced_champions`) rather than re-deriving it. Note for future readers: in
+  the real workflow the narrator *sanitizes* an unsourced reply before it is
+  scored, so a hallucination surfaces as `mode == "offline"`, not as a raw
+  unsourced reply — that is why the runtime scenarios assert on `mode: llm`.
+- **CLI**: `python -m lolcoach.cli eval [--suite PATH] [--json PATH] [--live]`.
+  Requires a model (clean exit 1 + message otherwise); exits non-zero if any
+  scenario fails.
+- **New `eval.db`** (`Settings.eval_db`, `LOL_COACH_EVAL_DB`) for eval run
+  history; wired into `reset --all` so the clean-state invariant ("remove all
+  data files") still holds.
+
+### What remains
+
+- The suite has **not been run against a live model** in this session (would spend
+  real API calls). Run `python -m lolcoach.cli eval --json data/eval-report.json`
+  to get a baseline pass rate and record it here.
+- Optional next steps: more scenarios (vision/draft image, live rank/matchup with
+  `--live`, multi-turn session memory), and a `--repeat N` for variance.
+
+### Files modified
+
+- Added: `src/lolcoach/eval/{__init__,scenarios,checks,runner,report}.py`,
+  `evals/scenarios.yaml`, `tests/test_eval_{scenarios,checks,runner,cli}.py`.
+- Changed: `src/lolcoach/cli.py` (eval + reset), `src/lolcoach/config.py`
+  (`eval_db`), `.env.example`, `docs/PRODUCT.md`, `docs/RELIABILITY.md`,
+  `README.md`, `feature_list.json` (`agent-evaluation` -> pass).
+
+### Verification
+
+- `bash init.sh` green on Python 3.14.7: ruff `All checks passed!`; mypy src
+  `Success: no issues found in 51 source files`; pytest `203 passed`.
+
 ## 2026-10-15 (4) — portraits, materialized reference data, and live lookups
 
 ### What was accomplished

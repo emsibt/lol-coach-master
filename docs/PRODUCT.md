@@ -150,6 +150,27 @@ workflow and opens the fresh run beside it (the original is never modified). Thi
 is the tool for "why did the coach say that?", "which tool did the agent call?",
 and "why did it break?" — down to the log line.
 
+### Agent evaluation
+The agent — not the engine — is the part that can drift, so its behavior is
+scored, not eyeballed. A checked-in suite of golden scenarios
+(`evals/scenarios.yaml`) drives the real chat tool-loop and asserts the outcomes
+the product promises: the agent resolves a fuzzy message into the right board,
+calls the tools the question needs (and not the ones it doesn't), recommends a
+pick only from `suggest_pick`, keeps its answer grounded, and stays within its
+tool budget.
+
+Two of the checks are the product invariants, verified structurally rather than
+by taste: the reply may name no champion absent from the tool results (the same
+guard the narrator enforces at runtime), and a narrated pick must equal a fresh
+run of the deterministic engine over the final board. Scoring is rule-based, not
+a second model, so a verdict is reproducible run to run.
+
+Run `python -m lolcoach.cli eval` (add `--json PATH` for a machine-readable
+report, `--live` to include the network tools). It exits non-zero if any
+scenario fails, and persists each run to `data/eval.db` so a failing scenario
+opens in the Trace Inspector beside the rest. A model is required; without one
+the command says so and exits non-zero without running anything.
+
 ### Knowledge graph + statistical snapshot
 A YAML knowledge graph (champions, counter/synergy relations, patch) is generated
 from an OP.GG-derived SQLite snapshot. The graph is data-derived, not hand-authored:
