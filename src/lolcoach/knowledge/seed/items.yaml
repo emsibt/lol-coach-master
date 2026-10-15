@@ -1,0 +1,3596 @@
+meta:
+  patch: '14.20'
+  source: opgg-mcp
+  generated_at: '2026-10-15T10:31:59Z'
+  ddragon_version: 14.20.1
+  champion_count: 173
+  relation_count: 3052
+  counter_count: 998
+  synergy_count: 2054
+items:
+- item_id: 1001
+  name: Boots
+  description: <mainText><stats><attention>25</attention> Move Speed</stats><br><br></mainText>
+  gold_total: 300
+  builds_into:
+  - 3005
+  - 3047
+  - 3008
+  - 3006
+  - 3009
+  - 3010
+  - 3020
+  - 3111
+  - 3117
+  - 3158
+  builds_from: []
+- item_id: 1004
+  name: Faerie Charm
+  description: <mainText><stats><attention>50%</attention> Base Mana Regen</stats><br><br></mainText>
+  gold_total: 200
+  builds_into:
+  - 3114
+  - 3012
+  - 4642
+  builds_from: []
+- item_id: 1006
+  name: Rejuvenation Bead
+  description: <mainText><stats><attention>100%</attention> Base Health Regen</stats><br><br></mainText>
+  gold_total: 300
+  builds_into:
+  - 3109
+  - 3211
+  - 323109
+  - 3801
+  builds_from: []
+- item_id: 1011
+  name: Giant's Belt
+  description: <mainText><stats><attention>350</attention> Health</stats><br><br></mainText>
+  gold_total: 900
+  builds_into:
+  - 4637
+  - 3084
+  - 2525
+  - 3039
+  - 3083
+  - 3116
+  - 3119
+  - 3143
+  - 323119
+  - 3748
+  - 6665
+  - 6609
+  - 6667
+  - 8001
+  builds_from:
+  - 1028
+- item_id: 1018
+  name: Cloak of Agility
+  description: <mainText><stats><attention>15%</attention> Critical Strike Chance</stats><br><br></mainText>
+  gold_total: 600
+  builds_into:
+  - 123430
+  - 667666
+  - 3031
+  - 3086
+  - 6670
+  - 3033
+  - 3039
+  - 3508
+  - 3095
+  - 6676
+  builds_from: []
+- item_id: 1026
+  name: Blasting Wand
+  description: <mainText><stats><attention>45</attention> Ability Power</stats><br><br></mainText>
+  gold_total: 850
+  builds_into:
+  - 2522
+  - 3100
+  - 326621
+  - 4637
+  - 3135
+  - 3165
+  - 3115
+  - 324005
+  - 2510
+  - 3116
+  - 3118
+  - 326657
+  - 6621
+  - 6657
+  builds_from: []
+- item_id: 1027
+  name: Sapphire Crystal
+  description: <mainText><stats><attention>300</attention> Mana</stats><br><br></mainText>
+  gold_total: 300
+  builds_into:
+  - 3024
+  - 3802
+  - 3803
+  builds_from: []
+- item_id: 1028
+  name: Ruby Crystal
+  description: <mainText><stats><attention>150</attention> Health</stats><br><br></mainText>
+  gold_total: 400
+  builds_into:
+  - 3742
+  - 1011
+  - 3068
+  - 2021
+  - 323222
+  - 323075
+  - 326617
+  - 323107
+  - 3012
+  - 3147
+  - 3067
+  - 3211
+  - 2502
+  - 322526
+  - 2526
+  - 3023
+  - 3044
+  - 3053
+  - 3066
+  - 3075
+  - 3152
+  - 3161
+  - 3801
+  - 3803
+  - 4401
+  - 4635
+  - 6035
+  - 6660
+  - 6662
+  builds_from: []
+- item_id: 1029
+  name: Cloth Armor
+  description: <mainText><stats><attention>15</attention> Armor</stats><br><br></mainText>
+  gold_total: 300
+  builds_into:
+  - 2421
+  - 2420
+  - 1031
+  - 323050
+  - 323190
+  - 2019
+  - 3193
+  - 3047
+  - 3024
+  - 3050
+  - 2524
+  - 3023
+  - 3076
+  - 3082
+  - 3105
+  - 3190
+  builds_from: []
+- item_id: 1031
+  name: Chain Vest
+  description: <mainText><stats><attention>40</attention> Armor</stats><br><br></mainText>
+  gold_total: 800
+  builds_into:
+  - 3742
+  - 3068
+  - 323002
+  - 3109
+  - 323075
+  - 2502
+  - 3002
+  - 3075
+  - 323109
+  - 6665
+  - 6662
+  builds_from:
+  - 1029
+- item_id: 1033
+  name: Null-Magic Mantle
+  description: <mainText><stats><attention>20</attention> Magic Resist</stats><br><br></mainText>
+  gold_total: 400
+  builds_into:
+  - 1057
+  - 3140
+  - 323050
+  - 323190
+  - 3193
+  - 3050
+  - 3001
+  - 3211
+  - 2524
+  - 3155
+  - 3105
+  - 3111
+  - 3190
+  - 4632
+  builds_from: []
+- item_id: 1036
+  name: Long Sword
+  description: <mainText><stats><attention>10</attention> Attack Damage</stats><br><br></mainText>
+  gold_total: 350
+  builds_into:
+  - 1053
+  - 4003
+  - 6701
+  - 2015
+  - 2019
+  - 2021
+  - 3077
+  - 6670
+  - 3133
+  - 2517
+  - 323004
+  - 3142
+  - 3004
+  - 2523
+  - 3032
+  - 3035
+  - 3044
+  - 3051
+  - 3155
+  - 6690
+  - 3123
+  - 3134
+  - 6699
+  - 6671
+  - 6692
+  builds_from: []
+- item_id: 1037
+  name: Pickaxe
+  description: <mainText><stats><attention>25</attention> Attack Damage</stats><br><br></mainText>
+  gold_total: 875
+  builds_into:
+  - 667666
+  - 3071
+  - 6333
+  - 3031
+  - 3153
+  - 6701
+  - 2020
+  - 2517
+  - 3087
+  - 6695
+  - 2523
+  - 3053
+  - 3072
+  - 3124
+  - 3181
+  - 3139
+  - 3161
+  - 6029
+  - 6035
+  - 6673
+  - 6676
+  - 6692
+  builds_from: []
+- item_id: 1038
+  name: B. F. Sword
+  description: <mainText><stats><attention>40</attention> Attack Damage</stats><br><br></mainText>
+  gold_total: 1300
+  builds_into:
+  - 3031
+  - 3026
+  - 3032
+  - 3072
+  - 3095
+  - 4403
+  - 6671
+  builds_from: []
+- item_id: 1042
+  name: Dagger
+  description: <mainText><stats><attention>10%</attention> Attack Speed</stats><br><br></mainText>
+  gold_total: 250
+  builds_into:
+  - 1043
+  - 3086
+  - 2510
+  - 3006
+  - 3046
+  - 3051
+  - 3073
+  - 3131
+  - 3144
+  - 6631
+  - 6675
+  - 6677
+  builds_from: []
+- item_id: 1043
+  name: Recurve Bow
+  description: <mainText><stats><attention>15%</attention> Attack Speed</stats><br><br><passive>Sting</passive><br>Attacks
+    deal <physicalDamage>15 bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>.</mainText>
+  gold_total: 700
+  builds_into:
+  - 3302
+  - 3153
+  - 3115
+  - 6672
+  - 3091
+  - 3124
+  builds_from:
+  - 1042
+- item_id: 1052
+  name: Amplifying Tome
+  description: <mainText><stats><attention>20</attention> Ability Power</stats><br><br></mainText>
+  gold_total: 400
+  builds_into:
+  - 3113
+  - 2421
+  - 2420
+  - 3145
+  - 124011
+  - 4637
+  - 3916
+  - 6656
+  - 3147
+  - 3146
+  - 3802
+  - 4005
+  - 2508
+  - 326616
+  - 3108
+  - 3116
+  - 3124
+  - 4630
+  - 323504
+  - 4628
+  - 4632
+  - 4635
+  - 4642
+  - 4644
+  builds_from: []
+- item_id: 1053
+  name: Vampiric Scepter
+  description: <mainText><stats><attention>15</attention> Attack Damage<br><attention>7%</attention> Life
+    Steal</stats><br><br></mainText>
+  gold_total: 900
+  builds_into:
+  - 3153
+  - 3146
+  - 3072
+  - 3074
+  - 3139
+  - 4403
+  builds_from:
+  - 1036
+- item_id: 1054
+  name: Doran's Shield
+  description: <mainText><stats><attention>110</attention> Health</stats><br><br><passive>Enduring Focus</passive><br>Restore
+    <healing>4 Health</healing> every 5 seconds. <br>After taking damage from a champion, restore <healing>Health</healing>
+    over 8 seconds.<br><br><passive>Helping Hand</passive><br>Attacks deal <physicalDamage>5 bonus physical
+    damage</physicalDamage> to minions.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1055
+  name: Doran's Blade
+  description: <mainText><stats><attention>10</attention> Attack Damage<br><attention>80</attention> Health<br><attention>2.5%</attention>
+    Omnivamp</stats><br><br></mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1056
+  name: Doran's Ring
+  description: <mainText><stats><attention>18</attention> Ability Power<br><attention>90</attention> Health</stats><br><br><passive>Drain</passive><br>Restore
+    <scaleMana>1 Mana</scaleMana> every second, increased to <scaleMana>2 Mana</scaleMana> per second
+    for 5 seconds after dealing damage to an enemy champion. If you can't gain Mana, <healing>heal for
+    45%</healing> of this value instead.<br><br><passive>Helping Hand</passive><br>Attacks deal <physicalDamage>5
+    bonus physical damage</physicalDamage> to minions.</mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from: []
+- item_id: 1057
+  name: Negatron Cloak
+  description: <mainText><stats><attention>45</attention> Magic Resist</stats><br><br></mainText>
+  gold_total: 850
+  builds_into:
+  - 2504
+  - 8020
+  - 328020
+  - 3091
+  - 6665
+  - 4401
+  builds_from:
+  - 1033
+- item_id: 1058
+  name: Needlessly Large Rod
+  description: <mainText><stats><attention>65</attention> Ability Power</stats><br><br></mainText>
+  gold_total: 1200
+  builds_into:
+  - 3157
+  - 4645
+  - 3089
+  - 3102
+  - 3128
+  - 4403
+  builds_from: []
+- item_id: 1082
+  name: Dark Seal
+  description: <mainText><stats><attention>15</attention> Ability Power<br><attention>50</attention> Health</stats><br><br><passive>Glory</passive><br><keyword>Takedowns</keyword>
+    grant <passive>Glory</passive>, up to 10. 5 <passive>Glory</passive> is lost on death.<br>Gain <scaleAP>4
+    Ability Power</scaleAP> per <passive>Glory</passive>.</mainText>
+  gold_total: 350
+  builds_into:
+  - 3041
+  builds_from: []
+- item_id: 1083
+  name: Cull
+  description: <mainText><stats><attention>7</attention> Attack Damage</stats><br><br><passive>Reap</passive><br>Restore
+    <healing>3 Health</healing> <OnHit>On-Hit</OnHit>.<br>Killing minions grants <gold>1 gold</gold>,
+    up to <gold>100</gold>. Reaching the limit grants another <gold>350 gold</gold>.<br></mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1086
+  name: Doran's Bow
+  description: <mainText><stats><attention>8</attention> Attack Damage<br><attention>15%</attention> Attack
+    Speed<br><attention>1.5%</attention> Omnivamp</stats><br><br></mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from: []
+- item_id: 1101
+  name: Scorchclaw Pup
+  description: <mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font
+    color='#DD2E2E'>Scorchclaw</font> that assists you against monsters.<br><br>The companion grows as
+    you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your
+    Jungle Quest and periodically imbues your next Attack or Ability to burn enemies and <status>Slow</status>
+    them. Killing large monsters readies this immediately.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1102
+  name: Gustwalker Hatchling
+  description: <mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font
+    color='#38A8E8'>Gustwalker</font> that assists you against monsters.<br><br>The companion grows as
+    you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your
+    Jungle Quest and grants <speed>Move Speed</speed> upon entering brush, increased when killing large
+    monsters.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1103
+  name: Mosstomper Seedling
+  description: <mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font
+    color='#1CA935'>Mosstomper</font> that assists you against monsters.<br><br>The companion grows as
+    you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your
+    Jungle Quest and grants a Shield while out of combat and after killing large monsters.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1105
+  name: Mosstomper Seedling
+  description: <mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font
+    color='#1CA935'>Mosstomper</font> that assists you against monsters.<br><br>The companion grows as
+    you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your
+    Jungle Quest and grants a Shield while out of combat and after killing large monsters.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1106
+  name: Gustwalker Hatchling
+  description: <mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font
+    color='#38A8E8'>Gustwalker</font> that assists you against monsters.<br><br>The companion grows as
+    you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your
+    Jungle Quest and grants <speed>Move Speed</speed> upon entering brush, increased when killing large
+    monsters.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1107
+  name: Scorchclaw Pup
+  description: <mainText><stats></stats><br><br><passive>Jungle Companions</passive><br>Summon a <font
+    color='#DD2E2E'>Scorchclaw</font> that assists you against monsters.<br><br>The companion grows as
+    you hunt monsters, empowering your <spellName>Smite</spellName>. When fully grown, it completes your
+    Jungle Quest and periodically imbues your next Attack or Ability to burn enemies and <status>Slow</status>
+    them. Killing large monsters readies this immediately.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1120
+  name: Doran's Helm
+  description: <mainText><stats><attention>150</attention> Health<br><attention>8</attention> Armor<br><attention>8</attention>
+    Magic Resist</stats><br><br><passive>Helping Hand</passive><br>Attacks deal <physicalDamage>5 bonus
+    physical damage</physicalDamage> to minions.</mainText>
+  gold_total: 450
+  builds_into: []
+  builds_from: []
+- item_id: 1501
+  name: Fortification
+  description: <mainText><stats></stats><br><br></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1502
+  name: Reinforced Armor
+  description: <mainText><stats></stats><br><br><mainText><unique>Reinforced</unique><br>Turrets take
+    80% reduced damage, including True Damage, when no enemy Lane Minions or Rift Herald are nearby.<br><br><unique>Melee
+    Weakness</unique><br>Turrets take 20% increased damage from melee Champions.</mainText></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1503
+  name: Warden's Eye
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1505
+  name: Reinforced Armor
+  description: <mainText><stats></stats><br><br><mainText><unique>Reinforced</unique><br>Turrets take
+    80% reduced damage, including True Damage, when no enemy Lane Minions or Rift Herald are nearby.<br><br><unique>Melee
+    Weakness</unique><br>Turrets take 20% increased damage from melee Champions.<br><br><unique>Regeneration</unique><br>Inhibitor
+    turrets have health regeneration but cannot regenerate past their current segment at 30%, 75%, and
+    100% health.</mainText></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1506
+  name: Reinforced Armor
+  description: <mainText><stats></stats><br><br><mainText><unique>Reinforced</unique><br>Turrets take
+    80% reduced damage, including True Damage, when no enemy Lane Minions or Rift Herald are nearby.<br><br><unique>Melee
+    Weakness</unique><br>Turrets take 20% increased damage from melee Champions.<br><br><unique>Regeneration</unique><br>Inhibitor
+    turrets have health regeneration but cannot regenerate past their current segment at 30%, 75%, and
+    100% health.</mainText></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1507
+  name: Overcharged
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1508
+  name: Anti-tower Socks
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1509
+  name: Gusto
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1510
+  name: Phreakish Gusto
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1511
+  name: Super Mech Armor
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1512
+  name: Super Mech Power Field
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1515
+  name: Turret Plating
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1516
+  name: Structure Bounty
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1517
+  name: Structure Bounty
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1518
+  name: Structure Bounty
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1519
+  name: Structure Bounty
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1520
+  name: OvererchargedHA
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1521
+  name: Fortification
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1522
+  name: Tower Power-Up
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1523
+  name: Overcharged
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 1524
+  name: Overgrowth
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 2001
+  name: Recall
+  description: Teleports your champion to the Summoning Platform after 8 seconds. Any damage taken will
+    cancel the teleport.
+  gold_total: 60
+  builds_into: []
+  builds_from: []
+- item_id: 2003
+  name: Health Potion
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Restores <healing>120 Health</healing>
+    over 15 seconds.</mainText>
+  gold_total: 50
+  builds_into: []
+  builds_from: []
+- item_id: 2007
+  name: Disabled Recall
+  description: ''
+  gold_total: 60
+  builds_into: []
+  builds_from: []
+- item_id: 2010
+  name: Total Biscuit of Everlasting Will
+  description: <mainText><stats></stats><br><br><active>Active - Consume:</active> Eat the biscuit to
+    restore <healing>Health</healing> over 5 seconds, increased based on missing health. Consuming or
+    selling a biscuit permanently grants <healing>30 maximum Health</healing>. </mainText>
+  gold_total: 50
+  builds_into: []
+  builds_from: []
+- item_id: 2019
+  name: Steel Sigil
+  description: <mainText><stats><attention>15</attention> Attack Damage<br><attention>30</attention> Armor</stats><br><br></mainText>
+  gold_total: 1100
+  builds_into:
+  - 6333
+  - 6700
+  - 3026
+  builds_from:
+  - 1029
+  - 1036
+  - 1029
+- item_id: 2020
+  name: The Brutalizer
+  description: <mainText><stats><attention>25</attention> Attack Damage<br><attention>10</attention> Ability
+    Haste<br><attention>5</attention> Lethality</stats><br><br></mainText>
+  gold_total: 1337
+  builds_into:
+  - 6698
+  - 2520
+  - 6699
+  - 6696
+  builds_from:
+  - 2022
+  - 1037
+- item_id: 2021
+  name: Tunneler
+  description: <mainText><stats><attention>15</attention> Attack Damage<br><attention>250</attention>
+    Health</stats><br><br></mainText>
+  gold_total: 1150
+  builds_into:
+  - 2501
+  - 3053
+  - 3073
+  - 3814
+  - 3181
+  - 3161
+  - 3748
+  - 6610
+  builds_from:
+  - 1036
+  - 1028
+- item_id: 2022
+  name: Glowing Mote
+  description: <mainText><stats><attention>5</attention> Ability Haste</stats><br><br></mainText>
+  gold_total: 250
+  builds_into:
+  - 2020
+  - 3024
+  - 3133
+  - 3802
+  - 3067
+  - 3057
+  - 3108
+  - 3158
+  - 4642
+  - 6660
+  builds_from: []
+- item_id: 2031
+  name: Refillable Potion
+  description: <mainText><stats></stats><br><br><active>Active</active> (2 charges)<br>Restores <healing>100
+    Health</healing> over 12 seconds. <br>Refills upon visiting the shop.</mainText>
+  gold_total: 150
+  builds_into:
+  - 2033
+  builds_from: []
+- item_id: 2033
+  name: Corrupting Potion
+  description: <mainText><stats></stats><br><br><active>Active - Consume:</active> Consumes a charge to
+    restore <healing>100 Health</healing> and <scaleMana>75 Mana</scaleMana> over 12 seconds. During this
+    time, damaging Abilities and Attacks burn enemy champions for <magicDamage>15 (20 if you cannot gain
+    Mana) magic damage</magicDamage> over 3 seconds. Holds up to 3 charges and refills upon visiting the
+    shop.<br><br><rules>Corrupting damage is reduced to 50% when triggered by area of effect or periodic
+    damage.</rules></mainText>
+  gold_total: 500
+  builds_into: []
+  builds_from:
+  - 2031
+- item_id: 2051
+  name: Guardian's Horn
+  description: <mainText><stats><attention>150</attention> Health</stats><br><br><br><li><passive>Recovery:</passive>
+    Restores <healing>20 Health</healing> every 5 seconds.<li><passive>Undaunted:</passive> Blocks 15
+    damage from attacks and spells from champions (25% effectiveness vs. damage over time abilities).<br></mainText>
+  gold_total: 950
+  builds_into: []
+  builds_from: []
+- item_id: 2052
+  name: Poro-Snax
+  description: <mainText><stats></stats><br><br><active>Active - Consume:</active> Serves a scrumptious
+    scoop to a nearby Poro, causing it to grow in size.<br><br><flavorText>This savory blend of Avarosan
+    hen and local Freljordian herbs—picked daily and flash-frozen—contains the essential nutrients necessary
+    to keep your Poro cool and calm.<br><br>All proceeds will be donated towards preserving the habitat
+    of the endangered Spotted Poro.</flavorText></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 2055
+  name: Control Ward
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Places a Control Ward that
+    grants vision and reveals enemy Stealth Wards, traps and <keywordStealth>Camouflaged</keywordStealth>
+    enemies.</mainText>
+  gold_total: 75
+  builds_into: []
+  builds_from: []
+- item_id: 2065
+  name: Shurelya's Battlesong
+  description: <mainText><stats><attention>50</attention> Ability Power<br><attention>15</attention> Ability
+    Haste<br><attention>4%</attention> Move Speed<br><attention>125%</attention> Base Mana Regen</stats><br><br><active>Inspiring
+    Speech</active><br>Grant nearby allies <speed>30% Move Speed</speed> for 4 seconds.</mainText>
+  gold_total: 2200
+  builds_into: []
+  builds_from:
+  - 3113
+  - 4642
+- item_id: 2138
+  name: Elixir of Iron
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Grants <scaleHealth>300 Health</scaleHealth>,
+    25% Tenacity and increased size for 3 minutes. While active, you leave a path behind that boosts allied
+    champions' <speed>Move Speed by 15%</speed>.</mainText>
+  gold_total: 500
+  builds_into: []
+  builds_from: []
+- item_id: 2139
+  name: Elixir of Sorcery
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Grants <scaleAP>50 Ability
+    Power</scaleAP> and <scaleMana>15% Mana Regen</scaleMana> for 3 minutes. While active, damaging a
+    champion or turret deals <trueDamage>25 bonus true damage</trueDamage> (5s against champions).</mainText>
+  gold_total: 500
+  builds_into: []
+  builds_from: []
+- item_id: 2140
+  name: Elixir of Wrath
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Grants <scaleAD>30 Attack
+    Damage</scaleAD> and <lifeSteal>12% Physical Vamp</lifeSteal> against champions for 3 minutes.</mainText>
+  gold_total: 500
+  builds_into: []
+  builds_from: []
+- item_id: 2141
+  name: Cappa Juice
+  description: <mainText><stats></stats><br><br><rules>Helps you get on a head.</rules><active>Active
+    - Consume:</active> This juice does nothing.<br></mainText>
+  gold_total: 300
+  builds_into: []
+  builds_from: []
+- item_id: 2150
+  name: Elixir of Skill
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Grants 1 Skill Point.<br><br><rules>This
+    item does not increase your level or allow allocating skill points past the normal maximum in a skill</rules></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 2151
+  name: Elixir of Avarice
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Grants <trueDamage>5 true
+    damage</trueDamage> on hit against minions for 60 seconds. When this effect expires, gain 60 gold.
+    </mainText>
+  gold_total: 50
+  builds_into: []
+  builds_from: []
+- item_id: 2152
+  name: Elixir of Force
+  description: <mainText><stats></stats><br><br><active>Consume</active><br>Grants 25 Adaptive Force for
+    60 seconds. </mainText>
+  gold_total: 50
+  builds_into: []
+  builds_from: []
+- item_id: 2403
+  name: Minion Dematerializer
+  description: <mainText><stats></stats><br><br><active>Active - Consume:</active> Kill target lane minion.
+    (0s)</mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 2420
+  name: Seeker's Armguard
+  description: <mainText><stats><attention>40</attention> Ability Power<br><attention>25</attention> Armor</stats><br><br><active>Time
+    Stop</active> (Single use)<br>Enter <keyword>Stasis</keyword> for 2.5 seconds.</mainText>
+  gold_total: 1600
+  builds_into:
+  - 3157
+  builds_from:
+  - 1052
+  - 1029
+  - 1052
+- item_id: 2421
+  name: Shattered Armguard
+  description: <mainText><stats><attention>40</attention> Ability Power<br><attention>25</attention> Armor</stats><br><br><passive>Shattered
+    Time</passive><br>Armguard is broken, but can still be upgraded.<br><br><rules>After breaking one
+    Armguard, the shopkeeper will only sell you <rarityGeneric>Shattered Armguard.</rarityGeneric></rules><br><br></mainText>
+  gold_total: 1600
+  builds_into:
+  - 3157
+  builds_from:
+  - 1052
+  - 1029
+  - 1052
+- item_id: 2422
+  name: Slightly Magical Footwear
+  description: <mainText><stats><attention>25</attention> Move Speed</stats><br><br>Grants an additional
+    <speed>10 Move Speed</speed>. Boots that build from Slightly Magical Footwear retain this bonus Move
+    Speed.</mainText>
+  gold_total: 300
+  builds_into:
+  - 3006
+  - 3047
+  - 3020
+  - 3158
+  - 3111
+  - 3117
+  - 3009
+  - 3008
+  builds_from: []
+- item_id: 2501
+  name: Overlord's Bloodmail
+  description: <mainText><stats><attention>30</attention> Attack Damage<br><attention>550</attention>
+    Health</stats><br><br><passive>Tyranny</passive><br>Gain 2.5% of your <healing>bonus Health</healing>
+    as <scaleAD>Attack Damage</scaleAD>. <br><br><passive>Retribution</passive><br>Gain up to 12% increased
+    <scaleAD>Attack Damage</scaleAD> based on your percent missing Health. </mainText>
+  gold_total: 3300
+  builds_into: []
+  builds_from:
+  - 2021
+  - 2021
+- item_id: 2502
+  name: Unending Despair
+  description: <mainText><stats><attention>400</attention> Health<br><attention>50</attention> Armor<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Anguish</passive><br>Every 4 seconds while in combat with champions,
+    deal <magicDamage>magic damage</magicDamage> to nearby enemy champions and <healing>heal for 250%</healing>
+    of the damage dealt.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 1031
+  - 3067
+  - 1028
+- item_id: 2503
+  name: Blackfire Torch
+  description: <mainText><stats><attention>80</attention> Ability Power<br><attention>600</attention>
+    Mana<br><attention>20</attention> Ability Haste</stats><br><br><passive>Baleful Blaze</passive><br>Damaging
+    Abilities deals <magicDamage>bonus magic damage</magicDamage> for 3 seconds.<br><br><passive>Blackfire</passive><br>For
+    each enemy champion, epic and large monster affected by your <passive>Baleful Blaze</passive>, gain
+    <scaleAP>4% Ability Power</scaleAP>. </mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3802
+  - 2508
+- item_id: 2504
+  name: Kaenic Rookern
+  description: <mainText><stats><attention>400</attention> Health<br><attention>80</attention> Magic Resist<br><attention>100%</attention>
+    Base Health Regen</stats><br><br><passive>Magebane</passive><br>After not taking magic damage for
+    15 seconds, gain a <shield>magic shield</shield>. </mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3211
+  - 1057
+- item_id: 2508
+  name: Fated Ashes
+  description: <mainText><stats><attention>30</attention> Ability Power</stats><br><br><passive>Inflame</passive><br>Damaging
+    Abilities deal <magicDamage>15 bonus magic damage</magicDamage> over 3 seconds.<br>Deals an additional
+    <magicDamage>45 magic damage</magicDamage> to monsters.</mainText>
+  gold_total: 900
+  builds_into:
+  - 2503
+  - 6653
+  builds_from:
+  - 1052
+- item_id: 2510
+  name: Dusk and Dawn
+  description: <mainText><stats><attention>300</attention> Health<br><attention>60</attention> Ability
+    Power<br><attention>20</attention> Ability Haste<br><attention>20%</attention> Attack Speed</stats><br><br><passive>Spellblade</passive>
+    (0s)<br>After using an Ability, your next Attack deals <magicDamage> bonus magic damage</magicDamage>
+    and <healing>heals you for </healing> <OnHit>On-Hit</OnHit> and then applies <OnHit>On-Hit</OnHit>
+    effects an additional time.</mainText>
+  gold_total: 3100
+  builds_into: []
+  builds_from:
+  - 3057
+  - 1026
+  - 3067
+  - 1042
+- item_id: 2512
+  name: Fiendhunter Bolts
+  description: <mainText><stats><attention>45%</attention> Attack Speed<br><attention>25%</attention>
+    Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Night Vigil</passive><br>Gain
+    30 Ultimate Ability Haste.<br><br><passive>Opening Barrage</passive><br>After casting your Ultimate,
+    your next 3 basic attacks gain <attackSpeed>50% Attack Speed</attackSpeed> and Critically Strike for
+    80% of your normal Critical Strike damage for 8 seconds. If an attack would already Critically Strike,
+    instead it deals <trueDamage>15% bonus true damage</trueDamage>.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 3086
+  - 3144
+- item_id: 2517
+  name: Endless Hunger
+  description: <mainText><stats><attention>65</attention> Attack Damage<br><attention>5%</attention> Omnivamp<br><attention>20%</attention>
+    Tenacity</stats><br><br><passive>Famine</passive><br>Gain Ability Haste based on your Bonus AD.<br><br><passive>Feast</passive><br>When
+    a champion that you damaged recently dies, gain Omnivamp for a moderate duration. </mainText>
+  gold_total: 3100
+  builds_into: []
+  builds_from:
+  - 3133
+  - 1037
+  - 1036
+- item_id: 2520
+  name: Bastionbreaker
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>22</attention> Lethality<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Shaped Charge</passive> (0s)<br>Dealing Ability damage to a
+    Champion or Epic Monster deals an additional <trueDamage> true damage</trueDamage>.<br><br><passive>Sabotage</passive><br>Taking
+    down a champion within 3 seconds of damaging them grants Sabotage for 90 seconds. While you have Sabotage,
+    your next Attack against an Epic Monster or Turret deals an additional <trueDamage> true damage</trueDamage>
+    over 3 seconds. </mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 2020
+  - 3134
+- item_id: 2522
+  name: Actualizer
+  description: <mainText><stats><attention>90</attention> Ability Power<br><attention>300</attention>
+    Mana<br><attention>10</attention> Ability Haste</stats><br><br><active>Mana Made Real</active> (0s)<br>For
+    8 seconds, your mana is Empowered. While Empowered, your spells cost 100% more Mana, you gain  increased
+    Ability damage, Shielding, and Healing, and your basic ability cooldowns progress 30% faster.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3802
+  - 1026
+- item_id: 2523
+  name: Hexoptics C44
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>25%</attention>
+    Critical Strike Chance</stats><br><br><passive>Magnification</passive><br>Deal up to 10% increased
+    damage with Attacks, based on how far away the enemy is (max damage at 500 range).<br><br><passive>Arcane
+    Aim</passive><br>When a champion that you damaged within 3 seconds dies, gain 100 additional attack
+    range for 8 seconds. </mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 1037
+  - 6670
+  - 1036
+- item_id: 2524
+  name: Bandlepipes
+  description: <mainText><stats><attention>200</attention> Health<br><attention>15</attention> Ability
+    Haste<br><attention>20</attention> Armor<br><attention>20</attention> Magic Resist</stats><br><br><passive>Fanfare</passive><br><keyword>Slowing</keyword>
+    or <keyword>Immobilizing</keyword> an enemy champion grants Fanfare for  seconds. Fanfare grants you
+    <speed>20 Move Speed</speed>. While you have Fanfare, nearby allies, including yourself, gain <attackSpeed>
+    Attack Speed</attackSpeed>.</mainText>
+  gold_total: 2300
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1029
+  - 1033
+- item_id: 2525
+  name: Protoplasm Harness
+  description: <mainText><stats><attention>600</attention> Health<br><attention>20</attention> Ability
+    Haste</stats><br><br><passive>Lifeline</passive> (0s)<br>Taking damage that would reduce your Health
+    below 30% causes you to gain <health> maximum Health</health> for 5 seconds, then heal <health> Health</health>
+    over the duration. While regenerating Health, you gain 15% increased Size, 10% Move Speed, and 25%
+    Tenacity. </mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1011
+- item_id: 2526
+  name: Whispering Circlet
+  description: <mainText><stats><attention>200</attention> Health<br><attention>8%</attention> Heal and
+    Shield Power<br><attention>75%</attention> Base Mana Regen<br><attention>300</attention> Mana</stats><br><br><passive>Harmony</passive><br>Gain
+    % Heal and Shield Power.<br><br><passive>Manaflow</passive> (8s, max 5 charges)<br>Landing Abilities
+    grants <scaleMana>4 max Mana</scaleMana> (doubled vs. champions).<br>Transforms into <rarityLegendary>Diadem
+    of Songs</rarityLegendary> at <scaleMana>360 max Mana</scaleMana>.</mainText>
+  gold_total: 2250
+  builds_into:
+  - 2530
+  builds_from:
+  - 3114
+  - 1028
+  - 3070
+- item_id: 2530
+  name: Diadem of Songs
+  description: <mainText><stats><attention>200</attention> Health<br><attention>8%</attention> Heal and
+    Shield Power<br><attention>1000</attention> Mana<br><attention>100%</attention> Base Mana Regen</stats><br><br><passive>Harmony</passive><br>Gain
+    % Heal and Shield Power.<br><br><passive>Consonance</passive><br>While you or any ally you've healed
+    or shielded in the last 3 seconds is in combat with champions, each second, heal the lowest health
+    nearby ally champion.</mainText>
+  gold_total: 2250
+  builds_into: []
+  builds_from: []
+- item_id: 3002
+  name: Trailblazer
+  description: <mainText><stats><attention>250</attention> Health<br><attention>40</attention> Armor<br><attention>4%</attention>
+    Move Speed</stats><br><br><passive>Lead the Way</passive><br>While moving, build up to <speed>20 bonus
+    Move Speed</speed>. <br>At max speed:<li>Create a trail that grants allied champions <speed>Move Speed
+    equal to 15%</speed> of yours. <li>If you are Melee, your next Attack <keyword>Slows</keyword> the
+    target by 50% for 1 second.<br><br></mainText>
+  gold_total: 2400
+  builds_into: []
+  builds_from:
+  - 3066
+  - 1031
+- item_id: 3003
+  name: Archangel's Staff
+  description: <mainText><stats><attention>70</attention> Ability Power<br><attention>600</attention>
+    Mana<br><attention>25</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain Ability
+    Power equal to <scaleMana>1% bonus Mana.</scaleMana><br><br><passive>Manaflow</passive> (8s, max 5
+    charges)<br>Landing Abilities grants <scaleMana>5 max Mana</scaleMana> (doubled vs. champions).<br>Transforms
+    into <rarityLegendary>Seraph's Embrace</rarityLegendary> at <scaleMana>360 max Mana</scaleMana>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3070
+  - 3802
+  - 3108
+- item_id: 3004
+  name: Manamune
+  description: <mainText><stats><attention>35</attention> Attack Damage<br><attention>500</attention>
+    Mana<br><attention>15</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleAD>
+    bonus Attack Damage</scaleAD>.<br><br><passive>Manaflow</passive> (8s, max 4 charges)<br>Landing Attacks
+    and Abilities grants <scaleMana>3 max Mana</scaleMana> (doubled vs. champions).<br>Transforms into
+    <rarityLegendary>Muramana</rarityLegendary> at <scaleMana>360 max Mana</scaleMana>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3070
+  - 3133
+  - 1036
+- item_id: 3006
+  name: Berserker's Greaves
+  description: <mainText><stats><attention>30%</attention> Attack Speed<br><attention>45</attention> Move
+    Speed</stats><br><br></mainText>
+  gold_total: 1100
+  builds_into:
+  - 3172
+  builds_from:
+  - 1001
+  - 1042
+  - 1042
+- item_id: 3008
+  name: Gluttonous Greaves
+  description: <mainText><stats><attention>45</attention> Move Speed<br><attention>4%</attention> Omnivamp</stats><br><br><passive>Slay</passive><br>Gain
+    0.6% Omnivamp on Champion takedown, stacking up to 10 times.</mainText>
+  gold_total: 1000
+  builds_into:
+  - 3168
+  builds_from:
+  - 1001
+- item_id: 3009
+  name: Boots of Swiftness
+  description: <mainText><stats><attention>55</attention> Move Speed</stats><br><br><passive>Fleetfooted</passive><br>Reduce
+    the effectiveness of <keyword>Slows</keyword> by 25%.</mainText>
+  gold_total: 1000
+  builds_into:
+  - 3170
+  builds_from:
+  - 1001
+- item_id: 3010
+  name: Symbiotic Soles
+  description: <mainText><stats><attention>40</attention> Move Speed</stats><br><br><passive>Synchrony</passive><br>Gain
+    <speed>10 Move Speed</speed> when out of combat.<br><br><passive>Symbiosis</passive><br>After traveling
+    150000 units of distance, transform into <rarityLegendary>Synchronized Souls</rarityLegendary>.</mainText>
+  gold_total: 900
+  builds_into:
+  - 3013
+  builds_from:
+  - 1001
+- item_id: 3011
+  name: Chemtech Putrifier
+  description: <mainText><stats><attention>35</attention> Ability Power<br><attention>10%</attention>
+    Heal and Shield Power<br><attention>75%</attention> Base Mana Regen<br><attention>15</attention> Ability
+    Haste</stats><br><br><br><li><passive>Puffcap Toxin:</passive> Dealing damage applies <status>40%
+    Grievous Wounds</status> to champions for 3 seconds.<br><br><rules><status>Grievous Wounds</status>
+    reduces the effectiveness of Healing and Regeneration effects.</rules></mainText>
+  gold_total: 1900
+  builds_into: []
+  builds_from:
+  - 3916
+  - 3114
+- item_id: 3013
+  name: Synchronized Souls
+  description: <mainText><stats><attention>45</attention> Move Speed</stats><br><br><passive>Voidborn</passive><br>Gain
+    Empowered Recall.<br><br><passive>Synchrony</passive><br>Gain <speed>45 Move Speed</speed> when out
+    of combat.</mainText>
+  gold_total: 900
+  builds_into:
+  - 3176
+  builds_from:
+  - 3010
+- item_id: 3020
+  name: Sorcerer's Shoes
+  description: <mainText><stats><attention>12</attention> Magic Penetration<br><attention>45</attention>
+    Move Speed</stats><br><br></mainText>
+  gold_total: 1100
+  builds_into:
+  - 3175
+  builds_from:
+  - 1001
+- item_id: 3024
+  name: Glacial Buckler
+  description: <mainText><stats><attention>25</attention> Armor<br><attention>300</attention> Mana<br><attention>10</attention>
+    Ability Haste</stats><br><br></mainText>
+  gold_total: 900
+  builds_into:
+  - 323110
+  - 3110
+  builds_from:
+  - 1029
+  - 1027
+  - 2022
+- item_id: 3026
+  name: Guardian Angel
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>45</attention> Armor</stats><br><br><passive>Rebirth</passive><br>Upon
+    taking lethal damage, restores <healing>50% base Health</healing> and <scaleMana>100% max Mana</scaleMana>
+    after 4 seconds of <keyword>Stasis</keyword>.</mainText>
+  gold_total: 3200
+  builds_into: []
+  builds_from:
+  - 2019
+  - 1038
+- item_id: 3031
+  name: Infinity Edge
+  description: <mainText><stats><attention>75</attention> Attack Damage<br><attention>25%</attention>
+    Critical Strike Chance<br><attention>30%</attention> Critical Strike Damage</stats><br><br></mainText>
+  gold_total: 3500
+  builds_into: []
+  builds_from:
+  - 1038
+  - 1037
+  - 1018
+- item_id: 3032
+  name: Yun Tal Wildarrows
+  description: <mainText><stats><attention>50</attention> Attack Damage<br><attention>45%</attention>
+    Attack Speed<br><attention>0%</attention> Critical Strike Chance</stats><br><br><passive>Practice
+    Makes Lethal</passive><br>On-Attack, gain Critical Strike Chance permanently up to 25%.<br><br><passive>Flurry</passive><br>On-Attacking
+    an enemy champion, gain 30% Attack Speed for 6 seconds (30 second cooldown). <br>Attacks reduce this
+    cooldown by 1 second, increased to 2 seconds for Critical Strikes.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1038
+  - 3144
+  - 1036
+- item_id: 3033
+  name: Mortal Reminder
+  description: <mainText><stats><attention>35</attention> Attack Damage<br><attention>30%</attention>
+    Armor Penetration<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Grievous
+    Wounds</passive><br>Dealing physical damage applies <keyword>40% Wounds</keyword> to enemy champions
+    for 3 seconds.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3123
+  - 3035
+  - 1018
+- item_id: 3035
+  name: Last Whisper
+  description: <mainText><stats><attention>20</attention> Attack Damage<br><attention>18%</attention>
+    Armor Penetration</stats><br><br></mainText>
+  gold_total: 1450
+  builds_into:
+  - 3033
+  - 3036
+  - 6694
+  builds_from:
+  - 1036
+  - 1036
+- item_id: 3036
+  name: Lord Dominik's Regards
+  description: <mainText><stats><attention>35</attention> Attack Damage<br><attention>35%</attention>
+    Armor Penetration<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Giant
+    Slayer</passive><br>Deal up to 15% bonus damage against champions based on their bonus Health. Maximum
+    damage bonus reached at 1500 bonus Health.</mainText>
+  gold_total: 3300
+  builds_into: []
+  builds_from:
+  - 3035
+  - 6670
+- item_id: 3040
+  name: Seraph's Embrace
+  description: <mainText><stats><attention>70</attention> Ability Power<br><attention>1000</attention>
+    Mana<br><attention>25</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleAP>
+    Ability Power</scaleAP>.<br><br><passive>Lifeline</passive> (0s)<br>Taking damage that would reduce
+    your Health below 30% grants a <shield> Shield</shield> for 3 seconds.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from: []
+- item_id: 3041
+  name: Mejai's Soulstealer
+  description: <mainText><stats><attention>20</attention> Ability Power<br><attention>100</attention>
+    Health</stats><br><br><passive>Glory</passive><br><keyword>Takedowns</keyword> grant <passive>Glory</passive>,
+    up to 25. 10 <passive>Glory</passive> is lost on death.<br>Gain <scaleAP>5 Ability Power</scaleAP>
+    per <passive>Glory</passive> and <speed>10% Move Speed</speed> at 10 or higher <passive>Glory</passive>.</mainText>
+  gold_total: 1500
+  builds_into: []
+  builds_from:
+  - 1082
+- item_id: 3042
+  name: Muramana
+  description: <mainText><stats><attention>35</attention> Attack Damage<br><attention>1000</attention>
+    Mana<br><attention>15</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleAD>2%
+    max Mana as bonus Attack Damage</scaleAD>.<br><br><passive>Shock</passive><br>Attacks against champions
+    deal <physicalDamage>1.2% max Mana as bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>.
+    <br>Damaging Abilities against champions deal <physicalDamage>3% - 4% max Mana as bonus physical damage</physicalDamage>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from: []
+- item_id: 3044
+  name: Phage
+  description: <mainText><stats><attention>15</attention> Attack Damage<br><attention>200</attention>
+    Health</stats><br><br><passive>Rage</passive><br>Attacking grants <speed>Move Speed</speed> for 2
+    seconds.</mainText>
+  gold_total: 1100
+  builds_into:
+  - 3071
+  - 3078
+  - 3073
+  - 6630
+  - 6631
+  builds_from:
+  - 1028
+  - 1036
+- item_id: 3046
+  name: Phantom Dancer
+  description: <mainText><stats><attention>65%</attention> Attack Speed<br><attention>25%</attention>
+    Critical Strike Chance<br><attention>10%</attention> Move Speed</stats><br><br><passive>Spectral Waltz</passive><br>Become
+    <keyword>Ghosted</keyword>.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 1042
+  - 3086
+  - 1042
+- item_id: 3047
+  name: Plated Steelcaps
+  description: <mainText><stats><attention>25</attention> Armor<br><attention>45</attention> Move Speed</stats><br><br><passive>Plating</passive><br>Reduces
+    incoming damage from Attacks by 10%.</mainText>
+  gold_total: 1200
+  builds_into:
+  - 3174
+  builds_from:
+  - 1001
+  - 1029
+- item_id: 3050
+  name: Zeke's Convergence
+  description: <mainText><stats><attention>300</attention> Health<br><attention>25</attention> Armor<br><attention>25</attention>
+    Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><passive>Frostfire Tempest</passive><br>Casting
+    your Ultimate summons a storm around you for 5 seconds. The storm deals <magicDamage>30 magic damage</magicDamage>
+    per second to enemy champions and <keyword>Slows</keyword> them by 30%.</mainText>
+  gold_total: 2200
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1029
+  - 1033
+- item_id: 3051
+  name: Hearthbound Axe
+  description: <mainText><stats><attention>20</attention> Attack Damage<br><attention>20%</attention>
+    Attack Speed</stats><br><br></mainText>
+  gold_total: 1200
+  builds_into:
+  - 3078
+  - 3302
+  - 6672
+  builds_from:
+  - 1036
+  - 1042
+  - 1036
+- item_id: 3053
+  name: Sterak's Gage
+  description: <mainText><stats><attention>400</attention> Health<br><attention>20%</attention> Tenacity</stats><br><br><passive>The
+    Claws that Catch</passive><br>Gain <scaleAD>bonus Attack Damage</scaleAD>.<br><br><passive>Lifeline</passive><br>Taking
+    damage that would reduce your Health below 30% grants a <shield>decaying Shield</shield> for 4.5 seconds.</mainText>
+  gold_total: 3200
+  builds_into: []
+  builds_from:
+  - 1037
+  - 2021
+  - 1028
+- item_id: 3057
+  name: Sheen
+  description: <mainText><stats><attention>10</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After
+    using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>.<br></mainText>
+  gold_total: 900
+  builds_into:
+  - 3078
+  - 3100
+  - 2510
+  - 3508
+  - 6632
+  - 6662
+  builds_from:
+  - 2022
+- item_id: 3065
+  name: Spirit Visage
+  description: <mainText><stats><attention>400</attention> Health<br><attention>50</attention> Magic Resist<br><attention>10</attention>
+    Ability Haste<br><attention>100%</attention> Base Health Regen</stats><br><br><passive>Boundless Vitality</passive><br>Heals
+    and Shields on you are increased by 25%.</mainText>
+  gold_total: 2700
+  builds_into: []
+  builds_from:
+  - 3211
+  - 3067
+- item_id: 3066
+  name: Winged Moonplate
+  description: <mainText><stats><attention>200</attention> Health<br><attention>4%</attention> Move Speed</stats><br><br></mainText>
+  gold_total: 800
+  builds_into:
+  - 3742
+  - 323002
+  - 3002
+  - 3181
+  - 4401
+  builds_from:
+  - 1028
+- item_id: 3067
+  name: Kindlegem
+  description: <mainText><stats><attention>200</attention> Health<br><attention>10</attention> Ability
+    Haste</stats><br><br></mainText>
+  gold_total: 800
+  builds_into:
+  - 3071
+  - 8020
+  - 323050
+  - 328020
+  - 124011
+  - 323190
+  - 323222
+  - 3165
+  - 6620
+  - 3050
+  - 3109
+  - 6656
+  - 326617
+  - 323107
+  - 2502
+  - 2510
+  - 2524
+  - 2525
+  - 6617
+  - 3065
+  - 3152
+  - 3119
+  - 326620
+  - 3190
+  - 3222
+  - 323109
+  - 323119
+  - 4403
+  - 4629
+  - 4644
+  - 6630
+  - 6632
+  - 8001
+  builds_from:
+  - 1028
+  - 2022
+- item_id: 3068
+  name: Sunfire Aegis
+  description: <mainText><stats><attention>350</attention> Health<br><attention>50</attention> Armor<br><attention>10</attention>
+    Ability Haste</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage>magic
+    damage</magicDamage> per second to nearby enemies for 3 seconds. </mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 6660
+  - 1031
+  - 1028
+- item_id: 3070
+  name: Tear of the Goddess
+  description: <mainText><stats><attention>240</attention> Mana</stats><br><br><passive>Manaflow</passive>
+    (8s, max 4 charges)<br>Landing Abilities grants <scaleMana>3 max Mana</scaleMana> (doubled vs. champions),
+    up to <scaleMana>360</scaleMana>.<br><br><passive>Helping Hand</passive><br>Attacks deal an additional
+    <physicalDamage>5 physical damage</physicalDamage> to minions.</mainText>
+  gold_total: 400
+  builds_into:
+  - 3003
+  - 3004
+  - 2526
+  - 3119
+  builds_from: []
+- item_id: 3071
+  name: Black Cleaver
+  description: <mainText><stats><attention>45</attention> Attack Damage<br><attention>400</attention>
+    Health<br><attention>20</attention> Ability Haste</stats><br><br><passive>Carve</passive><br>Dealing
+    <physicalDamage>physical damage</physicalDamage> to champions reduces the target's <scaleArmor>Armor
+    by 6%</scaleArmor> for 6 seconds. (stacks 5 times).<br><br><passive>Fervor</passive><br>Dealing <physicalDamage>physical
+    damage</physicalDamage> grants <speed> Move Speed</speed> for 2 seconds.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3044
+  - 3067
+  - 1037
+- item_id: 3072
+  name: Bloodthirster
+  description: <mainText><stats><attention>80</attention> Attack Damage<br><attention>15%</attention>
+    Life Steal</stats><br><br><passive>Ichorshield</passive><br>Convert excess healing from your Lifesteal
+    to a <shield>Shield</shield>.</mainText>
+  gold_total: 3400
+  builds_into: []
+  builds_from:
+  - 1038
+  - 1037
+  - 1053
+- item_id: 3073
+  name: Experimental Hexplate
+  description: <mainText><stats><attention>40</attention> Attack Damage<br><attention>20%</attention>
+    Attack Speed<br><attention>450</attention> Health</stats><br><br><passive>Hexcharged</passive><br>Gain
+    30 Ultimate Ability Haste.<br><br><passive>Overdrive</passive><br>After casting your Ultimate, gain
+    <attackSpeed>% Attack Speed</attackSpeed> and <speed>% Move Speed</speed> for 8 seconds. </mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 2021
+  - 1042
+  - 3044
+- item_id: 3074
+  name: Ravenous Hydra
+  description: <mainText><stats><attention>65</attention> Attack Damage<br><attention>15</attention> Ability
+    Haste<br><attention>12%</attention> Life Steal</stats><br><br><passive>Cleave</passive><br>Attacks
+    deal <physicalDamage>physical damage</physicalDamage> to nearby enemies.<active>Ravenous Crescent</active><br>Deal
+    <physicalDamage>physical damage</physicalDamage> to enemies around you. <br>Your Life Steal applies
+    to this damage.</mainText>
+  gold_total: 3300
+  builds_into: []
+  builds_from:
+  - 3077
+  - 1053
+  - 3133
+- item_id: 3075
+  name: Thornmail
+  description: <mainText><stats><attention>150</attention> Health<br><attention>75</attention> Armor</stats><br><br><passive>Thorns</passive><br>When
+    struck by an Attack, deal <magicDamage>magic damage</magicDamage> to the attacker and apply 40% <keyword>Wounds</keyword>
+    for 3 seconds if they are a champion.</mainText>
+  gold_total: 2450
+  builds_into: []
+  builds_from:
+  - 3076
+  - 1031
+  - 1028
+- item_id: 3076
+  name: Bramble Vest
+  description: <mainText><stats><attention>30</attention> Armor</stats><br><br><passive>Thorns</passive><br>When
+    hit by an Attack, deal <magicDamage> magic damage</magicDamage> to the attacker and apply <keyword>40%
+    Wounds</keyword> for 3 seconds if they are a champion.</mainText>
+  gold_total: 800
+  builds_into:
+  - 323075
+  - 3075
+  builds_from:
+  - 1029
+  - 1029
+- item_id: 3077
+  name: Tiamat
+  description: <mainText><stats><attention>25</attention> Attack Damage</stats><br><br><passive>Cleave</passive><br>Attacks
+    deal <physicalDamage>physical damage</physicalDamage> to nearby enemies.<br><active>Crescent</active><br>Deal
+    <physicalDamage>physical damage</physicalDamage> to enemies around you.</mainText>
+  gold_total: 1200
+  builds_into:
+  - 3074
+  - 3748
+  - 6698
+  - 6631
+  builds_from:
+  - 1036
+  - 1036
+- item_id: 3078
+  name: Trinity Force
+  description: <mainText><stats><attention>36</attention> Attack Damage<br><attention>30%</attention>
+    Attack Speed<br><attention>333</attention> Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After
+    using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>.<br>
+    <br><passive>Quicken</passive><br>Attacking grants <speed>20 Move Speed</speed> for 2 seconds.</mainText>
+  gold_total: 3333
+  builds_into: []
+  builds_from:
+  - 3057
+  - 3044
+  - 3051
+- item_id: 3082
+  name: Warden's Mail
+  description: <mainText><stats><attention>40</attention> Armor</stats><br><br><passive>Rock Solid</passive><br>Reduce
+    incoming damage from Attacks.</mainText>
+  gold_total: 1000
+  builds_into:
+  - 323110
+  - 3110
+  - 3143
+  builds_from:
+  - 1029
+  - 1029
+- item_id: 3083
+  name: Warmog's Armor
+  description: <mainText><stats><attention>1000</attention> Health<br><attention>100%</attention> Base
+    Health Regen</stats><br><br><passive>Warmog's Heart</passive> <br>If you have 2000 bonus Health and
+    have not taken damage within 8 seconds, restore <healing></healing> Health per second.<br><br><passive>Warmog's
+    Vitality</passive><br>Gain bonus Health equal to 12% of your Item Health (<healing>0</healing>).</mainText>
+  gold_total: 3100
+  builds_into: []
+  builds_from:
+  - 1011
+  - 1011
+  - 3801
+- item_id: 3084
+  name: Heartsteel
+  description: <mainText><stats><attention>900</attention> Health<br><attention>100%</attention> Base
+    Health Regen</stats><br><br><passive>Colossal Consumption</passive> (0s) per target<br>If an enemy
+    champion is nearby for a few seconds, your next Attack against them deals <physicalDamage>70 plus
+    6%</physicalDamage> of your max Health as <physicalDamage>bonus physical damage</physicalDamage> and
+    grants <scaleHealth>10%</scaleHealth> of the damage as <scaleHealth>max Health.</scaleHealth><br><br><passive>Goliath</passive><br>For
+    each <scaleHealth>1000 max Health</scaleHealth>, gain 3% increased size, up to 30%. </mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1011
+  - 3801
+  - 1011
+- item_id: 3085
+  name: Runaan's Hurricane
+  description: <mainText><stats><attention>40%</attention> Attack Speed<br><attention>25%</attention>
+    Critical Strike Chance<br><attention>5%</attention> Move Speed</stats><br><br><passive>Wind's Fury</passive><br>Attacks
+    fire bolts at 2 additional enemies near the target.<br>Each bolt deals <physicalDamage>physical damage</physicalDamage>
+    and applies <OnHit>On-Hit</OnHit> effects.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 3086
+  - 3144
+- item_id: 3086
+  name: Zeal
+  description: <mainText><stats><attention>15%</attention> Attack Speed<br><attention>15%</attention>
+    Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br></mainText>
+  gold_total: 1200
+  builds_into:
+  - 2512
+  - 3094
+  - 3046
+  - 3085
+  - 4403
+  - 6671
+  - 6675
+  builds_from:
+  - 1018
+  - 1042
+- item_id: 3087
+  name: Statikk Shiv
+  description: <mainText><stats><attention>45</attention> Attack Damage<br><attention>45</attention> Ability
+    Power<br><attention>30%</attention> Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Electrospark</passive><br>Your
+    <keyword>Energized Attacks</keyword> fire chain lightning, applying <OnHit>On-Hit</OnHit> effects
+    and dealing <magicDamage>magic damage</magicDamage> to nearby targets.<br><br><passive>Electroshock</passive>
+    <br>Basic Attacks grant extra <keyword>Energized</keyword> stacks.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3144
+  - 3113
+  - 1037
+- item_id: 3089
+  name: Rabadon's Deathcap
+  description: <mainText><stats><attention>130</attention> Ability Power</stats><br><br><passive>Magical
+    Opus</passive><br>Increases your total <scaleAP>Ability Power by 30%</scaleAP>.</mainText>
+  gold_total: 3500
+  builds_into: []
+  builds_from:
+  - 1058
+  - 1058
+- item_id: 3091
+  name: Wit's End
+  description: <mainText><stats><attention>50%</attention> Attack Speed<br><attention>45</attention> Magic
+    Resist<br><attention>20%</attention> Tenacity</stats><br><br><passive>Fray</passive><br>Attacks deal
+    <magicDamage>bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 1043
+  - 1057
+  - 1043
+- item_id: 3094
+  name: Rapid Firecannon
+  description: <mainText><stats><attention>35%</attention> Attack Speed<br><attention>25%</attention>
+    Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Sharpshooter</passive><br>Your
+    <keyword>Energized Attack</keyword> deals <magicDamage>40 bonus magic damage</magicDamage> and gains
+    35% bonus Attack Range.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 3086
+  - 3144
+- item_id: 3095
+  name: Stormrazor
+  description: <mainText><stats><attention>50</attention> Attack Damage<br><attention>25%</attention>
+    Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving
+    and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your
+    <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants
+    <speed>45% Movement Speed</speed> for 1.5 seconds.<br></mainText>
+  gold_total: 3200
+  builds_into: []
+  builds_from:
+  - 1038
+  - 1018
+  - 3144
+- item_id: 3100
+  name: Lich Bane
+  description: <mainText><stats><attention>100</attention> Ability Power<br><attention>6%</attention>
+    Move Speed<br><attention>10</attention> Ability Haste</stats><br><br><passive>Spellblade</passive><br>After
+    using an Ability, your next Attack deals <magicDamage>bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3057
+  - 3113
+  - 1026
+- item_id: 3102
+  name: Banshee's Veil
+  description: <mainText><stats><attention>105</attention> Ability Power<br><attention>40</attention>
+    Magic Resist</stats><br><br><passive>Annul</passive><br>Grants a Spell Shield that blocks the next
+    enemy Ability.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1058
+  - 4632
+- item_id: 3107
+  name: Redemption
+  description: <mainText><stats><attention>30</attention> Ability Power<br><attention>15</attention> Ability
+    Haste<br><attention>100%</attention> Base Mana Regen<br><attention>10%</attention> Heal and Shield
+    Power</stats><br><br><active>Intervention</active><br>Restore <healing>150 - 350 Health</healing>
+    to allied units and deal <trueDamage>10% max Health true damage</trueDamage> to enemy champions after
+    2.5 seconds.</mainText>
+  gold_total: 2300
+  builds_into: []
+  builds_from:
+  - 3108
+  - 3114
+- item_id: 3108
+  name: Fiendish Codex
+  description: <mainText><stats><attention>25</attention> Ability Power<br><attention>10</attention> Ability
+    Haste</stats><br><br></mainText>
+  gold_total: 850
+  builds_into:
+  - 123430
+  - 4636
+  - 323003
+  - 3115
+  - 3003
+  - 326616
+  - 3107
+  - 3128
+  - 3137
+  - 8010
+  - 6616
+  - 4628
+  - 4629
+  - 4633
+  builds_from:
+  - 1052
+  - 2022
+- item_id: 3109
+  name: Knight's Vow
+  description: <mainText><stats><attention>200</attention> Health<br><attention>40</attention> Armor<br><attention>10</attention>
+    Ability Haste<br><attention>100%</attention> Base Health Regen</stats><br><br><passive>Sacrifice</passive><br>While
+    near your <attention>Worthy</attention> ally, take 14% of the damage they receive and <healing>heal
+    for 12%</healing> of the damage they deal to champions.<active>Pledge</active> (0s)<br>Designate an
+    ally as <attention>Worthy</attention>.</mainText>
+  gold_total: 2300
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1031
+  - 1006
+- item_id: 3110
+  name: Frozen Heart
+  description: <mainText><stats><attention>75</attention> Armor<br><attention>400</attention> Mana<br><attention>20</attention>
+    Ability Haste</stats><br><br><passive>Winter's Caress</passive><br>Reduce the <attackSpeed>Attack
+    Speed</attackSpeed> of nearby champions by <attackSpeed>20%</attackSpeed>.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from:
+  - 3082
+  - 3024
+- item_id: 3111
+  name: Mercury's Treads
+  description: <mainText><stats><attention>20</attention> Magic Resist<br><attention>45</attention> Move
+    Speed<br><attention>30%</attention> Tenacity</stats><br><br></mainText>
+  gold_total: 1250
+  builds_into:
+  - 3173
+  builds_from:
+  - 1001
+  - 1033
+- item_id: 3112
+  name: Guardian's Orb
+  description: <mainText><stats><attention>50</attention> Ability Power<br><attention>150</attention>
+    Health</stats><br><br><br><li><passive>Recovery:</passive> Restores <scaleMana>10 Mana</scaleMana>
+    every 5 seconds. If you can't gain mana, restores <healing>15 Health</healing> instead.<br></mainText>
+  gold_total: 950
+  builds_into: []
+  builds_from: []
+- item_id: 3113
+  name: Aether Wisp
+  description: <mainText><stats><attention>30</attention> Ability Power<br><attention>4%</attention> Move
+    Speed</stats><br><br></mainText>
+  gold_total: 900
+  builds_into:
+  - 123430
+  - 3100
+  - 2065
+  - 322065
+  - 3087
+  - 323504
+  - 3504
+  - 4629
+  - 4646
+  builds_from:
+  - 1052
+- item_id: 3114
+  name: Forbidden Idol
+  description: <mainText><stats><attention>50%</attention> Base Mana Regen<br><attention>8%</attention>
+    Heal and Shield Power</stats><br><br></mainText>
+  gold_total: 600
+  builds_into:
+  - 124011
+  - 326621
+  - 223011
+  - 323222
+  - 323107
+  - 322526
+  - 2526
+  - 3011
+  - 326616
+  - 3107
+  - 3222
+  - 323504
+  - 3504
+  - 6616
+  - 6621
+  builds_from:
+  - 1004
+- item_id: 3115
+  name: Nashor's Tooth
+  description: <mainText><stats><attention>80</attention> Ability Power<br><attention>50%</attention>
+    Attack Speed<br><attention>15</attention> Ability Haste</stats><br><br><passive>Icathian Bite</passive><br>Attacks
+    deal <magicDamage>bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 1043
+  - 1026
+  - 3108
+- item_id: 3116
+  name: Rylai's Crystal Scepter
+  description: <mainText><stats><attention>65</attention> Ability Power<br><attention>400</attention>
+    Health</stats><br><br><passive>Rimefrost</passive><br>Damaging Abilities <keyword>Slow</keyword> enemies
+    by 30% for 1 second.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 1026
+  - 1011
+  - 1052
+- item_id: 3117
+  name: Mobility Boots
+  description: ''
+  gold_total: 1000
+  builds_into: []
+  builds_from:
+  - 1001
+- item_id: 3118
+  name: Malignance
+  description: <mainText><stats><attention>90</attention> Ability Power<br><attention>600</attention>
+    Mana<br><attention>15</attention> Ability Haste</stats><br><br><passive>Scorn</passive><br>Gain 20
+    Ultimate Ability Haste.<br><br><passive>Hatefog</passive><br>Damaging a champion with your Ultimate
+    burns the ground beneath them for 3s, dealing <magicDamage>magic damage</magicDamage> per second and
+    reducing their <scaleMR>Magic Resist</scaleMR>. <br></mainText>
+  gold_total: 2700
+  builds_into: []
+  builds_from:
+  - 3802
+  - 1026
+- item_id: 3119
+  name: Winter's Approach
+  description: <mainText><stats><attention>550</attention> Health<br><attention>500</attention> Mana<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleHealth> Health</scaleHealth>.<br><br><passive>Manaflow</passive>
+    (8s, max 4 charges)<br>Landing Attacks and Abilities grant <scaleMana>3 max Mana</scaleMana> (doubled
+    vs. champions).<br>Transforms into <rarityLegendary>Fimbulwinter</rarityLegendary> at <scaleMana>360
+    max Mana</scaleMana>.</mainText>
+  gold_total: 2400
+  builds_into: []
+  builds_from:
+  - 3070
+  - 1011
+  - 3067
+- item_id: 3121
+  name: Fimbulwinter
+  description: <mainText><stats><attention>550</attention> Health<br><attention>1000</attention> Mana<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleHealth> Health</scaleHealth>.<br><br><passive>Everlasting</passive>
+    (0s)<br><keyword>Immobilizing</keyword> or <keyword>Slowing</keyword> (Melee only) an enemy champion
+    grants a <shield>Shield</shield> for 3 seconds. <br>The Shield is increased by 80% if more than one
+    enemy is nearby.</mainText>
+  gold_total: 2400
+  builds_into: []
+  builds_from: []
+- item_id: 3123
+  name: Executioner's Calling
+  description: <mainText><stats><attention>15</attention> Attack Damage</stats><br><br><passive>Grievous
+    Wounds</passive><br>Dealing physical damage to champions applies <keyword>40% Wounds</keyword> for
+    3 seconds.</mainText>
+  gold_total: 800
+  builds_into:
+  - 3033
+  - 6609
+  builds_from:
+  - 1036
+- item_id: 3124
+  name: Guinsoo's Rageblade
+  description: <mainText><stats><attention>30</attention> Attack Damage<br><attention>30</attention> Ability
+    Power<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Wrath</passive><br>Attacks
+    deal <magicDamage>30 bonus magic damage <OnHit>On-Hit</OnHit></magicDamage>.<br><br><passive>Seething
+    Strike</passive><br>Attacks grant <attackSpeed>8% Attack Speed</attackSpeed> for 4 seconds. (stacks
+    4 times). <br>While fully stacked, every third Attack applies <OnHit>On-Hit</OnHit> effects twice.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1052
+  - 1043
+  - 1037
+- item_id: 3133
+  name: Caulfield's Warhammer
+  description: <mainText><stats><attention>20</attention> Attack Damage<br><attention>10</attention> Ability
+    Haste</stats><br><br></mainText>
+  gold_total: 1050
+  builds_into:
+  - 6333
+  - 126697
+  - 6697
+  - 4402
+  - 3156
+  - 2517
+  - 323004
+  - 6693
+  - 3004
+  - 3508
+  - 3074
+  - 3179
+  - 6691
+  - 6609
+  - 6610
+  - 6632
+  - 6692
+  - 6694
+  - 6696
+  builds_from:
+  - 1036
+  - 2022
+  - 1036
+- item_id: 3134
+  name: Serrated Dirk
+  description: <mainText><stats><attention>20</attention> Attack Damage<br><attention>10</attention> Lethality</stats><br><br></mainText>
+  gold_total: 1000
+  builds_into:
+  - 3142
+  - 667666
+  - 126697
+  - 6697
+  - 6701
+  - 6693
+  - 2520
+  - 4004
+  - 6695
+  - 3814
+  - 3131
+  - 3179
+  - 6691
+  - 6676
+  builds_from:
+  - 1036
+  - 1036
+- item_id: 3135
+  name: Void Staff
+  description: <mainText><stats><attention>95</attention> Ability Power<br><attention>40%</attention>
+    Magic Penetration</stats><br><br></mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 4630
+  - 1026
+- item_id: 3137
+  name: Cryptbloom
+  description: <mainText><stats><attention>75</attention> Ability Power<br><attention>30%</attention>
+    Magic Penetration<br><attention>20</attention> Ability Haste</stats><br><br><passive>Life from Death</passive><br>When
+    a champion that you damaged within 3 seconds dies, a nova spreads from their corpse that <healing>heals</healing>.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 4630
+  - 3108
+  - 3108
+- item_id: 3139
+  name: Mercurial Scimitar
+  description: <mainText><stats><attention>50</attention> Attack Damage<br><attention>35</attention> Magic
+    Resist<br><attention>10%</attention> Life Steal</stats><br><br><br><br><active>ACTIVE</active><br><active>Quicksilver</active><br>Removes
+    all crowd control debuffs (excluding <keyword>Airborne</keyword>) and grants Move Speed.</mainText>
+  gold_total: 3200
+  builds_into: []
+  builds_from:
+  - 3140
+  - 1037
+  - 1053
+- item_id: 3140
+  name: Quicksilver Sash
+  description: <mainText><stats><attention>30</attention> Magic Resist</stats><br><br><active>Quicksilver</active><br>Remove
+    all crowd control debuffs (excluding <keyword>Airborne</keyword>).</mainText>
+  gold_total: 1300
+  builds_into:
+  - 3139
+  - 6035
+  builds_from:
+  - 1033
+- item_id: 3142
+  name: Youmuu's Ghostblade
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>4%</attention>
+    Move Speed</stats><br><br><passive>Haunt</passive> <br>Gain <speed> Move Speed</speed> while out of
+    combat.<br><br><active>Wraith Step</active><br>Gain <speed>Move Speed</speed> and <keyword>Ghosting</keyword>
+    for  seconds.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3134
+  - 6690
+  - 1036
+- item_id: 3143
+  name: Randuin's Omen
+  description: <mainText><stats><attention>350</attention> Health<br><attention>75</attention> Armor</stats><br><br><passive>Resilience</passive><br>Receive
+    30% less damage from Critical Strikes.<br><active>Humility</active><br><keyword>Slow</keyword> nearby
+    enemies by 70% for 2 seconds.</mainText>
+  gold_total: 2700
+  builds_into: []
+  builds_from:
+  - 3082
+  - 1011
+- item_id: 3144
+  name: Scout's Slingshot
+  description: <mainText><stats><attention>20%</attention> Attack Speed</stats><br><br><passive>Bullseye</passive><br>Damaging
+    a champion deals <magicDamage>bonus magic damage</magicDamage>. <br>Attacks reduce this cooldown by
+    1 second.</mainText>
+  gold_total: 600
+  builds_into:
+  - 2512
+  - 3094
+  - 3087
+  - 3032
+  - 3085
+  - 3095
+  builds_from:
+  - 1042
+  - 1042
+- item_id: 3145
+  name: Hextech Alternator
+  description: <mainText><stats><attention>45</attention> Ability Power</stats><br><br><passive>Revved</passive><br>Damaging
+    a champion deals <magicDamage>bonus magic damage</magicDamage>.</mainText>
+  gold_total: 1100
+  builds_into:
+  - 4645
+  - 4636
+  - 3146
+  - 6655
+  - 3152
+  - 4646
+  builds_from:
+  - 1052
+  - 1052
+- item_id: 3146
+  name: Hextech Gunblade
+  description: <mainText><stats><attention>80</attention> Ability Power<br><attention>40</attention> Attack
+    Damage<br><attention>10%</attention> Omnivamp</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Lightning
+    Bolt</active><br>Shocks the target enemy champion, dealing  magic damage and slowing them by 25% for
+    1.5 seconds.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1053
+  - 3145
+  - 1052
+- item_id: 3147
+  name: Haunting Guise
+  description: <mainText><stats><attention>30</attention> Ability Power<br><attention>200</attention>
+    Health</stats><br><br><passive>Madness</passive><br>For each second in combat with enemy champions,
+    deal 2% bonus damage, up to 6%. </mainText>
+  gold_total: 1300
+  builds_into:
+  - 8010
+  - 4633
+  - 6653
+  builds_from:
+  - 1052
+  - 1028
+- item_id: 3152
+  name: Hextech Rocketbelt
+  description: <mainText><stats><attention>60</attention> Ability Power<br><attention>350</attention>
+    Health<br><attention>10</attention> Ability Haste</stats><br><br><active>Supersonic</active><br>Dash
+    in target direction, unleashing missiles that deal <magicDamage>magic damage</magicDamage>.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 3145
+  - 3067
+  - 1028
+- item_id: 3153
+  name: Blade of The Ruined King
+  description: <mainText><stats><attention>40</attention> Attack Damage<br><attention>25%</attention>
+    Attack Speed<br><attention>10%</attention> Life Steal</stats><br><br><passive>Mist's Edge</passive><br>Attacks
+    deal <physicalDamage>a percentage</physicalDamage> of enemy's current Health as <physicalDamage>bonus
+    physical damage</physicalDamage> <OnHit>On-Hit</OnHit>.<br><br><passive>Clawing Shadows</passive><br>Attacking
+    a champion 3 times <status>Slows</status> them by 30% for 1 second.</mainText>
+  gold_total: 3200
+  builds_into: []
+  builds_from:
+  - 1053
+  - 1043
+  - 1037
+- item_id: 3155
+  name: Hexdrinker
+  description: <mainText><stats><attention>25</attention> Attack Damage<br><attention>25</attention> Magic
+    Resist</stats><br><br><passive>Lifeline</passive><br>Taking magic damage that would reduce your Health
+    below 30% grants a <shield>magic damage Shield</shield> for 2.5 seconds.</mainText>
+  gold_total: 1300
+  builds_into:
+  - 3156
+  builds_from:
+  - 1036
+  - 1033
+  - 1036
+- item_id: 3156
+  name: Maw of Malmortius
+  description: <mainText><stats><attention>60</attention> Attack Damage<br><attention>15</attention> Ability
+    Haste<br><attention>40</attention> Magic Resist</stats><br><br><passive>Lifeline</passive><br>Taking
+    magic damage that would reduce your Health below 30% grants a <shield>magic damage Shield</shield>
+    for 3 seconds and <lifeSteal>10% Omnivamp</lifeSteal> until end of combat.</mainText>
+  gold_total: 3100
+  builds_into: []
+  builds_from:
+  - 3155
+  - 3133
+- item_id: 3157
+  name: Zhonya's Hourglass
+  description: <mainText><stats><attention>105</attention> Ability Power<br><attention>50</attention>
+    Armor</stats><br><br><br><br><active>Time Stop</active><br>Enter <keyword>Stasis</keyword> for 2.5
+    seconds.</mainText>
+  gold_total: 3250
+  builds_into: []
+  builds_from:
+  - 1058
+  - 2420
+- item_id: 3158
+  name: Ionian Boots of Lucidity
+  description: <mainText><stats><attention>10</attention> Ability Haste<br><attention>45</attention> Move
+    Speed</stats><br><br><passive>Ionian Insight</passive><br>Gain 10 Summoner Spell Haste.<br><br></mainText>
+  gold_total: 900
+  builds_into:
+  - 3171
+  builds_from:
+  - 1001
+  - 2022
+- item_id: 3161
+  name: Spear of Shojin
+  description: <mainText><stats><attention>45</attention> Attack Damage<br><attention>450</attention>
+    Health</stats><br><br><passive>Dragonforce</passive> <br>Gain 25 Basic Ability Haste.<br><br><passive>Focused
+    Will</passive> <br>Dealing damage with Abilities increases your Champion's Ability and Passive damage
+    by 3% for 6 seconds. (stacks 4 times).</mainText>
+  gold_total: 3100
+  builds_into: []
+  builds_from:
+  - 1037
+  - 2021
+  - 1028
+- item_id: 3165
+  name: Morellonomicon
+  description: <mainText><stats><attention>75</attention> Ability Power<br><attention>350</attention>
+    Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Grievous Wounds</passive><br>Dealing
+    <magicDamage>magic damage</magicDamage> to champions applies <keyword>40% Wounds</keyword> for 3 seconds.</mainText>
+  gold_total: 2850
+  builds_into: []
+  builds_from:
+  - 3916
+  - 1026
+  - 3067
+- item_id: 3168
+  name: Immortal Path
+  description: <mainText><stats><attention>45</attention> Move Speed<br><attention>4%</attention> Omnivamp</stats><br><br><passive>Slay</passive><br>Gain
+    0.6% Omnivamp on Champion takedown, stacking up to 10 times.<br><br><passive>Now and Forever</passive><br>While
+    above half Health, deal 4% increased damage. <br><br>While below half Health, gain 12% increased healing,
+    shielding, and regeneration.</mainText>
+  gold_total: 1000
+  builds_into: []
+  builds_from:
+  - 3008
+- item_id: 3170
+  name: Swiftmarch
+  description: <mainText><stats><attention>65</attention> Move Speed</stats><br><br><passive>Fleetfooted</passive><br>Reduce
+    the effectiveness of <keyword>Slows</keyword> by 25%.<br><br><passive>Noxian Fervor</passive><br>Gain
+    5% of your <speed>Move Speed</speed> as Adaptive Force.</mainText>
+  gold_total: 1000
+  builds_into: []
+  builds_from:
+  - 3009
+- item_id: 3171
+  name: Crimson Lucidity
+  description: <mainText><stats><attention>20</attention> Ability Haste<br><attention>45</attention> Move
+    Speed</stats><br><br><passive>Ionian Insight</passive><br>Gain 20 Summoner Spell Haste.<br><br><passive>Noxian
+    Haste</passive><br>Empowering or protecting allies with abilities, dealing damage to enemy Champions
+    with abilities, or casting a Summoner Spell grants <speed> Move Speed</speed> for 4 seconds.<br><br><rules>Noxian
+    Haste can only be triggered once per Ability cast.</rules></mainText>
+  gold_total: 900
+  builds_into: []
+  builds_from:
+  - 3158
+- item_id: 3172
+  name: Gunmetal Greaves
+  description: <mainText><stats><attention>45%</attention> Attack Speed<br><attention>45</attention> Move
+    Speed<br><attention>5%</attention> Life Steal</stats><br><br></mainText>
+  gold_total: 1100
+  builds_into: []
+  builds_from:
+  - 3006
+- item_id: 3173
+  name: Chainlaced Crushers
+  description: <mainText><stats><attention>25</attention> Magic Resist<br><attention>45</attention> Move
+    Speed<br><attention>30%</attention> Tenacity</stats><br><br><passive>Noxian Persistence</passive>
+    (0s)<br>After taking magic damage from a Champion, gain a <shield></shield> <magicDamage>magic</magicDamage>
+    <shield>shield</shield> for 5 seconds.</mainText>
+  gold_total: 1250
+  builds_into: []
+  builds_from:
+  - 3111
+- item_id: 3174
+  name: Armored Advance
+  description: <mainText><stats><attention>35</attention> Armor<br><attention>45</attention> Move Speed</stats><br><br><passive>Plating</passive><br>Reduces
+    incoming damage from Attacks by 10%.<br><br><passive>Noxian Endurance</passive> (0s)<br>After taking
+    physical damage from a Champion, gain a <shield></shield> <physicalDamage>physical</physicalDamage>
+    <shield>shield</shield> for 5 seconds.</mainText>
+  gold_total: 1200
+  builds_into: []
+  builds_from:
+  - 3047
+- item_id: 3175
+  name: Spellslinger's Shoes
+  description: <mainText><stats><attention>20</attention> Magic Penetration<br><attention>8%</attention>
+    Magic Penetration<br><attention>45</attention> Move Speed</stats><br><br></mainText>
+  gold_total: 1100
+  builds_into: []
+  builds_from:
+  - 3020
+- item_id: 3176
+  name: Forever Forward
+  description: '<mainText><stats><attention>55</attention> Move Speed</stats><br><br><passive>Omnipresent</passive><br>Gain
+    a new Active: Teleport.<br><br><passive>Voidborn</passive><br>Gain Empowered Recall.<br><br><passive>Noxian
+    Synchrony</passive><br>Gain <speed>45 Move Speed</speed> and <speed>8% total Move Speed</speed> when
+    out of combat.</mainText>'
+  gold_total: 900
+  builds_into: []
+  builds_from:
+  - 3013
+- item_id: 3177
+  name: Guardian's Blade
+  description: <mainText><stats><attention>30</attention> Attack Damage<br><attention>150</attention>
+    Health<br><attention>15</attention> Ability Haste</stats><br><br></mainText>
+  gold_total: 950
+  builds_into: []
+  builds_from: []
+- item_id: 3179
+  name: Umbral Glaive
+  description: <mainText><stats><attention>60</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Nightstalker</passive><br>After being unseen by enemies briefly,
+    your next attack against a champion deals an additional <trueDamage>true damage</trueDamage>.<br><br><passive>Blackout</passive><br>When
+    you are near enemy Stealth Wards and traps, reveal them briefly. While revealing wards, your attacks
+    deal bonus damage to them.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3134
+  - 3133
+- item_id: 3181
+  name: Hullbreaker
+  description: <mainText><stats><attention>40</attention> Attack Damage<br><attention>500</attention>
+    Health<br><attention>4%</attention> Move Speed</stats><br><br><passive>Skipper</passive><br>Every
+    fifth Attack against champions and epic monsters deals <physicalDamage>bonus physical damage</physicalDamage>,
+    increased against Structures.<br><br><passive>Boarding Party</passive><br>Nearby allied siege and
+    super minions gain <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR>.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 2021
+  - 3066
+  - 1037
+- item_id: 3184
+  name: Guardian's Hammer
+  description: <mainText><stats><attention>25</attention> Attack Damage<br><attention>150</attention>
+    Health<br><attention>5%</attention> Life Steal</stats><br><br></mainText>
+  gold_total: 950
+  builds_into: []
+  builds_from: []
+- item_id: 3190
+  name: Locket of the Iron Solari
+  description: <mainText><stats><attention>200</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention>
+    Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant
+    nearby allies a <shield>290 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>
+  gold_total: 2200
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1029
+  - 1033
+- item_id: 3211
+  name: Spectre's Cowl
+  description: <mainText><stats><attention>200</attention> Health<br><attention>35</attention> Magic Resist<br><attention>100%</attention>
+    Base Health Regen</stats><br><br></mainText>
+  gold_total: 1250
+  builds_into:
+  - 2504
+  - 3065
+  - 6664
+  builds_from:
+  - 1028
+  - 1033
+  - 1006
+- item_id: 3222
+  name: Mikael's Blessing
+  description: <mainText><stats><attention>250</attention> Health<br><attention>100%</attention> Base
+    Mana Regen<br><attention>12%</attention> Heal and Shield Power<br><attention>15</attention> Ability
+    Haste</stats><br><br><active>Purify</active><br>Remove all crowd control debuffs (excluding <keyword>Airborne</keyword>
+    and <keyword>Suppression</keyword>) from an ally champion and restore <healing>100 - 250 Health</healing>.</mainText>
+  gold_total: 2300
+  builds_into: []
+  builds_from:
+  - 3067
+  - 3114
+- item_id: 3302
+  name: Terminus
+  description: '<mainText><stats><attention>30</attention> Attack Damage<br><attention>35%</attention>
+    Attack Speed</stats><br><br><passive>Shadow</passive><br>Attacks deal <magicDamage> bonus magic damage</magicDamage>
+    <OnHit>On-Hit</OnHit>.<br><br><passive>Juxtaposition</passive><br>Alternate between <keywordMajor>Light</keywordMajor>
+    and <keywordMajor>Dark</keywordMajor> Attacks against champions: <li><keywordMajor>Light</keywordMajor>
+    Attacks grant <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> for 5s. <li><keywordMajor>Dark</keywordMajor>
+    Attacks grant 10% <scaleArmor>Armor Penetration</scaleArmor> and <scaleMR>Magic Penetration</scaleMR>
+    for 5s. </mainText>'
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3051
+  - 1043
+- item_id: 3330
+  name: Scarecrow Effigy
+  description: <mainText><stats></stats><br><br>Cannot be sold<br><br><active>Active - Trinket:</active>
+    Places an effigy that lasts for  seconds and appears exactly as Fiddlesticks does to enemies. Stores
+    one charge every  seconds, up to maximum 2 charges.<br><br>Enemy champions approaching an effigy will
+    activate it, causing the effigy to fake a random action, after which the effigy will fall apart.</mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3340
+  name: Stealth Ward
+  description: <mainText><stats></stats><br><br><active>Active</active> (<scaleLevel>210 - 90</scaleLevel>s,
+    max 2 charges)<br>Places an <keyword>Invisible</keyword> Stealth Ward that grants vision for <scaleLevel>90-120</scaleLevel>
+    seconds.</mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3363
+  name: Farsight Alteration
+  description: <mainText><stats></stats><br><br><active>Active</active> (<scaleLevel>198 - 99</scaleLevel>s)<br>Reveals
+    a distant area for 2 seconds and leaves a Ward that expires upon spotting an enemy champion.</mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3364
+  name: Oracle Lens
+  description: <mainText><stats></stats><br><br><active>Active</active> (<scaleLevel>160 - 100</scaleLevel>s,
+    max 2 charges)<br>Reveals enemy Stealth Wards and traps around you for 8 seconds.</mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3400
+  name: Your Cut
+  description: <mainText><stats></stats><br><br><active>Active - Consume:</active> Gain 0 gold.<br><br><rules>Bonus
+    gold given to an ally when Pyke executes an enemy champion using his Ultimate Ability. If no ally
+    was involved in the kill, Pyke gets to keep the Cut!</rules></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3504
+  name: Ardent Censer
+  description: <mainText><stats><attention>45</attention> Ability Power<br><attention>10%</attention>
+    Heal and Shield Power<br><attention>125%</attention> Base Mana Regen<br><attention>4%</attention>
+    Move Speed</stats><br><br><passive>Sanctify</passive><br>Healing or Shielding an ally enhances you
+    both for 6 seconds, granting <attackSpeed>25% Attack Speed</attackSpeed> and <magicDamage>20 magic
+    damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>
+  gold_total: 2200
+  builds_into: []
+  builds_from:
+  - 3113
+  - 3114
+- item_id: 3508
+  name: Essence Reaver
+  description: <mainText><stats><attention>50</attention> Attack Damage<br><attention>20</attention> Ability
+    Haste<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Spellblade</passive><br>After
+    using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> and
+    grants <scaleMana>Mana</scaleMana> <OnHit>On-Hit</OnHit>.</mainText>
+  gold_total: 3050
+  builds_into: []
+  builds_from:
+  - 3057
+  - 3133
+  - 1018
+- item_id: 3599
+  name: Kalista's Black Spear
+  description: <mainText><stats></stats><br><br><active>Active - Consume:</active> Bind with an ally for
+    the remainder of the game, becoming Oathsworn Allies. Oathsworn empowers you both while near one another.</mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3600
+  name: Kalista's Black Spear
+  description: <mainText><stats></stats><br><br><active>Active - Consume:</active> Bind with an ally for
+    the remainder of the game, becoming Oathsworn Allies. Oathsworn empowers you both while near one another.<br><br><rules>Required
+    to use <attention>Kalista's</attention> Ultimate Ability.</rules></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3742
+  name: Dead Man's Plate
+  description: <mainText><stats><attention>350</attention> Health<br><attention>55</attention> Armor<br><attention>4%</attention>
+    Move Speed</stats><br><br><passive>Shipwrecker</passive><br>While moving, build up to <speed>20 bonus
+    Move Speed</speed>. Your next Attack discharges built up Move Speed to deal <physicalDamage>bonus
+    physical damage</physicalDamage>.<br><br><passive>Unsinkable</passive><br>Reduce the effectiveness
+    of <keyword>Slows</keyword> by 15%.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3066
+  - 1028
+  - 1031
+- item_id: 3748
+  name: Titanic Hydra
+  description: <mainText><stats><attention>40</attention> Attack Damage<br><attention>600</attention>
+    Health</stats><br><br><passive>Cleave</passive><br>Attacks deal <physicalDamage>physical damage</physicalDamage>
+    on-hit and to enemies behind the target.<br><active>Titanic Crescent</active><br>Empower your next
+    <passive>Cleave</passive> to deal <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>
+    and deal <physicalDamage>bonus physical damage</physicalDamage> to enemies behind the target.</mainText>
+  gold_total: 3300
+  builds_into: []
+  builds_from:
+  - 3077
+  - 2021
+  - 1011
+- item_id: 3801
+  name: Crystalline Bracer
+  description: <mainText><stats><attention>200</attention> Health<br><attention>100%</attention> Base
+    Health Regen</stats><br><br></mainText>
+  gold_total: 800
+  builds_into:
+  - 3084
+  - 3083
+  builds_from:
+  - 1028
+  - 1006
+- item_id: 3802
+  name: Lost Chapter
+  description: <mainText><stats><attention>40</attention> Ability Power<br><attention>300</attention>
+    Mana<br><attention>10</attention> Ability Haste</stats><br><br><passive>Enlighten</passive><br>Levelling
+    up restores <scaleMana>20% max Mana</scaleMana> over 3 seconds.</mainText>
+  gold_total: 1200
+  builds_into:
+  - 2522
+  - 323003
+  - 6656
+  - 3003
+  - 6655
+  - 2503
+  - 3118
+  - 4644
+  builds_from:
+  - 1052
+  - 1027
+  - 2022
+- item_id: 3803
+  name: Catalyst of Aeons
+  description: <mainText><stats><attention>300</attention> Health<br><attention>375</attention> Mana</stats><br><br><passive>Eternity</passive><br>Restores
+    <scaleMana>10% of the damage taken</scaleMana> from champions as <scaleMana>Mana</scaleMana>. <br>Casting
+    an Ability <healing>heals for 25% of Mana</healing> spent.</mainText>
+  gold_total: 1300
+  builds_into:
+  - 4402
+  - 326657
+  - 6657
+  builds_from:
+  - 1028
+  - 1028
+  - 1027
+- item_id: 3814
+  name: Edge of Night
+  description: <mainText><stats><attention>50</attention> Attack Damage<br><attention>15</attention> Lethality<br><attention>250</attention>
+    Health</stats><br><br><passive>Annul</passive><br>Grants a Spell Shield that blocks the next enemy
+    Ability.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3134
+  - 2021
+- item_id: 3865
+  name: World Atlas
+  description: ''
+  gold_total: 400
+  builds_into: []
+  builds_from: []
+- item_id: 3866
+  name: Runic Compass
+  description: <mainText><stats><attention>60</attention> Health<br><attention>75%</attention> Base Health
+    Regen<br><attention>50%</attention> Base Mana Regen<br><attention>5</attention> Gold Per 10 Seconds</stats><br><br><passive>Support
+    Quest</passive><br>Earn <keywordMajor>0</keywordMajor> gold from this item to transform it into <rarityGeneric>Bounty
+    of Worlds</rarityGeneric>. <br><br><passive>Shared Riches</passive> (0s, max 0 charges)<br>While near
+    an ally champion, damage enemy champions or kill minions to gain gold.<active>Active</active> (3 charges)<br>Places
+    an <keyword>Invisible</keyword> Stealth Ward that grants vision.</mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from: []
+- item_id: 3867
+  name: Bounty of Worlds
+  description: <mainText><stats><attention>5</attention> Gold Per 10 Seconds<br><attention>75%</attention>
+    Base Health Regen<br><attention>75%</attention> Base Mana Regen<br><attention>200</attention> Health</stats><br><br><passive>Upgrade</passive>
+    <br>This item can be upgraded into <rarityLegendary>Bloodsong</rarityLegendary>, <rarityLegendary>Celestial
+    Opposition</rarityLegendary>, <rarityLegendary>Dream Maker</rarityLegendary>, <rarityLegendary>Zaz'Zak's
+    Realmspike</rarityLegendary>, or <rarityLegendary>Solstice Sleigh</rarityLegendary> for free.<active>Active</active>
+    (4 charges)<br>Places an <keyword>Invisible</keyword> Stealth Ward that grants vision.</mainText>
+  gold_total: 400
+  builds_into:
+  - 3869
+  - 3870
+  - 3871
+  - 3876
+  - 3877
+  builds_from: []
+- item_id: 3869
+  name: Celestial Opposition
+  description: <mainText><stats><attention>200</attention> Health<br><attention>75%</attention> Base Health
+    Regen<br><attention>75%</attention> Base Mana Regen<br><attention>9</attention> Gold Per 10 Seconds</stats><br><br><passive>Blessing
+    of the Mountain</passive><br>Reduce incoming champion damage for 2 seconds after taking damage from
+    a champion. When the effect ends, slow nearby enemies by 50% for 1.5 seconds.<br><active>Active</active>
+    (4 charges)<br>Places an <keyword>Invisible</keyword> Stealth Ward that grants vision.</mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from:
+  - 3867
+- item_id: 3870
+  name: Dream Maker
+  description: <mainText><stats><attention>200</attention> Health<br><attention>75%</attention> Base Health
+    Regen<br><attention>75%</attention> Base Mana Regen<br><attention>9</attention> Gold Per 10 Seconds</stats><br><br><passive>Dream
+    Maker</passive><br>Healing or Shielding another ally blows Dream Bubbles to them for 3 seconds. Their
+    next Attack deals <magicDamage>bonus magic damage</magicDamage> <OnHit>On-Hit</OnHit> and the next
+    damage they take is reduced.<active>Active</active> (4 charges)<br>Places an <keyword>Invisible</keyword>
+    Stealth Ward that grants vision.</mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from:
+  - 3867
+- item_id: 3871
+  name: Zaz'Zak's Realmspike
+  description: <mainText><stats><attention>200</attention> Health<br><attention>75%</attention> Base Health
+    Regen<br><attention>75%</attention> Base Mana Regen<br><attention>9</attention> Gold Per 10 Seconds</stats><br><br><passive>Void
+    Explosion</passive><br>Dealing Ability damage to a champion causes an explosion that deals <magicDamage>magic
+    damage</magicDamage>.<br><br><active>Active</active> (4 charges)<br>Places an <keyword>Invisible</keyword>
+    Stealth Ward that grants vision.</mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from:
+  - 3867
+- item_id: 3876
+  name: Solstice Sleigh
+  description: <mainText><stats><attention>200</attention> Health<br><attention>75%</attention> Base Health
+    Regen<br><attention>75%</attention> Base Mana Regen<br><attention>9</attention> Gold Per 10 Seconds</stats><br><br><passive>Going
+    Sledding</passive><br><keyword>Slowing</keyword> or <keyword>Immobilizing</keyword> an enemy champion
+    near allies restores <healing>Health</healing> and grants <speed>20% decaying Move Speed</speed> for
+    2.5 seconds to you and a nearby ally. <active>Active</active> (4 charges)<br>Places an <keyword>Invisible</keyword>
+    Stealth Ward that grants vision.</mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from:
+  - 3867
+- item_id: 3877
+  name: Bloodsong
+  description: <mainText><stats><attention>200</attention> Health<br><attention>75%</attention> Base Health
+    Regen<br><attention>75%</attention> Base Mana Regen<br><attention>9</attention> Gold Per 10 Seconds</stats><br><br><passive>Spellblade</passive><br>After
+    using an Ability, your next Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>.
+    If the target is a champion, they take increased damage for 4 seconds.<active>Active</active> (4 charges)<br>Places
+    an <keyword>Invisible</keyword> Stealth Ward that grants vision.</mainText>
+  gold_total: 400
+  builds_into: []
+  builds_from:
+  - 3867
+- item_id: 3901
+  name: Fire at Will 500 Silver Serpents
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3902
+  name: Death's Daughter 500 Silver Serpents
+  description: <mainText><stats></stats><br><br><mainText>Cannon Barrage additionally fires a mega-cannonball
+    at the center of the Barrage, dealing <trueDamage>bonus true damage</trueDamage> and <status>Slowing</status>.</mainText></mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3903
+  name: Raise Morale 500 Silver Serpents
+  description: <mainText><stats></stats><br><br>Allies in the Cannon Barrage gain <speed>bonus Move Speed</speed>.</mainText>
+  gold_total: 0
+  builds_into: []
+  builds_from: []
+- item_id: 3916
+  name: Oblivion Orb
+  description: <mainText><stats><attention>25</attention> Ability Power</stats><br><br><passive>Grievous
+    Wounds</passive><br>Dealing <magicDamage>magic damage</magicDamage> to champions applies <keyword>40%
+    Wounds</keyword> for 3 seconds.</mainText>
+  gold_total: 800
+  builds_into:
+  - 223011
+  - 3165
+  - 3011
+  builds_from:
+  - 1052
+- item_id: 4005
+  name: Imperial Mandate
+  description: <mainText><stats><attention>60</attention> Ability Power<br><attention>15</attention> Ability
+    Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain
+    20 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On
+    <keyword>Immobilizing</keyword> an enemy champion, mark them as 7% <Keyword>Vulnerable</Keyword> for
+    4 seconds.<br></mainText>
+  gold_total: 2400
+  builds_into: []
+  builds_from:
+  - 1052
+  - 4642
+  - 1052
+- item_id: 4401
+  name: Force of Nature
+  description: <mainText><stats><attention>400</attention> Health<br><attention>55</attention> Magic Resist<br><attention>4%</attention>
+    Move Speed</stats><br><br><passive>Steadfast</passive><br>Gain <scaleMR>70 Magic Resist</scaleMR>
+    and <speed>6% bonus Move Speed</speed> after taking magic damage from Champions 8 times.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 1057
+  - 1028
+  - 3066
+- item_id: 4628
+  name: Horizon Focus
+  description: <mainText><stats><attention>75</attention> Ability Power<br><attention>25</attention> Ability
+    Haste</stats><br><br><passive>Hypershot</passive><br>Dealing Ability damage to champions at 600 range
+    or greater <keywordStealth>Reveals</keywordStealth> them for 6 seconds. <br><br><passive>Focus</passive><br>When
+    <passive>Hypershot</passive> is triggered, <keywordStealth>Reveal</keywordStealth> all other enemy
+    champions within 1400 range of them for 3 seconds.</mainText>
+  gold_total: 2700
+  builds_into: []
+  builds_from:
+  - 3108
+  - 3108
+  - 1052
+- item_id: 4629
+  name: Cosmic Drive
+  description: <mainText><stats><attention>70</attention> Ability Power<br><attention>350</attention>
+    Health<br><attention>25</attention> Ability Haste<br><attention>4%</attention> Move Speed</stats><br><br><passive>Spelldance</passive><br>Dealing
+    <magicDamage>magic</magicDamage> or <trueDamage>true damage</trueDamage> to champions grants <speed>Move
+    Speed</speed> for 4 seconds. </mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3067
+  - 3113
+  - 3108
+- item_id: 4630
+  name: Blighting Jewel
+  description: <mainText><stats><attention>25</attention> Ability Power<br><attention>13%</attention>
+    Magic Penetration</stats><br><br></mainText>
+  gold_total: 1100
+  builds_into:
+  - 3135
+  - 3137
+  builds_from:
+  - 1052
+- item_id: 4632
+  name: Verdant Barrier
+  description: <mainText><stats><attention>40</attention> Ability Power<br><attention>25</attention> Magic
+    Resist</stats><br><br><passive>Annul</passive><br>Grants a Spell Shield that blocks the next enemy
+    Ability.</mainText>
+  gold_total: 1600
+  builds_into:
+  - 3102
+  builds_from:
+  - 1052
+  - 1033
+  - 1052
+- item_id: 4633
+  name: Riftmaker
+  description: <mainText><stats><attention>70</attention> Ability Power<br><attention>350</attention>
+    Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Void Corruption</passive><br>For
+    each second in combat with enemy champions, deal 2% bonus damage, up to 8%. At maximum strength, gain
+    <omnivamp>Omnivamp</omnivamp>.<br><br><passive>Void Infusion</passive><br>Gain 2% of your <scaleHealth>bonus
+    Health</scaleHealth> as <scaleAP>Ability Power</scaleAP>.</mainText>
+  gold_total: 3100
+  builds_into: []
+  builds_from:
+  - 3147
+  - 3108
+- item_id: 4635
+  name: Leeching Leer
+  description: <mainText><stats><attention>20</attention> Ability Power<br><attention>250</attention>
+    Health<br><attention>5%</attention> Omnivamp</stats><br><br></mainText>
+  gold_total: 1265
+  builds_into: []
+  builds_from:
+  - 1028
+  - 1052
+- item_id: 4636
+  name: Night Harvester
+  description: <mainText><stats><attention>90</attention> Ability Power<br><attention>300</attention>
+    Health<br><attention>25</attention> Ability Haste</stats><br><br><br><li><passive>Soulrend:</passive>
+    Damaging a champion with Attacks or Abilities deals an additional <magicDamage> magic damage</magicDamage>
+    and grants you <speed>25% Move Speed</speed> for 1.5 seconds (30(0s) per champion).<br><br><rarityMythic>Mythic
+    Passive:</rarityMythic> Grants all other <rarityLegendary>Legendary</rarityLegendary> items <attention>5</attention>
+    Ability Haste.<br><br><rules>Damaging a new champion will extend the duration of the Move Speed bonus.</rules></mainText>
+  gold_total: 2765
+  builds_into: []
+  builds_from:
+  - 3145
+  - 3108
+- item_id: 4637
+  name: Demonic Embrace
+  description: <mainText><stats><attention>75</attention> Ability Power<br><attention>350</attention>
+    Health</stats><br><br><br><li><passive>Azakana's Gaze:</passive> Dealing Ability damage burns enemies
+    for {{ Item_Melee_Ranged_Split }} <magicDamage>max Health magic damage</magicDamage> every second
+    for 4 seconds. <li><passive>Dark Pact:</passive> Gain 2% of your <scaleHealth>bonus Health</scaleHealth>
+    as <scaleAP>Ability Power</scaleAP>. <br><br><rules><passive>Azakana's Gaze</passive> deals a maximum
+    of 40 damage to monsters.</rules></mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1026
+  - 1011
+  - 1052
+- item_id: 4641
+  name: Stirring Wardstone
+  description: <mainText><stats><attention>80</attention> Health<br><attention>25%</attention> Base Mana
+    Regen</stats><br><br><br><li><passive>Arcane Cache:</passive> This item can store up to 2 purchased
+    Control Wards.<br><br></mainText>
+  gold_total: 350
+  builds_into: []
+  builds_from: []
+- item_id: 4642
+  name: Bandleglass Mirror
+  description: <mainText><stats><attention>20</attention> Ability Power<br><attention>100%</attention>
+    Base Mana Regen<br><attention>10</attention> Ability Haste</stats><br><br></mainText>
+  gold_total: 900
+  builds_into:
+  - 2065
+  - 322065
+  - 6620
+  - 326617
+  - 324005
+  - 4005
+  - 6617
+  - 326620
+  builds_from:
+  - 1004
+  - 1052
+  - 2022
+- item_id: 4645
+  name: Shadowflame
+  description: <mainText><stats><attention>110</attention> Ability Power<br><attention>15</attention>
+    Magic Penetration</stats><br><br><passive>Cinderbloom</passive><br><magicDamage>Magic</magicDamage>
+    and <trueDamage>true damage</trueDamage> <attention>Critically Strike</attention> enemies below 40%
+    Health, dealing 20% increased damage. </mainText>
+  gold_total: 3200
+  builds_into: []
+  builds_from:
+  - 3145
+  - 1058
+- item_id: 4646
+  name: Stormsurge
+  description: <mainText><stats><attention>90</attention> Ability Power<br><attention>15</attention> Magic
+    Penetration<br><attention>6%</attention> Move Speed</stats><br><br><passive>Stormraider</passive><br>Dealing
+    25% of a champion's maximum Health within 2.5s applies <passive>Squall</passive> to them.<br><br><passive>Squall</passive><br>After
+    2 seconds, deal <magicDamage>magic damage</magicDamage>. If the target dies before <passive>Squall</passive>
+    triggers, it damages nearby enemies.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3145
+  - 3113
+- item_id: 6333
+  name: Death's Dance
+  description: <mainText><stats><attention>60</attention> Attack Damage<br><attention>50</attention> Armor<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Ignore Pain</passive><br>A percentage of damage taken is dealt
+    to you over 3 seconds instead.<br><br><passive>Defy</passive><br>When a champion that you damaged
+    within 3 seconds dies, cleanse <passive>Ignore Pain's</passive> remaining damage and restore <healing>Health</healing>
+    over 2 seconds.</mainText>
+  gold_total: 3300
+  builds_into: []
+  builds_from:
+  - 2019
+  - 1037
+  - 3133
+- item_id: 6609
+  name: Chempunk Chainsword
+  description: <mainText><stats><attention>45</attention> Attack Damage<br><attention>450</attention>
+    Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Hackshorn</passive><br>Dealing
+    physical damage applies <keyword>40% Wounds</keyword> to enemy champions for 3 seconds.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3123
+  - 1011
+  - 3133
+- item_id: 6610
+  name: Sundered Sky
+  description: <mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention>
+    Health<br><attention>10</attention> Ability Haste</stats><br><br><passive>Lightshield Strike</passive><br>Your
+    first Attack against a champion <attention>Critically Strikes</attention> and <healing>restores Health</healing>.</mainText>
+  gold_total: 3100
+  builds_into: []
+  builds_from:
+  - 2021
+  - 3133
+- item_id: 6616
+  name: Staff of Flowing Water
+  description: <mainText><stats><attention>35</attention> Ability Power<br><attention>10%</attention>
+    Heal and Shield Power<br><attention>125%</attention> Base Mana Regen<br><attention>10</attention>
+    Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you
+    both <magicDamage>40 Ability Power</magicDamage> and <attention>15 Ability Haste</attention> for 6
+    seconds.</mainText>
+  gold_total: 2250
+  builds_into: []
+  builds_from:
+  - 3108
+  - 3114
+- item_id: 6617
+  name: Moonstone Renewer
+  description: <mainText><stats><attention>25</attention> Ability Power<br><attention>200</attention>
+    Health<br><attention>20</attention> Ability Haste<br><attention>125%</attention> Base Mana Regen</stats><br><br><passive>Starlit
+    Grace</passive><br>Healing or shielding an ally chains the effect to another ally (excluding yourself),
+    <healing>healing 30%</healing> or <shield>shielding 35%</shield> of the original amount.</mainText>
+  gold_total: 2200
+  builds_into: []
+  builds_from:
+  - 3067
+  - 4642
+- item_id: 6620
+  name: Echoes of Helia
+  description: <mainText><stats><attention>35</attention> Ability Power<br><attention>200</attention>
+    Health<br><attention>20</attention> Ability Haste<br><attention>125%</attention> Base Mana Regen</stats><br><br><passive>Soul
+    Siphon</passive><br>Gain 30% of pre-mitigation damage dealt to champions as Soul Charges. Healing
+    or Shielding an ally consumes all <passive>Soul Charges</passive> to restore <healing>Health</healing>.</mainText>
+  gold_total: 2200
+  builds_into: []
+  builds_from:
+  - 3067
+  - 4642
+- item_id: 6621
+  name: Dawncore
+  description: <mainText><stats><attention>45</attention> Ability Power<br><attention>16%</attention>
+    Heal and Shield Power<br><attention>100%</attention> Base Mana Regen</stats><br><br><passive>First
+    Light</passive><br>Gain <healing>2% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP>
+    per 100% Base Mana Regen.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from:
+  - 1026
+  - 3114
+  - 3114
+- item_id: 6631
+  name: Stridebreaker
+  description: <mainText><stats><attention>40</attention> Attack Damage<br><attention>25%</attention>
+    Attack Speed<br><attention>450</attention> Health</stats><br><br><passive>Cleave</passive><br>Attacks
+    deal <physicalDamage>physical damage</physicalDamage> to nearby enemies.<br><active>Breaking Shockwave</active><br>Deal
+    <physicalDamage>physical damage</physicalDamage> and <status>Slow</status> nearby enemies by 35%.<br>Gain
+    <speed>35% decaying Move Speed</speed> per champion hit for 3 seconds.</mainText>
+  gold_total: 3300
+  builds_into: []
+  builds_from:
+  - 3077
+  - 3044
+  - 1042
+- item_id: 6653
+  name: Liandry's Torment
+  description: <mainText><stats><attention>60</attention> Ability Power<br><attention>300</attention>
+    Health</stats><br><br><passive>Torment</passive><br>Damaging Abilities burn enemies for <magicDamage>2%
+    max Health magic damage</magicDamage> per second for 3 seconds.<br><br><passive>Suffering</passive><br>For
+    each second in combat with enemy champions, deal 2% bonus damage, up to 6%.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3147
+  - 2508
+- item_id: 6655
+  name: Luden's Echo
+  description: <mainText><stats><attention>100</attention> Ability Power<br><attention>600</attention>
+    Mana<br><attention>10</attention> Ability Haste</stats><br><br><passive>Echo</passive><br>Damaging
+    Abilities fire 6 Echoes that deal <magicDamage>bonus magic damage</magicDamage> to the target and
+    nearby enemies. Remaining Echoes fire on the primary target, dealing 20% damage.<br></mainText>
+  gold_total: 2750
+  builds_into: []
+  builds_from:
+  - 3802
+  - 3145
+- item_id: 6657
+  name: Rod of Ages
+  description: <mainText><stats><attention>45</attention> Ability Power<br><attention>350</attention>
+    Health<br><attention>500</attention> Mana</stats><br><br><passive>Timeless</passive><br>This item
+    gains <scaleHealth>10 Health</scaleHealth>, <scaleMana>30 Mana</scaleMana> and <scaleAP>3 Ability
+    Power</scaleAP> every 60 seconds up to 10 times. Upon reaching max stacks, gain a level.<br><br><passive>Eternity</passive><br>Taking
+    damage from champions restores <scaleMana>10%</scaleMana> of the damage as <scaleMana>Mana</scaleMana>.
+    <br>Casting an ability <healing>heals for 25%</healing> of Mana spent.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 1026
+  - 3803
+- item_id: 6660
+  name: Bami's Cinder
+  description: <mainText><stats><attention>150</attention> Health<br><attention>5</attention> Ability
+    Haste</stats><br><br><passive>Immolate</passive><br>After taking or dealing damage, deal <magicDamage>magic
+    damage</magicDamage> to nearby enemies for 3 seconds.</mainText>
+  gold_total: 900
+  builds_into:
+  - 3068
+  - 6664
+  builds_from:
+  - 1028
+  - 2022
+- item_id: 6662
+  name: Iceborn Gauntlet
+  description: <mainText><stats><attention>300</attention> Health<br><attention>50</attention> Armor<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Spellblade</passive><br>After using an Ability, your next Attack
+    deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit> and creates a frost
+    field for 2s that <status>Slows</status>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3057
+  - 1028
+  - 1031
+- item_id: 6664
+  name: Hollow Radiance
+  description: <mainText><stats><attention>400</attention> Health<br><attention>40</attention> Magic Resist<br><attention>10</attention>
+    Ability Haste<br><attention>100%</attention> Base Health Regen</stats><br><br><passive>Immolate</passive><br>After
+    taking or dealing damage, deal <magicDamage>magic damage</magicDamage> per second to nearby enemies
+    for 3 seconds. <br><br><passive>Desolate</passive><br>Killing an enemy deals <magicDamage>magic damage</magicDamage>
+    around them.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 6660
+  - 3211
+- item_id: 6665
+  name: Jak'Sho, The Protean
+  description: <mainText><stats><attention>350</attention> Health<br><attention>45</attention> Armor<br><attention>45</attention>
+    Magic Resist</stats><br><br><passive>Voidborn Resilience</passive><br>After 5 seconds of champion
+    combat, increase your bonus <scaleArmor>Armor</scaleArmor> and <scaleMR>Magic Resist</scaleMR> by
+    30% until end of combat.<br><br></mainText>
+  gold_total: 3200
+  builds_into: []
+  builds_from:
+  - 1011
+  - 1031
+  - 1057
+- item_id: 6670
+  name: Noonquiver
+  description: <mainText><stats><attention>15</attention> Attack Damage<br><attention>20%</attention>
+    Critical Strike Chance</stats><br><br></mainText>
+  gold_total: 1300
+  builds_into:
+  - 2523
+  - 3036
+  - 6673
+  builds_from:
+  - 1036
+  - 1018
+- item_id: 6672
+  name: Kraken Slayer
+  description: <mainText><stats><attention>45</attention> Attack Damage<br><attention>40%</attention>
+    Attack Speed<br><attention>4%</attention> Move Speed</stats><br><br><passive>Bring It Down</passive><br>Every
+    third Attack deals <physicalDamage>bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>, increased
+    based on their missing Health.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 6690
+  - 3051
+  - 1043
+- item_id: 6673
+  name: Immortal Shieldbow
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>25%</attention>
+    Critical Strike Chance</stats><br><br><passive>Lifeline</passive><br>Taking damage that would reduce
+    your Health below 30% grants a <shield>Shield</shield> for 3 seconds.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1037
+  - 6670
+- item_id: 6675
+  name: Navori Flickerblade
+  description: <mainText><stats><attention>40%</attention> Attack Speed<br><attention>25%</attention>
+    Critical Strike Chance<br><attention>4%</attention> Move Speed</stats><br><br><passive>Transcendence</passive><br>Attacks
+    reduce Basic Ability cooldowns by <attention>15%</attention> of their remaining cooldown.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 1042
+  - 3086
+  - 1042
+- item_id: 6676
+  name: The Collector
+  description: <mainText><stats><attention>50</attention> Attack Damage<br><attention>10</attention> Lethality<br><attention>25%</attention>
+    Critical Strike Chance</stats><br><br><passive>Death</passive><br>Your damage executes champions that
+    are below 5% Health.<br><br><passive>Taxes</passive><br>Champion kills grant <gold>25 bonus gold</gold>.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1037
+  - 3134
+  - 1018
+- item_id: 6690
+  name: Rectrix
+  description: <mainText><stats><attention>15</attention> Attack Damage<br><attention>4%</attention> Move
+    Speed</stats><br><br></mainText>
+  gold_total: 775
+  builds_into:
+  - 4003
+  - 6700
+  - 6672
+  - 3142
+  builds_from:
+  - 1036
+- item_id: 6692
+  name: Eclipse
+  description: <mainText><stats><attention>60</attention> Attack Damage<br><attention>15</attention> Ability
+    Haste</stats><br><br><passive>Ever Rising Moon</passive><br>Hitting a champion with 2 separate Attacks
+    or Abilities within 2 seconds grants you a <shield>Shield</shield> for 2 seconds.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3133
+  - 1037
+  - 1036
+- item_id: 6693
+  name: Prowler's Claw
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>22</attention> Lethality<br><attention>15</attention>
+    Ability Haste</stats><br><br><br><li><passive>Ambush Predator:</passive> After entering a bush your
+    next damaging Attack or Ability on enemy champions deals <physicalDamage>10% of their current health</physicalDamage>
+    over 4 seconds, revealing them and reducing their vision radius for the duration. (5(0s)).</mainText>
+  gold_total: 2850
+  builds_into: []
+  builds_from:
+  - 3134
+  - 3133
+- item_id: 6694
+  name: Serylda's Grudge
+  description: <mainText><stats><attention>45</attention> Attack Damage<br><attention>35%</attention>
+    Armor Penetration<br><attention>15</attention> Ability Haste</stats><br><br><passive>Bitter Cold</passive><br>Damaging
+    Abilities <status>Slow</status> enemies below 50% Health by 30% for 1 second.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 3133
+  - 3035
+- item_id: 6695
+  name: Serpent's Fang
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>15</attention> Lethality</stats><br><br><passive>Shield
+    Reaver</passive><br>Damaging an enemy champion reduces Shields they gain by % for 3 seconds. <br>If
+    they were not already affected by <passive>Shield Reaver</passive>, reduce Shields on them by %.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from:
+  - 3134
+  - 1037
+- item_id: 6696
+  name: Axiom Arc
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>20</attention>
+    Ability Haste</stats><br><br><passive>Flux</passive><br>When a champion that you damaged within 3
+    seconds dies, refund some of your Ultimate Ability's total cooldown.</mainText>
+  gold_total: 2750
+  builds_into: []
+  builds_from:
+  - 2020
+  - 3133
+- item_id: 6697
+  name: Hubris
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention>
+    Ability Haste</stats><br><br><passive>Ego</passive><br>When you kill an enemy champion you are granted
+    a statue of yourself, if you already have a statue this statue upgrades.<br><br><passive>Eminence</passive><br>When
+    a champion that you have damaged within the last 3 seconds dies, gain 10 (+1 per rank of Statue) Attack
+    Damage for 60 seconds.</mainText></mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3134
+  - 3133
+- item_id: 6698
+  name: Profane Hydra
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality<br><attention>10</attention>
+    Ability Haste</stats><br><br><passive>Cleave</passive><br>Attacks deal <physicalDamage>physical damage</physicalDamage>
+    to nearby enemies.<br><active>Heretical Cleave</active><br>Deal <physicalDamage>physical damage</physicalDamage>
+    around you.</mainText>
+  gold_total: 2850
+  builds_into: []
+  builds_from:
+  - 3077
+  - 2020
+- item_id: 6699
+  name: Voltaic Cyclosword
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>10</attention> Lethality<br><attention>10</attention>
+    Ability Haste</stats><br><br><passive>Galvanize</passive><br>Damaging an Enemy Champions with an ability
+    triggers <keyword>Energized</keyword> if it is ready.<br><br><passive>Firmament</passive><br>Your
+    <keyword>Energized Attack</keyword> deals <physicalDamage>% target's Current Health as bonus physical
+    damage</physicalDamage> and grants you <scaleLethality>bonus Lethality</scaleLethality> for 4 seconds.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 2020
+  - 1036
+  - 1036
+- item_id: 6701
+  name: Opportunity
+  description: <mainText><stats><attention>55</attention> Attack Damage<br><attention>18</attention> Lethality</stats><br><br><passive>Preparation</passive><br>After
+    being out of combat with Champions for 8 seconds gain <scaleLethality>Lethality</scaleLethality>.
+    This Lethality lasts for 3 seconds after dealing damage to champions.<br><br><passive>Extraction</passive><br>When
+    a champion that you damaged within 3 seconds dies, gain <speed>200 decaying Move Speed</speed> for
+    1.5 seconds.<br></mainText>
+  gold_total: 2700
+  builds_into: []
+  builds_from:
+  - 1037
+  - 3134
+  - 1036
+- item_id: 8001
+  name: Anathema's Chains
+  description: <mainText><stats><attention>650</attention> Health<br><attention>20</attention> Ability
+    Haste</stats><br><br><passive>Vendetta</passive><br>You gain Vendetta stacks over time Each stack
+    of Vendetta grants you 1% reduced damage from your Nemesis.<br><br><passive>Vengeance</passive><br>At
+    maximum stacks, your Nemesis has reduced Tenacity while near you.<br><br><br><br><active>ACTIVE</active>
+    (0s)<br><active>Vow</active><br>Choose a <attention>Nemesis</attention>.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1011
+- item_id: 8010
+  name: Bloodletter's Curse
+  description: <mainText><stats><attention>65</attention> Ability Power<br><attention>400</attention>
+    Health<br><attention>15</attention> Ability Haste</stats><br><br><passive>Vile Decay</passive><br>Dealing
+    <magicDamage>magic damage</magicDamage> with abilities or passives to champions reduces their <scaleMR>Magic
+    Resist by 7.5%</scaleMR> for 6 seconds. (Stacks 4 times).</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3147
+  - 3108
+- item_id: 8020
+  name: Abyssal Mask
+  description: <mainText><stats><attention>350</attention> Health<br><attention>45</attention> Magic Resist<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic
+    damage</magicDamage>.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1057
+- item_id: 322065
+  name: Shurelya's Battlesong
+  description: <mainText><stats><attention>65</attention> Ability Power<br><attention>15</attention> Ability
+    Haste<br><attention>6%</attention> Move Speed<br><attention>150%</attention> Base Mana Regen</stats><br><br><active>Inspiring
+    Speech</active><br>Grant nearby allies <speed>30% Move Speed</speed> for 4 seconds.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 3113
+  - 4642
+- item_id: 322526
+  name: Whispering Circlet
+  description: <mainText><stats><attention>200</attention> Health<br><attention>8%</attention> Heal and
+    Shield Power<br><attention>75%</attention> Base Mana Regen<br><attention>300</attention> Mana</stats><br><br><passive>Harmony</passive><br>Gain
+    % Heal and Shield Power.<br><br><passive>Manaflow</passive> (8s, max 5 charges)<br>Landing Abilities
+    grants <scaleMana>4 max Mana</scaleMana> (doubled vs. champions).<br>Transforms into <rarityLegendary>Diadem
+    of Songs</rarityLegendary> at <scaleMana>360 max Mana</scaleMana>.</mainText>
+  gold_total: 2250
+  builds_into:
+  - 322530
+  builds_from:
+  - 3114
+  - 1028
+  - 323070
+- item_id: 322530
+  name: Diadem of Songs
+  description: <mainText><stats><attention>200</attention> Health<br><attention>8%</attention> Heal and
+    Shield Power<br><attention>1000</attention> Mana<br><attention>100%</attention> Base Mana Regen</stats><br><br><passive>Harmony</passive><br>Gain
+    % Heal and Shield Power.<br><br><passive>Consonance</passive><br>While you or any ally you've healed
+    or shielded in the last 3 seconds is in combat with champions, each second, heal the lowest health
+    nearby ally champion.</mainText>
+  gold_total: 2250
+  builds_into: []
+  builds_from: []
+- item_id: 323002
+  name: Trailblazer
+  description: <mainText><stats><attention>300</attention> Health<br><attention>45</attention> Armor<br><attention>6%</attention>
+    Move Speed</stats><br><br><passive>Lead the Way</passive><br>While moving, build up to <speed>20 bonus
+    Move Speed</speed>. <br>At max speed:<li>Create a trail that grants allied champions <speed>Move Speed
+    equal to 15%</speed> of yours. <li>If you are Melee, your next Attack <keyword>Slows</keyword> the
+    target by 50% for 1 second.<br><br></mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 3066
+  - 1031
+- item_id: 323003
+  name: Archangel's Staff
+  description: <mainText><stats><attention>70</attention> Ability Power<br><attention>600</attention>
+    Mana<br><attention>25</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain Ability
+    Power equal to <scaleMana>1% bonus Mana.</scaleMana><br><br><passive>Manaflow</passive> (8s, max 5
+    charges)<br>Landing Abilities grants <scaleMana>9.5 max Mana</scaleMana> (doubled vs. champions).<br>Transforms
+    into <rarityLegendary>Seraph's Embrace</rarityLegendary> at <scaleMana>360 max Mana</scaleMana>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 323070
+  - 3802
+  - 3108
+- item_id: 323004
+  name: Manamune
+  description: <mainText><stats><attention>35</attention> Attack Damage<br><attention>500</attention>
+    Mana<br><attention>15</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleAD>
+    bonus Attack Damage</scaleAD>.<br><br><passive>Manaflow</passive> (8s, max 4 charges)<br>Landing Attacks
+    and Abilities grants <scaleMana>6.5 max Mana</scaleMana> (doubled vs. champions).<br>Transforms into
+    <rarityLegendary>Muramana</rarityLegendary> at <scaleMana>360 max Mana</scaleMana>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 323070
+  - 3133
+  - 1036
+- item_id: 323040
+  name: Seraph's Embrace
+  description: <mainText><stats><attention>70</attention> Ability Power<br><attention>1000</attention>
+    Mana<br><attention>25</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleAP>
+    Ability Power</scaleAP>.<br><br><passive>Lifeline</passive> (0s)<br>Taking damage that would reduce
+    your Health below 30% grants a <shield> Shield</shield> for 3 seconds.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from: []
+- item_id: 323042
+  name: Muramana
+  description: <mainText><stats><attention>35</attention> Attack Damage<br><attention>1000</attention>
+    Mana<br><attention>15</attention> Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleAD>2%
+    max Mana as bonus Attack Damage</scaleAD>.<br><br><passive>Shock</passive><br>Attacks against champions
+    deal <physicalDamage>1.2% max Mana as bonus physical damage</physicalDamage> <OnHit>On-Hit</OnHit>.
+    <br>Damaging Abilities against champions deal <physicalDamage>3% - 4% max Mana as bonus physical damage</physicalDamage>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from: []
+- item_id: 323050
+  name: Zeke's Convergence
+  description: <mainText><stats><attention>350</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention>
+    Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><passive>Frostfire Tempest</passive><br>Casting
+    your Ultimate summons a storm around you for 5 seconds. The storm deals <magicDamage>30 magic damage</magicDamage>
+    per second to enemy champions and <keyword>Slows</keyword> them by 30%.</mainText>
+  gold_total: 2300
+  builds_into: []
+  builds_from:
+  - 1029
+  - 3067
+  - 1033
+- item_id: 323070
+  name: Tear of the Goddess
+  description: <mainText><stats><attention>240</attention> Mana</stats><br><br><passive>Manaflow</passive>
+    (8s, max 4 charges)<br>Landing Abilities grants <scaleMana>6.5 max Mana</scaleMana> (doubled vs. champions),
+    up to <scaleMana>360</scaleMana>.<br><br><passive>Helping Hand</passive><br>Attacks deal an additional
+    <physicalDamage>5 physical damage</physicalDamage> to minions.</mainText>
+  gold_total: 400
+  builds_into:
+  - 3003
+  - 3004
+  - 323003
+  - 323004
+  - 322526
+  - 323119
+  builds_from: []
+- item_id: 323075
+  name: Thornmail
+  description: <mainText><stats><attention>200</attention> Health<br><attention>85</attention> Armor</stats><br><br><passive>Thorns</passive><br>When
+    struck by an Attack, deal <magicDamage>magic damage</magicDamage> to the attacker and apply 40% <keyword>Wounds</keyword>
+    for 3 seconds if they are a champion.</mainText>
+  gold_total: 2650
+  builds_into: []
+  builds_from:
+  - 3076
+  - 1031
+  - 1028
+- item_id: 323107
+  name: Redemption
+  description: <mainText><stats><attention>30</attention> Ability Power<br><attention>15</attention> Ability
+    Haste<br><attention>100%</attention> Base Mana Regen<br><attention>10%</attention> Heal and Shield
+    Power</stats><br><br><active>Intervention</active><br>Restore <healing>150 - 350 Health</healing>
+    to allied units and deal <trueDamage>10% max Health true damage</trueDamage> to enemy champions after
+    2.5 seconds.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1028
+  - 3114
+- item_id: 323109
+  name: Knight's Vow
+  description: <mainText><stats><attention>300</attention> Health<br><attention>50</attention> Armor<br><attention>10</attention>
+    Ability Haste<br><attention>150%</attention> Base Health Regen</stats><br><br><passive>Sacrifice</passive><br>While
+    near your <attention>Worthy</attention> ally, take 14% of the damage they receive and <healing>heal
+    for 12%</healing> of the damage they deal to champions.<active>Pledge</active> (0s)<br>Designate an
+    ally as <attention>Worthy</attention>.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1031
+  - 1006
+- item_id: 323110
+  name: Frozen Heart
+  description: <mainText><stats><attention>75</attention> Armor<br><attention>500</attention> Mana<br><attention>25</attention>
+    Ability Haste</stats><br><br><passive>Winter's Caress</passive><br>Reduce the <attackSpeed>Attack
+    Speed</attackSpeed> of nearby champions by <attackSpeed>20%</attackSpeed>.</mainText>
+  gold_total: 2700
+  builds_into: []
+  builds_from:
+  - 3082
+  - 3024
+- item_id: 323119
+  name: Winter's Approach
+  description: <mainText><stats><attention>550</attention> Health<br><attention>500</attention> Mana<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleHealth> Health</scaleHealth>.<br><br><passive>Manaflow</passive>
+    (8s, max 4 charges)<br>Landing Attacks and Abilities grant <scaleMana>6.5 max Mana</scaleMana> (doubled
+    vs. champions).<br>Transforms into <rarityLegendary>Fimbulwinter</rarityLegendary> at <scaleMana>360
+    max Mana</scaleMana>.</mainText>
+  gold_total: 2400
+  builds_into: []
+  builds_from:
+  - 323070
+  - 1011
+  - 3067
+- item_id: 323121
+  name: Fimbulwinter
+  description: <mainText><stats><attention>550</attention> Health<br><attention>1000</attention> Mana<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Awe</passive><br>Gain <scaleHealth> Health</scaleHealth>.<br><br><passive>Everlasting</passive>
+    (0s)<br><keyword>Immobilizing</keyword> or <keyword>Slowing</keyword> (Melee only) an enemy champion
+    grants a <shield>Shield</shield> for 3 seconds. <br>The Shield is increased by 80% if more than one
+    enemy is nearby.</mainText>
+  gold_total: 2400
+  builds_into: []
+  builds_from: []
+- item_id: 323190
+  name: Locket of the Iron Solari
+  description: <mainText><stats><attention>250</attention> Health<br><attention>30</attention> Armor<br><attention>30</attention>
+    Magic Resist<br><attention>10</attention> Ability Haste</stats><br><br><active>Devotion</active><br>Grant
+    nearby allies a <shield>290 - 360 Shield</shield> that decays over 2.5 seconds.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1029
+  - 1033
+- item_id: 323222
+  name: Mikael's Blessing
+  description: <mainText><stats><attention>400</attention> Health<br><attention>100%</attention> Base
+    Mana Regen<br><attention>15%</attention> Heal and Shield Power<br><attention>15</attention> Ability
+    Haste</stats><br><br><active>Purify</active><br>Remove all crowd control debuffs (excluding <keyword>Airborne</keyword>
+    and <keyword>Suppression</keyword>) from an ally champion and restore <healing>100 - 250 Health</healing>.</mainText>
+  gold_total: 2800
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1028
+  - 3114
+- item_id: 323504
+  name: Ardent Censer
+  description: <mainText><stats><attention>55</attention> Ability Power<br><attention>10%</attention>
+    Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>6%</attention>
+    Move Speed</stats><br><br><passive>Sanctify</passive><br>Healing or Shielding an ally enhances you
+    both for 6 seconds, granting <attackSpeed>25% Attack Speed</attackSpeed> and <magicDamage>20 magic
+    damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 3113
+  - 1052
+  - 3114
+- item_id: 324005
+  name: Imperial Mandate
+  description: <mainText><stats><attention>65</attention> Ability Power<br><attention>15</attention> Ability
+    Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Control</passive><br>Gain
+    20 Ability Haste for your abilities with <keyword>Immobilizing</keyword> effects.<br><br><passive>Command</passive><br>On
+    <keyword>Immobilizing</keyword> an enemy champion, mark them as 7% <Keyword>Vulnerable</Keyword> for
+    4 seconds.<br></mainText>
+  gold_total: 2400
+  builds_into: []
+  builds_from:
+  - 1026
+  - 4642
+- item_id: 326616
+  name: Staff of Flowing Water
+  description: <mainText><stats><attention>45</attention> Ability Power<br><attention>10%</attention>
+    Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>10</attention>
+    Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you
+    both <magicDamage>40 Ability Power</magicDamage> and <attention>15 Ability Haste</attention> for 6
+    seconds.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 3108
+  - 1052
+  - 3114
+- item_id: 326617
+  name: Moonstone Renewer
+  description: <mainText><stats><attention>35</attention> Ability Power<br><attention>400</attention>
+    Health<br><attention>20</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Starlit
+    Grace</passive><br>Healing or shielding an ally chains the effect to another ally (excluding yourself),
+    <healing>healing 30%</healing> or <shield>shielding 35%</shield> of the original amount.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1028
+  - 4642
+- item_id: 326620
+  name: Echoes of Helia
+  description: <mainText><stats><attention>35</attention> Ability Power<br><attention>250</attention>
+    Health<br><attention>20</attention> Ability Haste<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>Soul
+    Siphon</passive><br>Gain 30% of pre-mitigation damage dealt to champions as Soul Charges. Healing
+    or Shielding an ally consumes all <passive>Soul Charges</passive> to restore <healing>Health</healing>.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 3067
+  - 4642
+- item_id: 326621
+  name: Dawncore
+  description: <mainText><stats><attention>50</attention> Ability Power<br><attention>20%</attention>
+    Heal and Shield Power<br><attention>150%</attention> Base Mana Regen</stats><br><br><passive>First
+    Light</passive><br>Gain <healing>2% Heal and Shield Power</healing> and <scaleAP>10 Ability Power</scaleAP>
+    per 100% Base Mana Regen.</mainText>
+  gold_total: 2900
+  builds_into: []
+  builds_from:
+  - 1026
+  - 3114
+  - 3114
+- item_id: 326657
+  name: Rod of Ages
+  description: <mainText><stats><attention>45</attention> Ability Power<br><attention>350</attention>
+    Health<br><attention>500</attention> Mana</stats><br><br><passive>Timeless</passive><br>This item
+    gains <scaleHealth>10 Health</scaleHealth>, <scaleMana>30 Mana</scaleMana> and <scaleAP>3 Ability
+    Power</scaleAP> every 60 seconds up to 10 times. Upon reaching max stacks, gain a level.<br><br><passive>Eternity</passive><br>Taking
+    damage from champions restores <scaleMana>10%</scaleMana> of the damage as <scaleMana>Mana</scaleMana>.
+    <br>Casting an ability <healing>heals for 25%</healing> of Mana spent.</mainText>
+  gold_total: 2600
+  builds_into: []
+  builds_from:
+  - 1026
+  - 3803
+- item_id: 328020
+  name: Abyssal Mask
+  description: <mainText><stats><attention>350</attention> Health<br><attention>50</attention> Magic Resist<br><attention>15</attention>
+    Ability Haste</stats><br><br><passive>Unmake</passive><br>Nearby enemy champions take 12% more <magicDamage>magic
+    damage</magicDamage>.</mainText>
+  gold_total: 2850
+  builds_into: []
+  builds_from:
+  - 3067
+  - 1057
+- item_id: 663039
+  name: Atma's Reckoning
+  description: <mainText><stats><attention>500</attention> Health<br><attention>20%</attention> Critical
+    Strike Chance</stats><br><br><passive>Big Hands</passive><br>Gain 0-30% Critical Strike Chance, scaling
+    with your <scaleHealth>bonus Health</scaleHealth>.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 663056
+  name: Demon King's Crown
+  description: <mainText><stats></stats><br><br><passive>Supremacy</passive><br>Increases your Health,
+    Armor, Magic Resist, Attack Damage, Ability Power, Attack Speed, and Ability Haste by 20%, increased
+    by 0% perTakedown and -3% per Death after acquiring this item.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 663058
+  name: Shield of Molten Stone
+  description: <mainText><stats><attention>250</attention> Health<br><attention>80</attention> Armor</stats><br><br><passive>Immovable
+    as the Earth</passive><br>Increase your armor by 20%, and gain Block Chance based on your Armor.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 663059
+  name: Cloak of Starry Night
+  description: <mainText><stats><attention>250</attention> Health<br><attention>60</attention> Magic Resist</stats><br><br><passive>Limitless
+    as the Stars</passive><br>Increase your <scaleMR>Magic Resist</scaleMR> by 10%. Reduce all damage
+    you take from non-Basic Attack sources by a percentage, scaling with your <scaleMR>Magic Resist</scaleMR>
+    up to a cap of 25%.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 663060
+  name: Sword of the Divine
+  description: <mainText><stats><attention>90</attention> Adaptive Force<br><attention>50%</attention>
+    Critical Strike Chance</stats><br><br><passive>Excoriate</passive><br>Each Critical strike deals random
+    <keyword>bonus Critical Strike Damage</keyword>, scaling up to 50% of your Critical Strike Chance.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 663064
+  name: Veigar's Talisman of Ascension
+  description: <mainText><stats></stats><br><br>Gain 100% Extra Experience<br><br>Offers no stats, and
+    cannot be sold...<br><br>...But will be worth it if you reach Level 30.</mainText>
+  gold_total: 900
+  builds_into: []
+  builds_from: []
+- item_id: 663146
+  name: Hextech Gunblade
+  description: <mainText><stats><attention>90</attention> Ability Power<br><attention>45</attention> Attack
+    Damage<br><attention>15%</attention> Omnivamp</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Lightning
+    Bolt</active><br>Shocks the target enemy champion, dealing <magicDamage> magic damage</magicDamage>
+    and <status>Slowing</status> them by 40% for 2 seconds.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 663172
+  name: Zephyr
+  description: <mainText><stats><attention>40%</attention> Attack Speed<br><attention>8%</attention> Move
+    Speed<br><attention>25</attention> Ability Haste<br><attention>20%</attention> Tenacity</stats><br><br><passive>Like
+    the Wind</passive><br>Gain 5% Move Speed <OnHit>On-Hit</OnHit> for 6 seconds, stacking up to 25% Move
+    Speed.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 663193
+  name: Gargoyle Stoneplate
+  description: <mainText><stats><attention>55</attention> Armor<br><attention>55</attention> Magic Resist<br><attention>10</attention>
+    Ability Haste<br><attention>8%</attention> Move Speed</stats><br><br><active>Active -</active> <active>Unbreakable:</active>
+    Gain a Shield that decays and grow in size.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 664011
+  name: Sword of Blossoming Dawn
+  description: <mainText><stats><attention>35</attention> Ability Power<br><attention>150</attention>
+    Health<br><attention>10%</attention> Heal and Shield Power<br><attention>10</attention> Ability Haste</stats><br><br><passive>Effervescence</passive><br>Gain
+    +<attackSpeed>1% Attack Speed</attackSpeed> for every <healing>1% Heal and Shield Power</healing>
+    you have. <br><br><passive>Peppermint</passive><br><OnHit>On-Hit</OnHit>, <healing>heal the lowest
+    health</healing> ally champion near you for , prioritizing lower health allies.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 664403
+  name: The Golden Spatula
+  description: <mainText><stats><attention>90</attention> Attack Damage<br><attention>125</attention>
+    Ability Power<br><attention>30%</attention> Attack Speed<br><attention>25%</attention> Critical Strike
+    Chance<br><attention>250</attention> Health<br><attention>10</attention> Armor<br><attention>10</attention>
+    Magic Resist<br><attention>250</attention> Mana<br><attention>20</attention> Ability Haste<br><attention>10%</attention>
+    Life Steal<br><attention>100%</attention> Base Health Regen<br><attention>100%</attention> Base Mana
+    Regen</stats><br><br><flavorText>"It must do something...<br>Declined, it does EVERYTHING"</flavorText></mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 664644
+  name: Crown of the Shattered Queen
+  description: <mainText><stats><attention>65</attention> Ability Power<br><attention>250</attention>
+    Health<br><attention>600</attention> Mana<br><attention>15</attention> Ability Haste</stats><br><br><passive>Safeguard</passive><br>You
+    are <keywordMajor>Safeguarded</keywordMajor>, reducing incoming champion damage by 40%. <keywordMajor>Safeguard</keywordMajor>
+    persists for 3 seconds after taking champion damage. (0s). <br><br><rules>Item Cooldown is restarted
+    when damage is taken from champions.</rules></mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 667101
+  name: Gambler's Blade
+  description: <mainText><stats><attention>55</attention> Adaptive Force<br><attention>10</attention>
+    Ability Haste<br><attention>15</attention> Lethality<br><attention>15</attention> Magic Penetration<br><attention>15%</attention>
+    Move Speed</stats><br><br><passive>Playing for Time</passive><br>Champion takedowns while using Gambler's
+    Blade delays Doom-boss Veigar's arrival by an additional 10 seconds. Deaths while carrying the Blade
+    accelerate it by 10 seconds. (Will not lose time past the 14:30 minute mark)<br><br><passive>Double
+    Down</passive><br>Champion takedowns grant a stack, each granting<gold> 10 bonus gold</gold> on kill.
+    Also take 5% increased damage per stack. Lose all stacks on death.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 667109
+  name: Cruelty
+  description: <mainText><stats><attention>60</attention> Ability Power<br><attention>25</attention> Armor<br><attention>25</attention>
+    Magic Resist</stats><br><br><passive>Watch Them Fall</passive><br>On <status>Immobilize</status> or
+    <status>Grounding</status> an enemy champion, summon a comet above them. The comet lands after 1 second,
+    dealing additional <magicDamage> magic damage</magicDamage> in the area. This effect has a 6s cooldown
+    per target per spell cast.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 667112
+  name: Flesheater
+  description: <mainText><stats><attention>55</attention> Adaptive Force<br><attention>500</attention>
+    Health</stats><br><br><passive>Hack the Meat</passive><br>Dealing damage shreds 3 <scaleArmor>Armor</scaleArmor>
+    and <scaleMR>Magic Resist</scaleMR> for 5 seconds, stacking up to 10 times. Applying stacks has a
+    1 second cooldown per Ability.<br><br><passive>Cannibalize</passive><br>On Champion Takedown, steal
+    10% of their stats and size for the rest of the round.</mainText>
+  gold_total: 2500
+  builds_into: []
+  builds_from: []
+- item_id: 667666
+  name: The Collector
+  description: <mainText><stats><attention>50</attention> Attack Damage<br><attention>10</attention> Lethality<br><attention>25%</attention>
+    Critical Strike Chance</stats><br><br><passive>Death</passive><br>Your damage executes champions that
+    are below 5% Health.<br><br><passive>Taxes</passive><br>Champion kills grant <gold>25 bonus gold</gold>.</mainText>
+  gold_total: 3000
+  builds_into: []
+  builds_from:
+  - 1037
+  - 3134
+  - 1018
+- item_id: 771500
+  name: Penetrating Bullets
+  description: ''
+  gold_total: 0
+  builds_into: []
+  builds_from: []

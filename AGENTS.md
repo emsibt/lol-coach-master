@@ -47,25 +47,40 @@ src/lolcoach/
     engine/       PURE. No I/O, no network, no clock, no imports from the other layers.
                   Takes an Ontology + a StatsProvider by dependency injection.
     knowledge/    The YAML knowledge graph: load, JSON-Schema + referential validation.
+                  Also the materialized reference data (tips/abilities/builds/items),
+                  loaded leniently from YAML by knowledge/reference.py.
     dataprovider/ The ONLY layer that talks to the network (OP.GG MCP) and the ONLY
-                  layer that writes the stats snapshot.
+                  layer that writes the stats snapshot. It is also the only writer of
+                  knowledge/seed/*.yaml (build_kg.py), and holds the live provider
+                  (live.py) for the two lookups the agent makes mid-run.
     workflow/     The in-house Step-Functions-style executor. The ONLY layer that
                   persists execution history.
-    agent/        The LangChain narrator. Reads engine traces, produces prose.
-    server/       FastAPI. Wires the workflow + engine + narrator to HTTP.
+    agent/        The tool surface, the tool-loop, and the grounded narrator.
+    server/       FastAPI. Wires the workflow + engine + tools to HTTP.
 ```
 
 - `engine/**` must not import from `dataprovider`, `workflow`, `server`, or `agent`.
 - `dataprovider/**` must not import from `server`.
-- The narrator may not assert any fact or number not present in the engine traces.
+- `agent/**` must not import from `dataprovider`. Anything the agent needs from the
+  network layer is declared as a `Protocol` in `agent/tools.py` (e.g.
+  `LiveDataProvider`) and injected by the composition root (`server/app.py`).
+- The narrator may not assert any fact or number not present in the tool results. A
+  tool result declares `sources` — the champions it is entitled to source — and the
+  guard whitelists only those for prose tools (`get_champion_tips`,
+  `get_champion_build`, the live tools); every other tool's payload is walked as
+  before. Reference prose that mentions another champion does **not** widen it.
 
-**OP.GG data shape (important):** the OP.GG MCP server does *not* return JSON. Each
-tool result is a column-ordered "typed repr" (`class Name: a,b,c` header lines,
+**OP.GG data shape (important):** the OP.GG MCP server mostly does *not* return JSON.
+Each tool result is a column-ordered "typed repr" (`class Name: a,b,c` header lines,
 then a nested positional constructor expression). `dataprovider/typed_repr.py`
-parses it. Tool inputs are also strict: `position` and `game_mode` are required,
-and `desired_output_fields` is a closed set of exact paths (`[]` marks arrays).
-The roster mixes real champions with alternate-mode variants (`Jade_*`, id ≥ 60000);
-the fetch excludes those.
+parses it, and `opgg_mcp.py::_parse_result_text` accepts either form (a few tools,
+e.g. `lol_list_items`, return plain JSON). Tool inputs are also strict: `position`
+and `game_mode` are required, and `desired_output_fields` is a closed set of exact
+paths (`[]` marks arrays). Champions are addressed by their *display name* squashed
+to UPPER_SNAKE (`text.upper_snake`): OP.GG wants `CHOGATH` for `Cho'Gath` and
+`DR_MUNDO` for `Dr. Mundo` — punctuation is dropped, spaces become underscores, and
+this is **not** the Riot key uppercased. The roster mixes real champions with
+alternate-mode variants (`Jade_*`, id ≥ 60000); the fetch excludes those.
 
 ## Conventions
 

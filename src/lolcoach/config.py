@@ -87,6 +87,7 @@ class Settings:
     data_dir: Path = Path()
     snapshot_db: Path = Path()
     executions_db: Path = Path()
+    chat_db: Path = Path()
     opgg_mcp_url: str = "https://mcp-api.op.gg/mcp"
     fetch_interval: float = 1.2
     llm_provider: str = "anthropic"
@@ -96,7 +97,13 @@ class Settings:
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     max_tool_calls: int = 8
+    max_questions_per_session: int = 5
     enable_vision: bool = True
+    enable_live_tools: bool = True
+    live_region: str = "NA"
+    live_timeout: float = 15.0
+    live_cache_ttl: float = 300.0
+    live_min_interval: float = 0.25
     frontend_url: str = "http://localhost:5173"
 
 
@@ -113,6 +120,7 @@ def get_settings() -> Settings:
         data_dir=data_dir,
         snapshot_db=Path(_env("LOL_COACH_SNAPSHOT_DB", str(data_dir / "snapshot.db"))),
         executions_db=Path(_env("LOL_COACH_EXECUTIONS_DB", str(data_dir / "executions.db"))),
+        chat_db=Path(_env("LOL_COACH_CHAT_DB", str(data_dir / "chat.db"))),
         opgg_mcp_url=_env("LOL_COACH_OPGG_MCP_URL", "https://mcp-api.op.gg/mcp"),
         fetch_interval=float(_env("LOL_COACH_FETCH_INTERVAL", "1.2")),
         llm_provider=provider,
@@ -122,6 +130,12 @@ def get_settings() -> Settings:
         anthropic_api_key=_env("ANTHROPIC_API_KEY", ""),
         openai_api_key=_env("OPENAI_API_KEY", ""),
         max_tool_calls=_env_int("LOL_COACH_MAX_TOOL_CALLS", 8),
+        max_questions_per_session=_env_int("LOL_COACH_MAX_QUESTIONS", 5),
         enable_vision=_env_bool("LOL_COACH_ENABLE_VISION", True),
+        enable_live_tools=_env_bool("LOL_COACH_ENABLE_LIVE_TOOLS", True),
+        live_region=_env("LOL_COACH_LIVE_REGION", "NA").upper(),
+        live_timeout=float(_env("LOL_COACH_LIVE_TIMEOUT", "15")),
+        live_cache_ttl=float(_env("LOL_COACH_LIVE_CACHE_TTL", "300")),
+        live_min_interval=float(_env("LOL_COACH_LIVE_MIN_INTERVAL", "0.25")),
         frontend_url=_env("LOL_COACH_FRONTEND_URL", "http://localhost:5173"),
     )

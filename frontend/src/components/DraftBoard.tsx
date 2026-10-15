@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { api } from "../api";
 import { LANES, type Champion, type DraftRequest, type EvaluateResponse } from "../types";
+import ChampionAvatar from "./ChampionAvatar";
 import ChampionGrid from "./ChampionGrid";
 import RecommendationCard from "./RecommendationCard";
 
@@ -45,7 +46,14 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
     return map;
   }, [champions]);
 
+  const keyBySlug = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const champion of champions) map.set(champion.slug, champion.key);
+    return map;
+  }, [champions]);
+
   const nameOf = (slug: string): string => nameBySlug.get(slug) ?? slug;
+  const keyOf = (slug: string): string => keyBySlug.get(slug) ?? "";
 
   function withoutSlug(record: Record<string, string>, slug: string): Record<string, string> {
     const next: Record<string, string> = {};
@@ -129,9 +137,14 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
               }`}
             >
               <span className="w-16 text-xs uppercase tracking-wide text-slate-500">{role}</span>
-              <span className={slug === undefined ? "text-slate-600" : "font-medium text-slate-100"}>
-                {slug === undefined ? "—" : nameOf(slug)}
-              </span>
+              {slug === undefined ? (
+                <span className="text-slate-600">—</span>
+              ) : (
+                <span className="flex min-w-0 items-center gap-2">
+                  <ChampionAvatar name={nameOf(slug)} championKey={keyOf(slug)} size="sm" />
+                  <span className="truncate font-medium text-slate-100">{nameOf(slug)}</span>
+                </span>
+              )}
             </button>
           );
         })}
@@ -158,6 +171,7 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
               key={slug}
               className="flex items-center gap-1 rounded border border-rose-500/40 bg-rose-500/10 px-1.5 py-0.5 text-xs text-rose-200"
             >
+              <ChampionAvatar name={nameOf(slug)} championKey={keyOf(slug)} size="sm" />
               {nameOf(slug)}
               <button
                 type="button"
@@ -221,11 +235,13 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
           <RecommendationCard
             title="Counter-pick"
             pick={result.counter}
+            championKey={result.counter ? keyOf(result.counter.slug) : undefined}
             empty="No counter-pick: add an enemy champion to score against."
           />
           <RecommendationCard
             title="Synergy-pick"
             pick={result.synergy}
+            championKey={result.synergy ? keyOf(result.synergy.slug) : undefined}
             empty="No synergy-pick: add an ally champion to pair with."
           />
         </div>

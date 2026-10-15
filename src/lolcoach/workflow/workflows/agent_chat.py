@@ -37,9 +37,11 @@ from lolcoach.agent.agent import (
 )
 from lolcoach.agent.llm import ImagePart, LlmClient
 from lolcoach.agent.narrator import narrate_final
-from lolcoach.agent.tools import Board, ToolBox, normalize_board
+from lolcoach.agent.tools import Board, LiveDataProvider, ToolBox, normalize_board
+from lolcoach.chat.memory import MEMORY_TOOL_NAMES, SessionMemory, call_memory_tool
 from lolcoach.config import Settings, get_settings
 from lolcoach.knowledge.ontology import Ontology
+from lolcoach.knowledge.reference import ReferenceData
 from lolcoach.values import as_int, as_str, opt_dict, opt_list
 from lolcoach.workflow.types import (
     ChoiceRule,
@@ -87,6 +89,10 @@ def _turns(value: object) -> tuple[tuple[str, str], ...]:
     return tuple(out)
 
 
+def _notes(value: object) -> tuple[str, ...]:
+    return tuple(note for note in (as_str(item).strip() for item in opt_list(value)) if note)
+
+
 def _rec_from_steps(steps: list[ToolStep]) -> dict[str, object] | None:
     for step in reversed(steps):
         if step.name == "suggest_pick" and step.ok:
@@ -104,10 +110,17 @@ def build_agent_chat(
     *,
     client: LlmClient | None = None,
     settings: Settings | None = None,
+    reference: ReferenceData | None = None,
+    live: LiveDataProvider | None = None,
 ) -> AgentChat:
-    """Build the agent-chat workflow plus its task/predicate registries."""
+    """Build the agent-chat workflow plus its task/predicate registries.
+
+    ``reference`` and ``live`` are injected by the composition root, not imported:
+    this layer must not reach into ``dataprovider``. Either may be ``None``, in
+    which case the corresponding tools are neither advertised nor callable.
+    """
     active = settings or get_settings()
-    toolbox = ToolBox(ontology)
+    toolbox = ToolBox(ontology, reference=reference, live=live)
 
     def parse_input(data: dict[str, object]) -> dict[str, object]:
         question = as_str(data.get("question"))
@@ -123,6 +136,8 @@ def build_agent_chat(
             "image": opt_dict(data.get("image")) or None,
             "history": [step_to_dict(step) for step in _steps(data.get("history"))],
             "turns": [list(item) for item in _turns(data.get("turns"))],
+            "notes": list(_notes(data.get("notes"))),
+            "memory": bool(data.get("memory")),
             "unresolved": unresolved,
             "max_tool_calls": as_int(data.get("max_tool_calls"), active.max_tool_calls),
         }
@@ -134,6 +149,10 @@ def build_agent_chat(
             image=_image(data.get("image")),
             history=tuple(_steps(data.get("history"))),
             turns=_turns(data.get("turns")),
+            notes=_notes(data.get("notes")),
+            memory=bool(data.get("memory")),
+            reference_tools=toolbox.reference_tools,
+            live_tools=toolbox.live_tools,
         )
         action = choose_action(context, client=client, settings=active)
         return {"action": action}
@@ -144,21 +163,51 @@ def build_agent_chat(
         arguments = opt_dict(action.get("arguments"))
         call_id = as_str(action.get("call_id")) or uuid4().hex
         board = normalize_board(data.get("board"))
+        notes = list(_notes(data.get("notes")))
+
+        memory_call = None
+        if bool(data.get("memory")) and name in MEMORY_TOOL_NAMES:
+            memory_call = call_memory_tool(
+                name,
+                arguments,
+                SessionMemory(turns=_turns(data.get("turns")), notes=tuple(notes)),
+                existing_notes=notes,
+            )
+
+        sources: tuple[str, ...] = ()
         try:
-            result = toolbox.call(name, arguments, board)
-            ok, payload = result.ok, result.payload
+            if memory_call is not None:
+                ok = memory_call.payload.get("ok") is not False
+                payload = memory_call.payload
+            else:
+                result = toolbox.call(name, arguments, board)
+                ok, payload, sources = result.ok, result.payload, result.sources
         except Exception as exc:  # noqa: BLE001 - a broken tool must not kill the loop
             logger.exception("Agent tool failed", extra={"data": {"tool": name}})
-            ok, payload = False, {"error": f"{type(exc).__name__}: {exc}"}
+            ok, payload, sources = False, {"error": f"{type(exc).__name__}: {exc}"}, ()
+
+        if memory_call is not None and memory_call.recorded_note:
+            if memory_call.recorded_note not in notes:
+                notes.append(memory_call.recorded_note)
 
         step = ToolStep(
-            call_id=call_id, name=name, arguments=arguments, ok=ok, payload=payload
+            call_id=call_id,
+            name=name,
+            arguments=arguments,
+            ok=ok,
+            payload=payload,
+            sources=sources,
         )
         history = [step_to_dict(existing) for existing in _steps(data.get("history"))]
         history.append(step_to_dict(step))
         applies_board = name == "set_board" and ok
         new_board: Board = normalize_board(payload.get("board")) if applies_board else board
-        return {"history": history, "board": new_board, "last_step": step_to_dict(step)}
+        return {
+            "history": history,
+            "board": new_board,
+            "notes": notes,
+            "last_step": step_to_dict(step),
+        }
 
     def finalize(data: dict[str, object]) -> dict[str, object]:
         steps = _steps(data.get("history"))
@@ -182,6 +231,7 @@ def build_agent_chat(
                 {"name": step.name, "ok": step.ok, "arguments": step.arguments} for step in steps
             ],
             "recommendation": _rec_from_steps(steps),
+            "notes": list(_notes(data.get("notes"))),
             "unresolved": unresolved,
         }
 

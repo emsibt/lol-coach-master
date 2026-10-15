@@ -4,7 +4,7 @@
     python -m lolcoach.cli fetch [--limit N]
     python -m lolcoach.cli build-kg [--patch X]
     python -m lolcoach.cli kg-report [--out PATH]
-    python -m lolcoach.cli reset (--all | --executions)
+    python -m lolcoach.cli reset (--all | --executions | --chat)
     python -m lolcoach.cli demo
     python -m lolcoach.cli benchmark --n 200
     python -m lolcoach.cli scan-executions
@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import re
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -64,7 +65,9 @@ def _cmd_fetch(args: argparse.Namespace) -> int:
             f"{report.champions} champions, {report.stat_rows} stat rows, "
             f"{report.matchup_rows} matchups, {report.synergy_rows} synergies "
             f"({report.analyzed_pairs} pairs analyzed, {report.skipped_pairs} skipped, "
-            f"{report.errors} errors)"
+            f"{report.errors} errors), "
+            f"{report.reference_rows} reference rows, {report.build_rows} build rows, "
+            f"{report.rune_rows} rune rows, {report.item_rows} items"
         )
     finally:
         conn.close()
@@ -81,7 +84,9 @@ def _cmd_build_kg(args: argparse.Namespace) -> int:
         return 1
     conn = store.connect(settings.snapshot_db)
     try:
-        counts = build_knowledge_graph(conn, _SEED_DIR, patch=args.patch)
+        counts = build_knowledge_graph(
+            conn, _SEED_DIR, patch=args.patch, ddragon_version=_ddragon_version(args)
+        )
     finally:
         conn.close()
     print(
@@ -90,6 +95,19 @@ def _cmd_build_kg(args: argparse.Namespace) -> int:
         f"({counts['counter_count']} counters, {counts['synergy_count']} synergies)"
     )
     return _EXIT_OK
+
+
+def _ddragon_version(args: argparse.Namespace) -> str:
+    """Data Dragon CDN version for champion portraits.
+
+    The KG patch label (``14.20``) is not a CDN version (``14.20.1``); default to
+    the patch's first build and allow an explicit override.
+    """
+    if args.ddragon:
+        return str(args.ddragon)
+    if re.fullmatch(r"\d+\.\d+", args.patch):
+        return f"{args.patch}.1"
+    return ""
 
 
 def _cmd_kg_report(args: argparse.Namespace) -> int:
@@ -112,9 +130,11 @@ def _cmd_reset(args: argparse.Namespace) -> int:
     data_dir = settings.data_dir.resolve()
     targets = []
     if args.all:
-        targets = [settings.snapshot_db, settings.executions_db]
+        targets = [settings.snapshot_db, settings.executions_db, settings.chat_db]
     elif args.executions:
         targets = [settings.executions_db]
+    elif args.chat:
+        targets = [settings.chat_db]
 
     for base in targets:
         resolved = base.resolve()
@@ -152,6 +172,11 @@ def _build_parser() -> argparse.ArgumentParser:
 
     p_kg = sub.add_parser("build-kg", help="build the YAML knowledge graph from the snapshot")
     p_kg.add_argument("--patch", default="unknown", help="patch label recorded in patches.yaml")
+    p_kg.add_argument(
+        "--ddragon",
+        default="",
+        help="Data Dragon CDN version for portraits (default: <patch>.1 when patch is X.Y)",
+    )
     p_kg.set_defaults(func=_cmd_build_kg)
 
     p_report = sub.add_parser(
@@ -160,10 +185,11 @@ def _build_parser() -> argparse.ArgumentParser:
     p_report.add_argument("--out", default=None, help="output path (default data/kg-report.html)")
     p_report.set_defaults(func=_cmd_kg_report)
 
-    p_reset = sub.add_parser("reset", help="delete runtime data (snapshot and/or executions)")
+    p_reset = sub.add_parser("reset", help="delete runtime data (snapshot, executions, chat)")
     group = p_reset.add_mutually_exclusive_group(required=True)
     group.add_argument("--all", action="store_true")
     group.add_argument("--executions", action="store_true")
+    group.add_argument("--chat", action="store_true")
     p_reset.set_defaults(func=_cmd_reset)
 
     p_demo = sub.add_parser("demo", help="run the flagship draft scenario in the terminal")

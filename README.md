@@ -30,16 +30,20 @@ fact is through a tool result.
 
 The chat is the front door: you type `jinx vs their zeri` (or paste a draft
 screenshot) and the agent resolves it to the engine's strict input, calls the
-deterministic tools, and answers in coach voice. A grounding check then discards
-any reply that names a champion no tool produced, so prose cannot smuggle in a
-fact the engine never measured. `docs/ARCHITECTURE.md` has the full picture.
+deterministic tools, and answers in coach voice. It can also answer the questions
+*around* the pick — a champion's tips, abilities, and build (materialized offline),
+and a player's rank or one specific lane matchup (fetched live). A grounding check
+then discards any reply that names a champion no tool produced, so prose cannot
+smuggle in a fact the engine never measured. `docs/ARCHITECTURE.md` has the full
+picture.
 
 | Route | Purpose |
 |-------|---------|
-| `POST /api/agent/chat` | chat front door: `{message, board?, image?, turns?}` → reply + tool calls + board |
+| `POST /api/agent/chat` | chat front door: `{message, board?, image?, session_id?}` → reply + tool calls + board |
 | `POST /api/draft/evaluate` | evaluate a board directly (the draft-eval workflow) |
 | `POST /api/chat` | narrate one execution's recommendation |
 | `GET /api/executions`, `GET /api/executions/{id}` | Trace Inspector history, including the agent's tool-loop |
+| `POST/GET /api/sessions`, `GET/PATCH/DELETE /api/sessions/{id}` | chat history: create, list, read, rename, delete |
 | `GET /api/champions`, `GET /api/health` | roster + liveness |
 
 ## Quick start
@@ -51,6 +55,7 @@ pip install -e ".[dev]"
 # offline data backbone (run once; throttled + resumable)
 python -m lolcoach.cli fetch --limit 40      # OP.GG pull -> data/snapshot.db
 python -m lolcoach.cli build-kg              # snapshot -> knowledge/seed/*.yaml
+                                             #   (graph + tips/abilities/builds/items)
 python -m lolcoach.cli kg-report             # review the graph in a browser
 
 # configure a model (required for chat — see below)
@@ -82,6 +87,8 @@ LOL_COACH_LLM_MODEL=deepseek/deepseek-v4.1-flash
 # LOL_COACH_LLM_EXTRA_HEADERS={}                    # JSON object; headers for a gateway/proxy
 # LOL_COACH_ENABLE_VISION=true                      # image input
 # LOL_COACH_MAX_TOOL_CALLS=8                        # tool-loop round-trip budget
+# LOL_COACH_ENABLE_LIVE_TOOLS=true                  # rank + lane-matchup lookups (network)
+# LOL_COACH_LIVE_REGION=NA                          # default region for a Riot-ID lookup
 ```
 
 The endpoint is always sent explicitly, so an ambient `ANTHROPIC_BASE_URL` /
@@ -125,8 +132,20 @@ ParseInput ─► Think ─► Route ──tool──► RunTool ─┐
 
 `Think` is the only place the model is consulted, and it is consulted about
 orchestration, never about League. The agent is invoked through
-`POST /api/agent/chat` and is stateless — the board is carried between turns by the
-client.
+`POST /api/agent/chat`; when a `session_id` is supplied the conversation and the
+board live server-side in `data/chat.db`, and the session's transcript is the
+agent's memory. Without a session the call is stateless and the client carries the
+board between turns.
+
+### Chat history & memory
+
+Chat is organized into sessions (ChatGPT/Gemini style) with a session list in the
+UI: create, reopen, rename, delete. Each session stores its transcript, board, and
+the agent's notes, and is capped at **5 questions** (`LOL_COACH_MAX_QUESTIONS`) —
+past the cap the API returns `409` and the UI locks the composer. The transcript
+is replayed to the agent as context, and two memory tools — `recall_history` and
+`remember` — let it re-read earlier turns and keep durable notes for the session.
+No authentication: sessions are trusted as-is.
 
 ## Tools
 
@@ -139,8 +158,20 @@ The deterministic surface the agent orchestrates
 | `suggest_pick` | Runs the pure engine over the current board and returns the best counter-pick and synergy-pick with their evidence traces. | **The only source of a pick recommendation.** |
 | `explain_matchup` | Returns the measured counter and synergy edges between two champions, optionally in a specific role. | Evidence only — never a recommendation. |
 | `get_champion` | Returns a champion's roles and win/pick/ban rates from the snapshot. | Reference data, no scoring. |
+| `get_champion_tips` | Returns a champion's tips (how to play with and against), abilities, and lore. | Materialized reference data; advertised only when loaded. |
+| `get_champion_build` | Returns a champion's recommended items, runes, and skill order for a role. | Materialized reference data; advertised only when loaded. |
+| `get_summoner_profile` | Returns a player's tier, division, LP, and win/loss for a Riot ID. | **Live** (network). Identity only — never a champion pool. |
+| `get_lane_matchup_guide` | Returns the written tip for one champion against one named opponent in a role. | **Live** (network). Evidence for the matchup the user named. |
 
-Every tool wraps existing engine or knowledge logic; none of them is the LLM.
+Every tool wraps existing engine or knowledge logic; none of them is the LLM. The
+two `get_champion_*` tools read the materialized reference YAML; the two live tools
+call OP.GG on demand (disable with `LOL_COACH_ENABLE_LIVE_TOOLS=false`, in which
+case they are not even advertised).
+
+Tips and matchup prose can name *other* champions ("great against Yasuo"). To keep
+the grounding guard meaningful, a result declares the champions it is entitled to
+source (`ToolResult.sources`) and the guard whitelists only those — a mention in
+prose never widens it.
 
 ## Stack
 

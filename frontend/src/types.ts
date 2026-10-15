@@ -7,6 +7,8 @@ export interface Health {
   status: string;
   service: string;
   version: string;
+  patch: string;
+  ddragon: string;
 }
 
 export interface PositionInfo {
@@ -21,6 +23,7 @@ export interface PositionInfo {
 export interface Champion {
   slug: string;
   name: string;
+  key: string;
   positions: PositionInfo[];
 }
 
@@ -166,4 +169,54 @@ export interface AgentChatResponse {
   synergy: Pick | null;
   traces: TraceLine[];
   error: string | null;
+  session_id: string | null;
+  question_count: number;
+  max_questions: number;
+  remaining_questions: number;
+}
+
+// Mirrors lolcoach/server/schemas.py::SessionSummary.
+export interface SessionSummary {
+  session_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+  question_count: number;
+  max_questions: number;
+  remaining_questions: number;
+}
+
+// Mirrors lolcoach/server/schemas.py::SessionMessageOut.
+export interface SessionMessage {
+  seq: number;
+  role: string;
+  text: string;
+  created_at: string;
+  mode: string | null;
+  tool_calls: AgentToolCall[];
+  counter: Pick | null;
+  synergy: Pick | null;
+  execution_id: string | null;
+  error: string | null;
+}
+
+export interface SessionDetail extends SessionSummary {
+  board: AgentBoard;
+  notes: string[];
+  messages: SessionMessage[];
+}
+
+// The chat panel's view model. User messages are optimistic; the rest come from sessions.
+export interface CoachMessage {
+  id: number;
+  role: "user" | "coach";
+  text: string;
+  mode?: string;
+  imagePreview?: string;
+  toolCalls?: AgentToolCall[];
+  counter?: Pick | null;
+  synergy?: Pick | null;
+  executionId?: string;
+  error?: boolean;
 }

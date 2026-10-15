@@ -16,6 +16,7 @@ derived from the win rate, not stored, so the data stays symmetric and testable.
 
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 from pathlib import Path
@@ -74,6 +75,47 @@ CREATE TABLE IF NOT EXISTS analysis_done (
     champion_id INTEGER NOT NULL,
     position    TEXT NOT NULL,
     PRIMARY KEY (champion_id, position)
+);
+CREATE TABLE IF NOT EXISTS champion_reference (
+    champion_id INTEGER PRIMARY KEY,
+    lore        TEXT NOT NULL DEFAULT '',
+    blurb       TEXT NOT NULL DEFAULT '',
+    tags        TEXT NOT NULL DEFAULT '[]',
+    ally_tips   TEXT NOT NULL DEFAULT '[]',
+    enemy_tips  TEXT NOT NULL DEFAULT '[]',
+    abilities   TEXT NOT NULL DEFAULT '[]',
+    updated_at  TEXT NOT NULL DEFAULT ''
+);
+CREATE TABLE IF NOT EXISTS champion_builds (
+    champion_id INTEGER NOT NULL,
+    position    TEXT NOT NULL,
+    item_type   TEXT NOT NULL,
+    ordinal     INTEGER NOT NULL,
+    item_id     INTEGER NOT NULL DEFAULT 0,
+    item_name   TEXT NOT NULL DEFAULT '',
+    play        INTEGER NOT NULL DEFAULT 0,
+    win         INTEGER NOT NULL DEFAULT 0,
+    pick_rate   REAL NOT NULL DEFAULT 0,
+    PRIMARY KEY (champion_id, position, item_type, ordinal)
+);
+CREATE TABLE IF NOT EXISTS champion_runes (
+    champion_id INTEGER NOT NULL,
+    position    TEXT NOT NULL,
+    tree        TEXT NOT NULL,
+    slot        INTEGER NOT NULL,
+    rune        TEXT NOT NULL,
+    PRIMARY KEY (champion_id, position, tree, slot)
+);
+CREATE TABLE IF NOT EXISTS items (
+    item_id     INTEGER PRIMARY KEY,
+    name        TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    gold_total  INTEGER NOT NULL DEFAULT 0,
+    builds_into TEXT NOT NULL DEFAULT '[]',
+    builds_from TEXT NOT NULL DEFAULT '[]'
+);
+CREATE TABLE IF NOT EXISTS reference_done (
+    champion_id INTEGER PRIMARY KEY
 );
 """
 
@@ -216,6 +258,130 @@ def analysis_done(conn: sqlite3.Connection, champion_id: int, position: str) -> 
     return row is not None
 
 
+def mark_reference_done(conn: sqlite3.Connection, champion_id: int) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO reference_done(champion_id) VALUES(?)", (champion_id,)
+    )
+
+
+def reference_done(conn: sqlite3.Connection, champion_id: int) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM reference_done WHERE champion_id = ?", (champion_id,)
+    ).fetchone()
+    return row is not None
+
+
+def decode_list(value: object) -> list[object]:
+    """Decode a JSON-array column written by the reference upserts.
+
+    Returns ``[]`` for anything unexpected: reference data is advisory, so a
+    corrupted blob should degrade to "no data", never abort a build.
+    """
+    if not isinstance(value, str) or not value:
+        return []
+    try:
+        parsed: object = json.loads(value)
+    except json.JSONDecodeError:
+        logger.warning("Ignoring malformed JSON column in the snapshot")
+        return []
+    return parsed if isinstance(parsed, list) else []
+
+
+def upsert_champion_reference(
+    conn: sqlite3.Connection,
+    champion_id: int,
+    *,
+    lore: str,
+    blurb: str,
+    tags: list[str],
+    ally_tips: list[str],
+    enemy_tips: list[str],
+    abilities: list[dict[str, str]],
+    updated_at: str,
+) -> None:
+    conn.execute(
+        "INSERT INTO champion_reference"
+        "(champion_id, lore, blurb, tags, ally_tips, enemy_tips, abilities, updated_at) "
+        "VALUES(?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(champion_id) DO UPDATE SET lore = excluded.lore, "
+        "blurb = excluded.blurb, tags = excluded.tags, ally_tips = excluded.ally_tips, "
+        "enemy_tips = excluded.enemy_tips, abilities = excluded.abilities, "
+        "updated_at = excluded.updated_at",
+        (
+            champion_id,
+            lore,
+            blurb,
+            json.dumps(tags, ensure_ascii=False),
+            json.dumps(ally_tips, ensure_ascii=False),
+            json.dumps(enemy_tips, ensure_ascii=False),
+            json.dumps(abilities, ensure_ascii=False),
+            updated_at,
+        ),
+    )
+
+
+def upsert_champion_build(
+    conn: sqlite3.Connection,
+    champion_id: int,
+    position: str,
+    item_type: str,
+    ordinal: int,
+    *,
+    item_id: int = 0,
+    item_name: str = "",
+    play: int = 0,
+    win: int = 0,
+    pick_rate: float = 0.0,
+) -> None:
+    conn.execute(
+        "INSERT INTO champion_builds"
+        "(champion_id, position, item_type, ordinal, item_id, item_name, play, win, pick_rate) "
+        "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(champion_id, position, item_type, ordinal) DO UPDATE SET "
+        "item_id = excluded.item_id, item_name = excluded.item_name, play = excluded.play, "
+        "win = excluded.win, pick_rate = excluded.pick_rate",
+        (champion_id, position, item_type, ordinal, item_id, item_name, play, win, pick_rate),
+    )
+
+
+def upsert_champion_rune(
+    conn: sqlite3.Connection, champion_id: int, position: str, tree: str, slot: int, rune: str
+) -> None:
+    conn.execute(
+        "INSERT INTO champion_runes(champion_id, position, tree, slot, rune) "
+        "VALUES(?, ?, ?, ?, ?) "
+        "ON CONFLICT(champion_id, position, tree, slot) DO UPDATE SET rune = excluded.rune",
+        (champion_id, position, tree, slot, rune),
+    )
+
+
+def upsert_item(
+    conn: sqlite3.Connection,
+    item_id: int,
+    *,
+    name: str,
+    description: str,
+    gold_total: int,
+    builds_into: list[int],
+    builds_from: list[int],
+) -> None:
+    conn.execute(
+        "INSERT INTO items(item_id, name, description, gold_total, builds_into, builds_from) "
+        "VALUES(?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT(item_id) DO UPDATE SET name = excluded.name, "
+        "description = excluded.description, gold_total = excluded.gold_total, "
+        "builds_into = excluded.builds_into, builds_from = excluded.builds_from",
+        (
+            item_id,
+            name,
+            description,
+            gold_total,
+            json.dumps(builds_into),
+            json.dumps(builds_from),
+        ),
+    )
+
+
 def name_to_id(conn: sqlite3.Connection) -> dict[str, int]:
     """Case-insensitive champion display name -> champion_id."""
     rows = conn.execute("SELECT champion_id, name FROM champions").fetchall()
@@ -224,7 +390,8 @@ def name_to_id(conn: sqlite3.Connection) -> dict[str, int]:
 
 def counts(conn: sqlite3.Connection) -> dict[str, int]:
     tables = ("champions", "champion_stats", "champion_roles", "matchups", "synergies",
-              "analysis_done")
+              "analysis_done", "champion_reference", "champion_builds", "champion_runes",
+              "items")
     result: dict[str, int] = {}
     for table in tables:
         row = conn.execute(f"SELECT COUNT(*) AS n FROM {table}").fetchone()  # noqa: S608

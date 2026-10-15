@@ -11,6 +11,8 @@ import type {
   ExecutionSummary,
   Health,
   RerunResponse,
+  SessionDetail,
+  SessionSummary,
 } from "./types";
 
 // Empty by default: the Vite dev server proxies /api to the backend. Set
@@ -27,6 +29,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(`${response.status} ${response.statusText}: ${detail}`);
   }
   return (await response.json()) as T;
+}
+
+async function requestVoid(path: string, init?: RequestInit): Promise<void> {
+  const response = await fetch(`${BASE}${path}`, {
+    headers: { "Content-Type": "application/json" },
+    ...init,
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`${response.status} ${response.statusText}: ${detail}`);
+  }
 }
 
 export const api = {
@@ -53,9 +66,26 @@ export const api = {
     board?: Partial<AgentBoard>;
     image?: AgentImage | null;
     turns?: AgentTurn[];
+    session_id?: string;
   }): Promise<AgentChatResponse> =>
     request<AgentChatResponse>("/api/agent/chat", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  sessions: (limit = 100): Promise<SessionSummary[]> =>
+    request<SessionSummary[]>(`/api/sessions?limit=${limit}`),
+  session: (id: string): Promise<SessionDetail> =>
+    request<SessionDetail>(`/api/sessions/${encodeURIComponent(id)}`),
+  createSession: (board?: Partial<AgentBoard>): Promise<SessionDetail> =>
+    request<SessionDetail>("/api/sessions", {
+      method: "POST",
+      body: JSON.stringify({ board }),
+    }),
+  renameSession: (id: string, title: string): Promise<SessionDetail> =>
+    request<SessionDetail>(`/api/sessions/${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    }),
+  deleteSession: (id: string): Promise<void> =>
+    requestVoid(`/api/sessions/${encodeURIComponent(id)}`, { method: "DELETE" }),
 };

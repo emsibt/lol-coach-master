@@ -27,6 +27,18 @@ logger = logging.getLogger(__name__)
 _PROTOCOL_VERSION = "2025-06-18"
 
 
+def _parse_result_text(text: str) -> object:
+    """Parse a tool result body.
+
+    OP.GG returns a typed-repr for most tools, but a few (e.g. ``lol_list_items``)
+    return plain JSON. A typed-repr always begins with ``class`` header lines, so a
+    leading ``{``/``[`` unambiguously marks a JSON body.
+    """
+    if text.lstrip()[:1] in ("{", "["):
+        return json.loads(text)
+    return parse_typed(text)
+
+
 class OpggMcpError(RuntimeError):
     """Raised for transport failures and JSON-RPC / tool-level errors."""
 
@@ -91,7 +103,7 @@ class OpggMcpClient:
         result = self._request("tools/call", {"name": name, "arguments": arguments})
         if result.get("isError"):
             raise OpggMcpError(f"tool {name!r} returned an error: {self._content_text(result)}")
-        return parse_typed(self._content_text(result))
+        return _parse_result_text(self._content_text(result))
 
     # -- internals --------------------------------------------------------
 

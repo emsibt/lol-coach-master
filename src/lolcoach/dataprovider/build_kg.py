@@ -10,10 +10,17 @@ Outputs (into ``knowledge/seed/``)::
     champions.yaml   # roster, per-lane meta stats, role classes
     relations.yaml   # counter and synergy edges
     patches.yaml     # provenance: patch, source, generated_at, counts
+    reference.yaml   # per-champion tips, abilities, lore (advisory)
+    builds.yaml      # per-champion item sets, runes, skill order (advisory)
+    items.yaml       # the item catalog behind the builds
 
 Counter direction is derived from the win rate, not trusted from the tool's
 ``strong``/``weak`` label, so the two perspectives of a matchup collapse to one
 edge pointing at the winner.
+
+The three reference files are **always** written, empty lists included, so the
+runtime loader has a stable path. They are advisory: their counts are logged, not
+added to the returned ``counts`` dict (whose shape is asserted exactly).
 """
 
 from __future__ import annotations
@@ -32,9 +39,13 @@ from lolcoach.constants import (
     MIN_EDGE_GAMES,
     SAMPLE_FULL_CONFIDENCE,
 )
+from lolcoach.dataprovider import store
 from lolcoach.values import as_int, opt_int
 
 logger = logging.getLogger(__name__)
+
+# Order the item groups appear in a build (matches the fetch's staging order).
+_ITEM_TYPES = ("starter", "boots", "core")
 
 
 def build_knowledge_graph(
@@ -43,11 +54,15 @@ def build_knowledge_graph(
     *,
     patch: str = "unknown",
     source: str = "opgg-mcp",
+    ddragon_version: str = "",
 ) -> dict[str, int]:
-    """Read the snapshot, write the three YAML files, return counts."""
+    """Read the snapshot, write the YAML files, return counts."""
     slug_by_id: dict[int, str] = {}
     champions = _champions(conn, slug_by_id)
     relations = _relations(conn, slug_by_id)
+    reference = _reference(conn)
+    builds = _builds(conn)
+    items = _items(conn)
 
     generated_at = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
     counts = {
@@ -60,6 +75,7 @@ def build_knowledge_graph(
         "patch": patch,
         "source": source,
         "generated_at": generated_at,
+        "ddragon_version": ddragon_version,
         **counts,
     }
 
@@ -67,9 +83,125 @@ def build_knowledge_graph(
     _dump(seed_dir / "champions.yaml", {"meta": meta, "champions": champions})
     _dump(seed_dir / "relations.yaml", {"meta": meta, "relations": relations})
     _dump(seed_dir / "patches.yaml", {"meta": meta})
+    _dump(seed_dir / "reference.yaml", {"meta": meta, "champions": reference})
+    _dump(seed_dir / "builds.yaml", {"meta": meta, "builds": builds})
+    _dump(seed_dir / "items.yaml", {"meta": meta, "items": items})
 
-    logger.info("Knowledge graph built", extra={"data": {"seed_dir": str(seed_dir), **counts}})
+    logger.info(
+        "Knowledge graph built",
+        extra={
+            "data": {
+                "seed_dir": str(seed_dir),
+                **counts,
+                "reference_count": len(reference),
+                "build_count": len(builds),
+                "item_count": len(items),
+            }
+        },
+    )
     return counts
+
+
+def _reference(conn: sqlite3.Connection) -> list[dict[str, object]]:
+    """Per-champion tips, abilities, and lore, keyed by slug."""
+    out: list[dict[str, object]] = []
+    for row in conn.execute(
+        "SELECT r.*, c.slug, c.name FROM champion_reference r "
+        "JOIN champions c ON c.champion_id = r.champion_id ORDER BY c.slug"
+    ):
+        out.append(
+            {
+                "slug": str(row["slug"]),
+                "name": str(row["name"]),
+                "lore": str(row["lore"]),
+                "blurb": str(row["blurb"]),
+                "tags": store.decode_list(row["tags"]),
+                "ally_tips": store.decode_list(row["ally_tips"]),
+                "enemy_tips": store.decode_list(row["enemy_tips"]),
+                "abilities": store.decode_list(row["abilities"]),
+            }
+        )
+    return out
+
+
+def _builds(conn: sqlite3.Connection) -> list[dict[str, object]]:
+    """Per-(champion, lane) item sets, rune pages, and skill order."""
+    skills: dict[tuple[str, str], list[str]] = {}
+    groups: dict[tuple[str, str, str], list[sqlite3.Row]] = {}
+    order: list[tuple[str, str]] = []
+    for row in conn.execute(
+        "SELECT b.*, c.slug FROM champion_builds b "
+        "JOIN champions c ON c.champion_id = b.champion_id "
+        "ORDER BY c.slug, b.position, b.item_type, b.ordinal"
+    ):
+        slug, position, item_type = str(row["slug"]), str(row["position"]), str(row["item_type"])
+        if (slug, position) not in skills:
+            skills[(slug, position)] = []
+            order.append((slug, position))
+        if item_type == "skill":
+            skills[(slug, position)].append(str(row["item_name"]))
+        else:
+            groups.setdefault((slug, position, item_type), []).append(row)
+
+    pages: dict[tuple[str, str], list[tuple[str, list[str]]]] = {}
+    for row in conn.execute(
+        "SELECT r.tree, r.rune, r.position, c.slug FROM champion_runes r "
+        "JOIN champions c ON c.champion_id = r.champion_id "
+        "ORDER BY c.slug, r.position, r.slot"
+    ):
+        key = (str(row["slug"]), str(row["position"]))
+        tree, rune = str(row["tree"]), str(row["rune"])
+        parked = pages.setdefault(key, [])
+        if parked and parked[-1][0] == tree:
+            parked[-1][1].append(rune)
+        else:
+            parked.append((tree, [rune]))
+
+    builds: list[dict[str, object]] = []
+    for slug, position in order:
+        item_sets: list[dict[str, object]] = []
+        for item_type in _ITEM_TYPES:
+            rows = groups.get((slug, position, item_type))
+            if not rows:
+                continue
+            play, win = int(rows[0]["play"]), int(rows[0]["win"])
+            item_sets.append(
+                {
+                    "item_type": item_type,
+                    "item_ids": [int(row["item_id"]) for row in rows],
+                    "names": [str(row["item_name"]) for row in rows],
+                    "win_rate": round(win / play, 4) if play else 0.0,
+                    "pick_rate": round(float(rows[0]["pick_rate"]), 4),
+                }
+            )
+        builds.append(
+            {
+                "slug": slug,
+                "position": position,
+                "skill_order": skills[(slug, position)],
+                "item_sets": item_sets,
+                "runes": [
+                    {"page": tree, "picks": picks}
+                    for tree, picks in pages.get((slug, position), [])
+                ],
+            }
+        )
+    return builds
+
+
+def _items(conn: sqlite3.Connection) -> list[dict[str, object]]:
+    """The item catalog, so a build's item names resolve to real items."""
+    return [
+        {
+            "item_id": int(row["item_id"]),
+            "name": str(row["name"]),
+            "description": str(row["description"]),
+            "gold_total": int(row["gold_total"]),
+            "builds_into": [as_int(item) for item in store.decode_list(row["builds_into"])],
+            "builds_from": [as_int(item) for item in store.decode_list(row["builds_from"])],
+        }
+        for row in conn.execute("SELECT * FROM items ORDER BY item_id")
+    ]
 
 
 def _champions(conn: sqlite3.Connection, slug_by_id: dict[int, str]) -> list[dict[str, object]]:

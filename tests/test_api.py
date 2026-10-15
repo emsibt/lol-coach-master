@@ -93,6 +93,20 @@ def test_champions_lists_the_roster(client: TestClient) -> None:
     assert jinx["positions"]
 
 
+def test_champions_expose_the_ddragon_key(client: TestClient) -> None:
+    champions = client.get("/api/champions").json()
+    keys = {c["slug"]: c["key"] for c in champions}
+    assert keys["jinx"] == "Jinx"
+    assert all(keys.values())
+
+
+def test_health_reports_the_data_dragon_version(client: TestClient) -> None:
+    body = client.get("/api/health").json()
+    assert body["status"] == "ok"
+    assert body["patch"] == "14.20"
+    assert body["ddragon"] == "14.20.1"
+
+
 def test_evaluate_runs_workflow_and_records_execution(client: TestClient) -> None:
     body = _evaluate(client, {"allies": ["jinx"], "enemies": ["ahri", "vi"], "open_roles": ["mid"]})
     assert body["status"] == "succeeded"

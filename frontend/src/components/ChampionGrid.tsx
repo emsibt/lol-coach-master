@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { Champion } from "../types";
+import ChampionAvatar from "./ChampionAvatar";
 
 interface Props {
   champions: Champion[];
@@ -55,10 +56,13 @@ export default function ChampionGrid({ champions, targetLabel, onPick }: Props) 
                 disabled={targetLabel === null}
                 onClick={() => onPick(champion.slug)}
                 title={champion.positions.map((p) => p.position).join(", ")}
-                className="flex flex-col items-start rounded border border-edge bg-ink/50 px-2 py-1.5 text-left text-xs text-slate-300 transition enabled:hover:border-cyan-500/60 enabled:hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-2 rounded border border-edge bg-ink/50 px-2 py-1.5 text-left text-xs text-slate-300 transition enabled:hover:border-cyan-500/60 enabled:hover:bg-cyan-500/10 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <span className="truncate font-medium text-slate-200">{champion.name}</span>
-                <span className="text-[10px] uppercase tracking-wide text-slate-500">{lanes}</span>
+                <ChampionAvatar name={champion.name} championKey={champion.key} size="sm" />
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate font-medium text-slate-200">{champion.name}</span>
+                  <span className="text-[10px] uppercase tracking-wide text-slate-500">{lanes}</span>
+                </span>
               </button>
             );
           })}

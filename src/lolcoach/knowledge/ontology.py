@@ -74,6 +74,7 @@ class Ontology:
     relations: tuple[Relation, ...]
     counters_from: dict[str, tuple[Relation, ...]]
     synergies_with: dict[str, tuple[Relation, ...]]
+    ddragon_version: str = ""
 
     def champion(self, slug: str) -> Champion | None:
         return self.champions.get(slug)
@@ -140,6 +141,7 @@ def load_ontology(
         relations=tuple(relations),
         counters_from={k: tuple(v) for k, v in counters_from.items()},
         synergies_with={k: tuple(v) for k, v in synergies_with.items()},
+        ddragon_version=as_str(meta.get("ddragon_version")),
     )
     logger.info(
         "Knowledge graph loaded",

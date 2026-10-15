@@ -18,9 +18,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from lolcoach import __version__
 from lolcoach.agent.llm import build_client
-from lolcoach.agent.tools import normalize_board
-from lolcoach.config import get_settings
+from lolcoach.agent.tools import LiveDataProvider, normalize_board
+from lolcoach.chat.store import ChatStore, Message, Session, SessionLimitReached
+from lolcoach.config import Settings, get_settings
 from lolcoach.knowledge.ontology import Ontology, OntologyError, get_ontology
+from lolcoach.knowledge.reference import get_reference
 from lolcoach.server.schemas import (
     AgentChatRequest,
     AgentChatResponse,
@@ -28,14 +30,20 @@ from lolcoach.server.schemas import (
     ChampionOut,
     ChatRequest,
     ChatResponse,
+    CreateSessionRequest,
     DraftRequest,
     EvaluateResponse,
     EventOut,
     ExecutionDetail,
     ExecutionSummary,
+    HealthResponse,
     PickOut,
     PositionOut,
+    RenameSessionRequest,
     RerunResponse,
+    SessionDetail,
+    SessionMessageOut,
+    SessionSummary,
     ToolCallOut,
     TraceOut,
 )
@@ -56,6 +64,19 @@ def _ontology() -> Ontology:
         raise HTTPException(status_code=503, detail=f"knowledge graph unavailable: {exc}") from exc
 
 
+def _live(settings: Settings) -> LiveDataProvider | None:
+    """The live provider, or ``None`` when the feature is switched off.
+
+    Imported here rather than at module scope so the server does not drag the
+    network layer in until the composition root actually needs it.
+    """
+    if not settings.enable_live_tools:
+        return None
+    from lolcoach.dataprovider.live import build_live_provider
+
+    return build_live_provider()
+
+
 def _build_workflow(
     name: str, ontology: Ontology, *, with_client: bool
 ) -> DraftEval | AgentChat | None:
@@ -65,7 +86,13 @@ def _build_workflow(
     if name == "agent-chat":
         settings = get_settings()
         client = build_client(settings) if with_client else None
-        return build_agent_chat(ontology, client=client, settings=settings)
+        return build_agent_chat(
+            ontology,
+            client=client,
+            settings=settings,
+            reference=get_reference(),
+            live=_live(settings),
+        )
     return None
 
 
@@ -84,6 +111,117 @@ def _store() -> Iterator[ExecutionStore]:
         yield store
     finally:
         store.close()
+
+
+def _chat_store() -> Iterator[ChatStore]:
+    store = ChatStore.connect(get_settings().chat_db)
+    try:
+        yield store
+    finally:
+        store.close()
+
+
+_BOARD_CONTENT_KEYS = ("allies", "enemies", "ally_bans", "enemy_bans")
+
+
+def _board_in(value: object) -> BoardIn:
+    return BoardIn.model_validate(normalize_board(value))
+
+
+def _board_has_content(board: BoardIn) -> bool:
+    return any(getattr(board, key) for key in _BOARD_CONTENT_KEYS)
+
+
+def _session_summary(session: Session) -> SessionSummary:
+    return SessionSummary(
+        session_id=session.session_id,
+        title=session.title,
+        created_at=session.created_at,
+        updated_at=session.updated_at,
+        message_count=session.message_count,
+        question_count=session.question_count,
+        max_questions=session.max_questions,
+        remaining_questions=session.remaining_questions,
+    )
+
+
+def _tool_calls(value: object) -> list[ToolCallOut]:
+    return [
+        ToolCallOut(
+            name=as_str(opt_dict(item).get("name")),
+            ok=bool(opt_dict(item).get("ok")),
+            arguments=opt_dict(opt_dict(item).get("arguments")),
+        )
+        for item in opt_list(value)
+    ]
+
+
+def _session_message(message: Message) -> SessionMessageOut:
+    meta = message.meta
+    if message.role != "assistant":
+        return SessionMessageOut(
+            seq=message.seq, role=message.role, text=message.text, created_at=message.created_at
+        )
+    return SessionMessageOut(
+        seq=message.seq,
+        role=message.role,
+        text=message.text,
+        created_at=message.created_at,
+        mode=as_str(meta.get("mode")) or None,
+        tool_calls=_tool_calls(meta.get("tool_calls")),
+        counter=_pick(meta.get("counter")),
+        synergy=_pick(meta.get("synergy")),
+        execution_id=as_str(meta.get("execution_id")) or None,
+        error=as_str(meta.get("error")) or None,
+    )
+
+
+def _session_detail(chats: ChatStore, session: Session) -> SessionDetail:
+    return SessionDetail(
+        **_session_summary(session).model_dump(),
+        board=_board_in(session.board),
+        notes=chats.notes(session.session_id),
+        messages=[_session_message(message) for message in chats.messages(session.session_id)],
+    )
+
+
+def _persist_turn(
+    chats: ChatStore,
+    session: Session,
+    output: dict[str, object],
+    response: AgentChatResponse,
+) -> AgentChatResponse:
+    """Write the completed turn back to the session and attach its counters."""
+    known = chats.notes(session.session_id)
+    for note in (as_str(item).strip() for item in opt_list(output.get("notes"))):
+        if note and note not in known:
+            chats.add_note(session.session_id, note)
+
+    text = response.reply or response.error or "The coach did not produce an answer."
+    chats.append_message(
+        session.session_id,
+        "assistant",
+        text,
+        meta={
+            "mode": response.mode,
+            "tool_calls": [call.model_dump() for call in response.tool_calls],
+            "counter": response.counter.model_dump() if response.counter else None,
+            "synergy": response.synergy.model_dump() if response.synergy else None,
+            "execution_id": response.execution_id,
+            "error": response.error,
+        },
+    )
+    chats.touch_session(session.session_id, board=output.get("board"))
+
+    refreshed = chats.get_session(session.session_id) or session
+    return response.model_copy(
+        update={
+            "session_id": refreshed.session_id,
+            "question_count": refreshed.question_count,
+            "max_questions": refreshed.max_questions,
+            "remaining_questions": refreshed.remaining_questions,
+        }
+    )
 
 
 def _pick(value: object) -> PickOut | None:
@@ -109,8 +247,19 @@ def create_app() -> FastAPI:
     )
 
     @app.get("/api/health")
-    def health() -> dict[str, str]:
-        return {"status": "ok", "service": settings.service, "version": __version__}
+    def health() -> HealthResponse:
+        try:
+            ontology = get_ontology()
+            patch, ddragon = ontology.patch, ontology.ddragon_version
+        except OntologyError:
+            patch, ddragon = "", ""
+        return HealthResponse(
+            status="ok",
+            service=settings.service,
+            version=__version__,
+            patch=patch,
+            ddragon=ddragon,
+        )
 
     @app.get("/api/champions")
     def champions() -> list[ChampionOut]:
@@ -121,6 +270,7 @@ def create_app() -> FastAPI:
                 ChampionOut(
                     slug=champion.slug,
                     name=champion.name,
+                    key=champion.key,
                     positions=[
                         PositionOut(
                             position=p.position,
@@ -219,26 +369,80 @@ def create_app() -> FastAPI:
 
     @app.post("/api/agent/chat")
     def agent_chat(
-        request: AgentChatRequest, store: Annotated[ExecutionStore, Depends(_store)]
+        request: AgentChatRequest,
+        store: Annotated[ExecutionStore, Depends(_store)],
+        chats: Annotated[ChatStore, Depends(_chat_store)],
     ) -> AgentChatResponse:
         ontology = _ontology()
         settings = get_settings()
+
+        session: Session | None = None
+        if request.session_id is not None:
+            session = chats.get_session(request.session_id)
+            if session is None:
+                raise HTTPException(
+                    status_code=404, detail=f"no session {request.session_id!r}"
+                )
+            if session.question_count >= session.max_questions:
+                raise HTTPException(
+                    status_code=409,
+                    detail=(
+                        f"session reached its limit of {session.max_questions} questions; "
+                        "start a new chat"
+                    ),
+                )
+
         client = build_client(settings)
         if client is None:
             raise HTTPException(
                 status_code=503,
                 detail="no LLM is configured: set LOL_COACH_LLM_PROVIDER and its API key",
             )
-        built = build_agent_chat(ontology, client=client, settings=settings)
+
+        question = request.message
+        image = request.image.model_dump() if request.image is not None else None
+
+        if session is not None:
+            board = (
+                request.board
+                if _board_has_content(request.board)
+                else _board_in(session.board)
+            )
+            turns: list[dict[str, object]] = [
+                {"role": message.role, "text": message.text}
+                for message in chats.messages(session.session_id)
+                if message.role in ("user", "assistant") and message.text.strip()
+            ]
+            notes = chats.notes(session.session_id)
+            # The question consumes a slot even if the run later fails, so the cap
+            # bounds requests, not answers.
+            try:
+                chats.append_question(session.session_id, question or "(draft image)")
+            except SessionLimitReached as exc:  # pragma: no cover - guarded above
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+        else:
+            board = request.board
+            turns = [turn.model_dump() for turn in request.turns]
+            notes = []
+
+        built = build_agent_chat(
+            ontology,
+            client=client,
+            settings=settings,
+            reference=get_reference(),
+            live=_live(settings),
+        )
         executor = WorkflowExecutor(
             built.workflow, tasks=built.tasks, predicates=built.predicates, store=store
         )
         result = executor.run(
             {
-                "question": request.message,
-                "board": request.board.model_dump(),
-                "image": request.image.model_dump() if request.image is not None else None,
-                "turns": [turn.model_dump() for turn in request.turns],
+                "question": question,
+                "board": board.model_dump(),
+                "image": image,
+                "turns": turns,
+                "notes": notes,
+                "memory": session is not None,
             }
         )
 
@@ -247,25 +451,68 @@ def create_app() -> FastAPI:
         fallback_mode = "failed" if result.status != "succeeded" else "offline"
         mode = as_str(output.get("mode")) or fallback_mode
         recommendation = opt_dict(output.get("recommendation"))
-        return AgentChatResponse(
+        response = AgentChatResponse(
             execution_id=result.execution_id,
             status=result.status,
             reply=reply,
             mode=mode,
-            board=BoardIn.model_validate(normalize_board(output.get("board"))),
+            board=_board_in(output.get("board")),
             unresolved=[as_str(item) for item in opt_list(output.get("unresolved"))],
-            tool_calls=[
-                ToolCallOut(
-                    name=as_str(opt_dict(item).get("name")),
-                    ok=bool(opt_dict(item).get("ok")),
-                    arguments=opt_dict(opt_dict(item).get("arguments")),
-                )
-                for item in opt_list(output.get("tool_calls"))
-            ],
+            tool_calls=_tool_calls(output.get("tool_calls")),
             counter=_pick(recommendation.get("counter")),
             synergy=_pick(recommendation.get("synergy")),
             traces=_traces(recommendation.get("traces")),
             error=result.error,
         )
+
+        if session is not None:
+            response = _persist_turn(chats, session, output, response)
+        return response
+
+    @app.post("/api/sessions", status_code=201)
+    def create_session(
+        request: CreateSessionRequest,
+        chats: Annotated[ChatStore, Depends(_chat_store)],
+    ) -> SessionDetail:
+        session = chats.create_session(
+            title=request.title,
+            board=request.board.model_dump(),
+            max_questions=get_settings().max_questions_per_session,
+        )
+        return _session_detail(chats, session)
+
+    @app.get("/api/sessions")
+    def list_sessions(
+        chats: Annotated[ChatStore, Depends(_chat_store)],
+        limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    ) -> list[SessionSummary]:
+        return [_session_summary(session) for session in chats.list_sessions(limit)]
+
+    @app.get("/api/sessions/{session_id}")
+    def get_session(
+        session_id: str, chats: Annotated[ChatStore, Depends(_chat_store)]
+    ) -> SessionDetail:
+        session = chats.get_session(session_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail=f"no session {session_id!r}")
+        return _session_detail(chats, session)
+
+    @app.patch("/api/sessions/{session_id}")
+    def rename_session(
+        session_id: str,
+        request: RenameSessionRequest,
+        chats: Annotated[ChatStore, Depends(_chat_store)],
+    ) -> SessionDetail:
+        session = chats.rename_session(session_id, request.title)
+        if session is None:
+            raise HTTPException(status_code=404, detail=f"no session {session_id!r}")
+        return _session_detail(chats, session)
+
+    @app.delete("/api/sessions/{session_id}", status_code=204)
+    def delete_session(
+        session_id: str, chats: Annotated[ChatStore, Depends(_chat_store)]
+    ) -> None:
+        if not chats.delete_session(session_id):
+            raise HTTPException(status_code=404, detail=f"no session {session_id!r}")
 
     return app

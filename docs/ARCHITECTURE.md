@@ -45,9 +45,20 @@ is structurally forbidden from adding to it.
   (champions, positions, relations) by dependency injection, so it is trivially
   unit-testable. The ontology already carries everything the engine needs — the
   snapshot is only a build-time input to the graph.
+- `workflow/**` is the only layer that persists execution history. It does **not**
+  touch the chat database: the server loads session memory and writes turns back.
 - `dataprovider/**` is the only layer that touches the network and the only layer
-  that writes `data/snapshot.db`.
-- `workflow/**` is the only layer that persists execution history.
+  that writes `data/snapshot.db`. It also materializes the reference data (item
+  catalog, champion tips/abilities/lore) into `knowledge/seed/reference*.yaml`
+  during `build-kg`; `build_kg.py` is the only writer of the seed directory.
+- `knowledge/reference.py` loads that materialized reference data at runtime, the
+  same way `ontology.py` loads the graph: from checked-in YAML, never the snapshot.
+  It is deliberately **lenient** — a missing or malformed file yields an empty
+  `ReferenceData` with a WARNING, because reference data is advisory and must not
+  gate startup (unlike the ontology, which hard-fails).
+- `chat/**` is the only layer that persists chat sessions and their memory
+  (`data/chat.db`): the store, the schema, and the memory-tool logic. It depends
+  on nothing above it; the server wires it to HTTP.
 - `agent/**` is the only layer allowed to call a language model. It has three
   jobs, none of them deciding: **adapt** fuzzy input to a strict board
   (`tools.set_board`), **orchestrate** the deterministic tools (`agent.choose_action`
@@ -86,10 +97,10 @@ reads `os.environ`, which keeps it controllable under `monkeypatch` in tests.
 
 | Process | Command | Port | Talks to |
 |---------|---------|------|----------|
-| API | `uvicorn lolcoach.main:app` | 8000 | snapshot.db (read), executions.db (read/write), OP.GG MCP (fetch only), LLM provider (orchestrate + narrate only) |
-| Web | `pnpm dev` (Vite) | 5173 | API via `VITE_API_BASE_URL` |
+| API | `uvicorn lolcoach.main:app` | 8000 | snapshot.db (read), executions.db (read/write), chat.db (read/write), OP.GG MCP (fetch + the two live lookups), LLM provider (orchestrate + narrate only) |
+| Web | `pnpm dev` (Vite) | 5173 | API via `VITE_API_BASE_URL`, the Data Dragon CDN (portraits) |
 | Fetch job | `python -m lolcoach.cli fetch` | — | OP.GG MCP → snapshot.db |
-| KG build | `python -m lolcoach.cli build-kg` | — | snapshot.db → `knowledge/seed/*.yaml` |
+| KG build | `python -m lolcoach.cli build-kg` | — | snapshot.db → `knowledge/seed/*.yaml` (graph + reference) |
 | KG report | `python -m lolcoach.cli kg-report` | — | `knowledge/seed/*.yaml` → `data/kg-report.html` (static, offline) |
 
 `main.py` is the single entrypoint that calls `configure_logging()` exactly once,
@@ -97,18 +108,23 @@ then constructs the FastAPI app. Domain modules only create module-level loggers
 
 ## Data directory
 
-Everything runtime lives under `data/` (gitignored). Two SQLite databases with
+Everything runtime lives under `data/` (gitignored). Three SQLite databases with
 different lifecycles, deliberately kept apart:
 
 - `data/snapshot.db` — the OP.GG statistical snapshot. **Replaceable and
   rebuildable** from the MCP server; written only by `dataprovider/`.
-  Tables: `champions`, `champion_stats`, `matchups`, `synergies`, `meta`.
+  Tables: `champions`, `champion_stats`, `champion_roles`, `matchups`,
+  `synergies`, `analysis_done`, `champion_reference`, `champion_builds`,
+  `champion_runes`, `items`, `meta`.
 - `data/executions.db` — the immutable execution history (the traceability
   feature). **Precious**; written through by the workflow executor on every state
   transition. Tables: `executions`, `execution_events`.
+- `data/chat.db` — chat sessions and the agent's session memory. **Mutable**
+  product state: create, rename, and delete freely. Tables: `sessions`,
+  `session_messages`, `session_notes`. Written only by `chat/store.py`.
 
-Splitting them means "refresh the meta data" and "keep the audit trail" never
-have to negotiate.
+Splitting them means "refresh the meta data", "keep the audit trail", and "delete
+a conversation" never have to negotiate.
 
 The snapshot is populated by `dataprovider/fetch.py` from the OP.GG MCP server.
 OP.GG returns a **typed repr**, not JSON (`class Name: a,b,c` headers declaring
@@ -119,6 +135,109 @@ id ≥ 60000) are excluded. `dataprovider/build_kg.py` turns the snapshot into t
 YAML graph: counter direction is derived from the measured win rate (not the
 tool's label), weights are win-rate delta × sample-size confidence, and each edge
 carries an auto-generated statistical `reason`.
+
+## Materialized reference data
+
+Not everything the coach can talk about is a *decision*. Items, runes, skill
+order, champion tips, and abilities are **reference** facts: stable, small, and
+useful next to a recommendation, but they never decide anything. They are
+materialized the same way the graph is — fetch once, snapshot, emit YAML, read
+YAML at runtime — rather than fetched live per question, so a chat run never
+depends on the network being up.
+
+```
+lol_list_champion_details ─┐
+lol_list_items           ─┼─► fetch pass ─► snapshot tables ─┐
+analysis core/boots/runes ─┘                                 │
+                                                             ▼
+                        build-kg ─► knowledge/seed/{reference,builds,items}.yaml
+                                                             │
+                                                             ▼
+                       knowledge/reference.py ─► ToolBox._reference
+                                                ─► get_champion_tips / get_champion_build
+```
+
+- **Fetch.** `fetch.py::_load_reference` runs after the analyses. Champion details
+  arrive in batches of 10 (`lol_list_champion_details`), so `data.champions[]` is
+  matched by `id` (falling back to display name); `lol_list_items` is a single call
+  returning plain **JSON** (not the typed repr — `opgg_mcp.py::_parse_result_text`
+  accepts both). Batches are addressed by the *display name* squashed to
+  UPPER_SNAKE (`text.upper_snake`): OP.GG wants `CHOGATH` for `Cho'Gath` and
+  `DR_MUNDO` for `Dr. Mundo`, which is **not** the Riot key uppercased. A failed
+  batch is simply not marked done, so a re-run retries it. Build rows come from the
+  per-`(champion, lane)` analysis call we already make, so the extra cost is ~18
+  calls, not a second full pull. A row is written even when tips are empty, and
+  `reference_done` marks the champion, so an interrupted pull resumes. Summoner
+  spells and stat shards are deliberately **not** requested: OP.GG returns bare ids
+  for both (`ids_names: [4, 12]`), which would materialize as meaningless numbers.
+- **Build.** `build_kg.py` emits `reference.yaml`, `builds.yaml`, and `items.yaml`
+  (with a `meta` block each), **always** — an empty list rather than a missing file,
+  so the loader has a stable path. The returned `counts` dict is unchanged; the
+  reference totals are logged, not returned.
+- **Runtime.** `knowledge/reference.py::get_reference()` is `lru_cache`d and loads
+  the three files into `ReferenceData(champions, builds, items)`. Missing files are
+  a WARNING and an empty result, never an exception.
+- **Tools.** `get_champion_tips` and `get_champion_build` are advertised only when
+  the data is actually present (`ToolBox.reference_tools`), so advertised always
+  equals available. Both are **evidence-only**: their payloads never contain a pick.
+
+### Reference prose and the grounding guard
+
+Tips and ability descriptions are human-written prose that names *other* champions
+("great against Yasuo"). If those payloads were walked for champion slugs the way
+`suggest_pick`'s are, a single tip would whitelist half the roster and the guard
+would stop meaning anything. So `ToolResult.sources` carries the champion slugs a
+result is **entitled** to source, and `narrator.py` treats an explicit-source tool
+(`get_champion_tips`/`get_champion_build`, plus the live tools) differently: only
+`step.sources` is added to the whitelist, and the payload is **not** walked. Every
+other tool keeps the existing `champions_in_payloads` walk, so their behavior is
+byte-for-byte unchanged.
+
+`sources` lives on `ToolStep`, not in `payload`, so it never reaches the model —
+`_llm_action` serializes `step.payload` alone, and a slug list in the JSON would be
+an invitation to echo it.
+
+The cost of a strict name guard is that a narrated reply quoting a tip which names
+another champion is discarded; the `_FINAL_SYSTEM_PROMPT` says not to do that, and
+`offline_final_text` has tips/build branches so the grounded fallback is still
+useful when a reply is dropped.
+
+## Live lookups
+
+Two things cannot be checked in, because they change with the player and the
+patch: a summoner's rank, and the guide for one specific lane matchup. Those are
+fetched **during** a chat run, by the agent, only when a question asks for them.
+
+```
+agent/tools.py::LiveDataProvider   (Protocol - no network import)
+            ▲
+            │ injected by the composition root
+            │
+server/app.py ──► dataprovider/live.py::OpggLiveProvider ──► OP.GG MCP
+```
+
+- **The seam.** `agent/**` may not import `dataprovider`, so the interface is a
+  `Protocol` declared in `agent/tools.py` and the implementation lives in
+  `dataprovider/live.py`. `server/app.py` is the composition root and injects it
+  (`build_live_provider()`, skipped entirely when `LOL_COACH_ENABLE_LIVE_TOOLS` is
+  off). A tool with no provider is not advertised *and* returns a failed result,
+  so advertised always equals available.
+- **Singleton.** The provider is `lru_cache`d. Its TTL cache and min-interval gate
+  live on the instance, so a per-request provider would cache and throttle nothing.
+  It takes no arguments because `Settings` carries a dict and is unhashable.
+- **Defensive by design.** A short timeout and a one-retry budget (a chat turn is
+  waiting), a monotonic min-interval gate under a `threading.Lock` (FastAPI runs
+  these sync endpoints in a threadpool; OP.GG is a public server), and a TTL cache
+  keyed by the exact call. A failure raises `LiveDataError`, which the tool loop
+  turns into an `ok=False` step and carries on — a dead upstream never fails a run.
+- **Payloads are shaped, not passed through.** The raw profile and guide responses
+  are tens of kilobytes; `live.py` reduces them to the fields the coach reports.
+  `get_summoner_profile` returns rank/LP/record and **no champion names at all** —
+  the guard would otherwise have to license naming the player's champion pool,
+  which is a player fact, not a draft fact. `get_lane_matchup_guide` returns the
+  written tip, the lane-advantage verdicts, and that champion's win rate in the
+  lane (taken from the lane's own row, not the all-lane average), and declares
+  `sources=(champion, opponent)` — the pair the user named.
 
 ## Draft-eval pipeline
 
@@ -178,8 +297,10 @@ ParseInput ─► Think (Task) ─► Route (Choice)
 - `agent/tools.py` — the deterministic tool surface. `set_board` resolves loose
   names to slugs via `knowledge/resolve.py::NameResolver`; `suggest_pick` wraps
   the pure `engine/scoring.py::evaluate_draft` and is **the only source of a
-  pick**; `explain_matchup` and `get_champion` return evidence. There is no tool
-  that lets the model introduce a champion of its own.
+  pick**; `explain_matchup` and `get_champion` return evidence;
+  `get_champion_tips` and `get_champion_build` return materialized reference data
+  (see *Materialized reference data*). There is no tool that lets the model
+  introduce a champion of its own.
 - `agent/agent.py::choose_action` — runs the tool-loop over `langchain` (system
   prompt: adapt/orchestrate/narrate only, picks come only from `suggest_pick`) and
   emits a JSON-safe action dict. There is **no offline planner**: a missing client,
@@ -193,6 +314,53 @@ ParseInput ─► Think (Task) ─► Route (Choice)
   object) adds request headers, for gateways/proxies that require them.
 - Every completed tool call is a `ToolStep` carried in workflow `data`, so the
   loop's `Think`/`RunTool` events render the agent's call journey in the Inspector.
+
+## Chat sessions & agent memory
+
+The chat is **stateful per session** (ChatGPT/Gemini style). A *session*
+(`chat/store.py`, `data/chat.db`) holds an ordered transcript, the board it is
+working from, the memory notes the agent recorded, and a hard cap of
+`LOL_COACH_MAX_QUESTIONS` (default **5**) user questions.
+
+```
+POST /api/sessions            create a session          201
+GET  /api/sessions            list (most-recent first)
+GET  /api/sessions/{id}       transcript + board + notes + counters
+PATCH/DELETE /api/sessions/{id}
+POST /api/agent/chat          {message, image?, session_id?} → run + persist
+```
+
+`POST /api/agent/chat` with a `session_id` is the stateful path. The server:
+
+1. rejects the call with **409** when the session already holds its question cap
+   (and **404** for an unknown session; **503** before consuming a slot when no
+   LLM is configured);
+2. resolves the board (the request's, else the session's) and loads the session's
+   prior turns and notes;
+3. appends the user question — the slot is consumed here, so the cap bounds
+   *requests*, not answers;
+4. runs the agent workflow with `turns`, `notes`, and `memory=true` in the run's
+   initial data (the workflow itself never touches the DB);
+5. writes the assistant reply and any notes the agent recorded back to the
+   session, and returns the updated `question_count` / `remaining_questions`.
+
+The **transcript is the agent's memory**. Prior turns are replayed to the model
+as conversation context (the same `turns` channel a session-less call uses), and
+the memory notes are re-injected as a system message on every turn. Two memory
+tools (`chat/memory.py`, offered only when `memory=true`) let the agent manage
+that memory itself:
+
+| Tool | What it does |
+|------|--------------|
+| `recall_history` | returns this session's earlier turns and kept notes, for when the model wants to re-read rather than rely on context |
+| `remember` | keeps a short note (a board detail, a stated constraint) that is re-read on every later turn |
+
+Memory-tool results travel in the workflow `data` like any other tool payload, so
+they render in the Trace Inspector; the server — not the workflow — owns
+persistence, keeping `workflow/` free of the chat database.
+
+Sessions carry no authentication: with auth out of scope, the API trusts the
+caller and stores nothing personal beyond the conversation itself.
 
 ## Narrator seam
 

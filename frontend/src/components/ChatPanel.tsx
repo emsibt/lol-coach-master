@@ -1,29 +1,17 @@
 import { useRef, useState } from "react";
 
-import { api } from "../api";
-import type { AgentBoard, AgentChatResponse, AgentImage, AgentToolCall, Pick } from "../types";
+import type { AgentImage, AgentToolCall, CoachMessage } from "../types";
 import RecommendationCard from "./RecommendationCard";
 
 interface Props {
-  board: AgentBoard;
-  onResponse: (response: AgentChatResponse) => void;
+  messages: CoachMessage[];
+  busy: boolean;
+  /** Questions left in the active session, or null when no session is bound. */
+  remaining: number | null;
+  maxQuestions: number;
+  onSend: (message: string, image: AgentImage | null, imagePreview: string | null) => void;
   onOpenTrace: () => void;
 }
-
-interface CoachMessage {
-  id: number;
-  role: "user" | "coach";
-  text: string;
-  mode?: string;
-  imagePreview?: string;
-  toolCalls?: AgentToolCall[];
-  counter?: Pick | null;
-  synergy?: Pick | null;
-  executionId?: string;
-  error?: boolean;
-}
-
-let nextId = 1;
 
 function readImage(file: File): Promise<{ image: AgentImage; preview: string }> {
   return new Promise((resolve, reject) => {
@@ -100,13 +88,20 @@ function CoachBubble({ message, onOpenTrace }: { message: CoachMessage; onOpenTr
   );
 }
 
-export default function ChatPanel({ board, onResponse, onOpenTrace }: Props) {
-  const [messages, setMessages] = useState<CoachMessage[]>([]);
+export default function ChatPanel({
+  messages,
+  busy,
+  remaining,
+  maxQuestions,
+  onSend,
+  onOpenTrace,
+}: Props) {
   const [input, setInput] = useState("");
   const [attached, setAttached] = useState<{ image: AgentImage; preview: string } | null>(null);
-  const [busy, setBusy] = useState(false);
   const [attachError, setAttachError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const exhausted = remaining !== null && remaining <= 0;
 
   async function attach(file: File) {
     try {
@@ -117,50 +112,29 @@ export default function ChatPanel({ board, onResponse, onOpenTrace }: Props) {
     }
   }
 
-  async function send() {
+  function send() {
     const message = input.trim();
-    if ((message === "" && attached === null) || busy) return;
-    const turns = messages
-      .filter((item) => item.text.trim() !== "")
-      .map((item) => ({ role: item.role === "user" ? "user" : "assistant", text: item.text }));
-
-    setMessages((prev) => [
-      ...prev,
-      { id: nextId++, role: "user", text: message === "" ? "(draft image)" : message, imagePreview: attached?.preview },
-    ]);
-    const image = attached?.image ?? null;
+    if ((message === "" && attached === null) || busy || exhausted) return;
+    onSend(message, attached?.image ?? null, attached?.preview ?? null);
     setInput("");
     setAttached(null);
-    setBusy(true);
-    try {
-      const response = await api.agentChat({ message, board, image, turns });
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: nextId++,
-          role: "coach",
-          text: response.reply,
-          mode: response.mode,
-          toolCalls: response.tool_calls,
-          counter: response.counter,
-          synergy: response.synergy,
-          executionId: response.execution_id,
-        },
-      ]);
-      onResponse(response);
-    } catch (cause) {
-      const failure = cause instanceof Error ? cause.message : String(cause);
-      setMessages((prev) => [...prev, { id: nextId++, role: "coach", text: failure, error: true }]);
-    } finally {
-      setBusy(false);
-    }
   }
 
   return (
     <section className="flex h-full min-h-0 flex-col rounded-lg border border-edge bg-panel/60">
       <div className="flex items-center justify-between border-b border-edge px-3 py-2">
         <h2 className="text-sm font-semibold text-slate-200">Coach</h2>
-        <span className="text-xs text-slate-500">engine decides · agent translates</span>
+        <span className="text-xs text-slate-500">
+          {remaining === null ? (
+            "engine decides · agent translates"
+          ) : exhausted ? (
+            <span className="text-amber-400">limit reached — start a new chat</span>
+          ) : (
+            <span>
+              {remaining} of {maxQuestions} questions left
+            </span>
+          )}
+        </span>
       </div>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto p-3">
@@ -201,7 +175,7 @@ export default function ChatPanel({ board, onResponse, onOpenTrace }: Props) {
         className="border-t border-edge p-3"
         onSubmit={(event) => {
           event.preventDefault();
-          void send();
+          send();
         }}
         onPaste={(event) => {
           const file = Array.from(event.clipboardData.files)[0];
@@ -248,13 +222,13 @@ export default function ChatPanel({ board, onResponse, onOpenTrace }: Props) {
           <input
             value={input}
             onChange={(event) => setInput(event.target.value)}
-            disabled={busy}
-            placeholder="jinx vs their zeri"
+            disabled={busy || exhausted}
+            placeholder={exhausted ? "Question limit reached" : "jinx vs their zeri"}
             className="min-w-0 flex-1 rounded border border-edge bg-ink/70 px-2 py-1.5 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-cyan-500/60 disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={busy || (input.trim() === "" && attached === null)}
+            disabled={busy || exhausted || (input.trim() === "" && attached === null)}
             className="rounded bg-cyan-500 px-3 py-1.5 text-sm font-semibold text-ink transition hover:bg-cyan-400 disabled:opacity-50"
           >
             Send

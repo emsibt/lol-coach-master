@@ -12,6 +12,7 @@
         "patch": {"type": "string"},
         "source": {"type": "string"},
         "generated_at": {"type": "string"},
+        "ddragon_version": {"type": "string"},
         "champion_count": {"type": "integer", "minimum": 0},
         "relation_count": {"type": "integer", "minimum": 0},
         "counter_count": {"type": "integer", "minimum": 0},

@@ -59,7 +59,16 @@ class PositionOut(BaseModel):
 class ChampionOut(BaseModel):
     slug: str
     name: str
+    key: str = ""
     positions: list[PositionOut] = Field(default_factory=list)
+
+
+class HealthResponse(BaseModel):
+    status: str
+    service: str
+    version: str
+    patch: str = ""
+    ddragon: str = ""
 
 
 class ExecutionSummary(BaseModel):
@@ -166,12 +175,18 @@ class TurnIn(BaseModel):
 
 
 class AgentChatRequest(BaseModel):
-    """One message to the chat agent, plus the board state so far."""
+    """One message to the chat agent, plus the board state so far.
+
+    When ``session_id`` is set the server reads the conversation (and board) from
+    the stored session; ``board`` and ``turns`` are only used for a session-less
+    call. A missing ``session_id`` starts a fresh, ephemeral run.
+    """
 
     message: str = ""
     board: BoardIn = Field(default_factory=BoardIn)
     image: ImageIn | None = None
     turns: list[TurnIn] = Field(default_factory=list)
+    session_id: str | None = None
 
 
 class ToolCallOut(BaseModel):
@@ -192,3 +207,50 @@ class AgentChatResponse(BaseModel):
     synergy: PickOut | None = None
     traces: list[TraceOut] = Field(default_factory=list)
     error: str | None = None
+    session_id: str | None = None
+    question_count: int = 0
+    max_questions: int = 0
+    remaining_questions: int = 0
+
+
+class CreateSessionRequest(BaseModel):
+    """Start a new chat session (title optional; board seeds the draft state)."""
+
+    title: str | None = None
+    board: BoardIn = Field(default_factory=BoardIn)
+
+
+class RenameSessionRequest(BaseModel):
+    title: str
+
+
+class SessionSummary(BaseModel):
+    session_id: str
+    title: str
+    created_at: str
+    updated_at: str
+    message_count: int
+    question_count: int
+    max_questions: int
+    remaining_questions: int
+
+
+class SessionMessageOut(BaseModel):
+    """One stored turn. Assistant turns carry the run metadata the UI renders."""
+
+    seq: int
+    role: str
+    text: str
+    created_at: str
+    mode: str | None = None
+    tool_calls: list[ToolCallOut] = Field(default_factory=list)
+    counter: PickOut | None = None
+    synergy: PickOut | None = None
+    execution_id: str | None = None
+    error: str | None = None
+
+
+class SessionDetail(SessionSummary):
+    board: BoardIn = Field(default_factory=BoardIn)
+    notes: list[str] = Field(default_factory=list)
+    messages: list[SessionMessageOut] = Field(default_factory=list)

@@ -1,5 +1,180 @@
 # Session Handoff
 
+## 2026-10-15 (4) — portraits, materialized reference data, and live lookups
+
+### What was accomplished
+
+- **Champion portraits (derived, no fetch).** `dataprovider/build_kg.py` resolves the
+  fully-qualified Data Dragon version (e.g. `14.20.1` — *not* the `14.20` patch
+  label) and writes it into `patches.yaml` meta; `Ontology.ddragon_version` carries
+  it, `GET /api/health` surfaces it, and `GET /api/champions` now exposes each
+  champion's `key`. The browser builds
+  `ddragon.leagueoflegends.com/cdn/<version>/img/champion/<key>.png`
+  (`frontend/src/ddragon.ts`) and `ChampionAvatar.tsx` falls back to initials on a
+  missing version or a 404, so a draft never renders blank. Wired into
+  `ChampionGrid`, `DraftBoard`, `BoardSummary`, `RecommendationCard`.
+- **JSON branch in the MCP client.** `opgg_mcp.py::_parse_result_text` accepts either
+  the typed repr or plain JSON (`lol_list_items` returns JSON), keeping
+  `ToolCaller` and every fake in the tests unchanged.
+- **Materialized reference data.** New snapshot tables
+  (`champion_reference`, `champion_builds`, `champion_runes`, `items`,
+  `reference_done`); a resumable fetch pass (`_load_reference` + `_load_items`) that
+  pulls tips/abilities/lore in batches of 10 and the item catalog in one call, plus
+  the recommended build captured from the analysis call we already make; `build-kg`
+  always emits `reference.yaml`, `builds.yaml`, `items.yaml` (counts logged, the
+  asserted `counts` dict unchanged); a deliberately **lenient** runtime loader
+  (`knowledge/reference.py`) that degrades a missing/malformed file to an empty
+  `ReferenceData` with a WARNING.
+- **Two materialized agent tools.** `get_champion_tips` and `get_champion_build`,
+  advertised only when the data is loaded (`ToolBox.reference_tools`), so advertised
+  equals available.
+- **Grounding-guard hardening (the load-bearing change).** Tips and builds are
+  *prose that names other champions*. `ToolResult.sources` now declares the
+  champions a result is entitled to source; `ToolStep` carries it (deliberately
+  **not** in `payload`, so it never reaches the model); `narrator.allowed_champions`
+  whitelists only `step.sources` for the four explicit-source tools and keeps the
+  existing whole-payload walk for every other tool, so `suggest_pick` /
+  `explain_matchup` / `get_champion` / `set_board` behavior is unchanged. The
+  system prompt gained the matching rule, and `offline_final_text` gained
+  tips/build/guide/profile branches so a discarded reply still gets a grounded
+  answer.
+- **Live lookups (the network seam).** `LiveDataProvider` is a Protocol in
+  `agent/tools.py` (so `agent/**` never imports `dataprovider`), implemented by
+  `dataprovider/live.py::OpggLiveProvider` and injected by the composition root
+  (`server/app.py::_live`, gated by `LOL_COACH_ENABLE_LIVE_TOOLS`).
+  `get_summoner_profile` reports tier/division/LP/record for a Riot ID and **no
+  champion names at all**; `get_lane_matchup_guide` returns the written tip, the
+  lane/solo-kill verdicts, play style, and the champion's win rate *in that lane*,
+  sourcing `(champion, opponent)`. The provider is an `lru_cache`d process
+  singleton with a short timeout, one retry, a monotonic min-interval gate under a
+  `threading.Lock`, and a TTL cache; a failure raises `LiveDataError`, which the
+  loop turns into an `ok=False` step so a dead upstream never fails a run.
+- **Docs.** `ARCHITECTURE.md` (+ *Materialized reference data*, *Reference prose and
+  the grounding guard*, *Live lookups*), `PRODUCT.md` (+ four feature sections and
+  two reconciled non-goals), `README.md` (tool table, env knobs), `AGENTS.md`
+  (layer boundaries, the Protocol seam, the OP.GG identifier rule),
+  `.env.example` (five new knobs), `feature_list.json` (+3 features, evidence
+  refreshed).
+
+### Decisions
+
+- **Builds ride along on the analysis call.** They cost no extra request, but it
+  means an *existing* snapshot has no build rows: `analysis_done` marks "the call
+  succeeded", not "we captured everything the call now carries". Backfilling a
+  pre-existing snapshot is a one-time local operation (clear `analysis_done` and
+  re-run `fetch`), not a code path.
+- **Summoner spells and stat shards are not materialized.** OP.GG returns bare ids
+  for both (`ids_names: [4, 12]`; `stat_mod_names: [5008, …]`), which would
+  materialize as meaningless numbers. Fourth/fifth/sixth items are likewise out.
+- **The profile reports no champion pool.** The plan's Context mentioned "rank +
+  hero pool", but its Sources line narrowed the tool to "rank/LP/level — never a
+  pick". Surfacing a pool would force a choice between whitelisting the player's
+  champions (which are not draft facts) and discarding every answer that names
+  them, so the payload carries rank/LP/record only. Easy to revisit if wanted.
+- **`sources` lives on `ToolStep`, not in `payload`** — a slug list in the
+  model-facing JSON is an invitation to echo it.
+- **A fresh MCP session per live call** (rather than one long-lived client): the
+  session id is server state and FastAPI runs these endpoints on a threadpool; the
+  cache absorbs repeats, so the extra `initialize` is not on the hot path.
+- **The seed files are regenerated, not hand-edited.** The committed
+  `champions.yaml`/`relations.yaml` moved from 2,435 to 3,052 relations because the
+  snapshot was re-analysed against fresh upstream data; the reference/builds/items
+  files are new. All generated by the same `build-kg`.
+
+### Verification (green, 2026-10-15)
+
+- `ruff check .` clean; `mypy src` "no issues found in **46** source files";
+  `pytest tests` → **181 passed** (up from 143). New/changed suites:
+  `test_text` (the OP.GG identifier rule), `test_reference` (lenient loader),
+  `test_live` (shaping, cache, gate, singleton, no champion in the profile payload),
+  plus extensions to `test_fetch`, `test_store`, `test_build_kg`, `test_agent_tools`,
+  `test_agent_loop`, `test_narrator`, `test_api`.
+- **Real data, end to end (live OP.GG, temp dirs):** fetch → build-kg →
+  `load_reference` produced **173 champions / 268 builds / 315 items**, then the
+  same pipeline was run against the real snapshot with **0 errors**:
+  `fetched: 173 champions … 315 items` and
+  `build-kg --patch 14.20` → `173 champions, 3052 relations (998 counters, 2054
+  synergies)`, reference 173 / builds 268 / items 315. `load_ontology()` passes
+  schema + referential validation; the full test suite is green against the
+  regenerated seed.
+- **Two real bugs found and fixed by running it for real:**
+  1. Champion details were addressed by the *Riot key*, which OP.GG rejects for
+     names like `Dr. Mundo` (`DRMUNDO`); the accepted form is the display name with
+     punctuation dropped and spaces → `_` (`DR_MUNDO`, but `CHOGATH`). This silently
+     lost 70 of 173 champions on the first pull. `text.upper_snake` now implements
+     the real rule and has its own test.
+  2. Summoner spells / stat shards would have materialized as bare numbers.
+- Live-tool payload shapes verified against the real API (the raw guide response is
+  ~86 KB; the shaped payload is ~9 fields).
+
+### What remains
+
+- **Browser visual pass** of the portraits (grid/board/recommendation/icons + the
+  404 → initials fallback) — still the outstanding human check, carried over.
+- **Live end-to-end chat through a real model** for the new tools (a rank question
+  and a matchup-guide question): the tools, the guard, and the offline fallbacks are
+  covered by tests, but no chat turn has been run against a provider this session.
+- **cicd** is still the only `not-started` feature.
+
+## 2026-10-15 (3) — chat history sessions + agent memory
+
+### What was accomplished
+
+- **Chat sessions (ChatGPT/Gemini style).** A new storage layer, `lolcoach/chat/`,
+  persists conversations to a third database, `data/chat.db` (`sessions`,
+  `session_messages`, `session_notes`) — kept apart from the immutable
+  `executions.db` and the replaceable `snapshot.db`. `ChatStore` supports
+  create/list/get/rename/delete, message append, notes, and counts.
+- **5-question cap per session.** `LOL_COACH_MAX_QUESTIONS` (default 5). Enforced
+  atomically in `ChatStore.append_question` (raises `SessionLimitReached`) and at
+  the route (HTTP **409**). The slot is consumed when the question is asked, so the
+  cap bounds requests, not answers.
+- **Session history is the agent's memory.** `POST /api/agent/chat` gained
+  `session_id`: it loads the session's prior turns and notes, replays the turns as
+  conversation context, and persists each user/assistant turn with its run metadata
+  (mode, tool calls, picks, execution id). The board is stored on the session too.
+- **Memory tools.** `chat/memory.py` defines `SessionMemory` plus two tools —
+  `recall_history` and `remember` — offered only when a run is session-bound
+  (`tool_specs(include_memory=True)`), dispatched in `workflow/workflows/agent_chat.py`.
+  Notes re-inject as a system message on every turn. The workflow stays DB-free:
+  the **server** persists returned notes.
+- **API + UI.** Routes `POST/GET /api/sessions`, `GET/PATCH/DELETE
+  /api/sessions/{id}`. The frontend gained `SessionSidebar` (new/open/rename/delete,
+  per-session question counter) and a session-scoped, controlled `ChatPanel` with a
+  remaining-questions header; `App.tsx` owns session/message state.
+- **Docs.** `ARCHITECTURE.md` (chat layer, data dir, sessions & memory section),
+  `PRODUCT.md` (chat history + cap), `README.md` (routes, agent section),
+  `.env.example`, and `feature_list.json` (`chat-history` = pass).
+
+### Decisions
+
+- **Third database, not an executions table.** Sessions are mutable product state;
+  merging them into the audit trail would make "delete a conversation" touch
+  history. `chat/` is the only layer that writes `chat.db`.
+- **Server owns session persistence; the workflow does not.** The agent workflow
+  receives `turns`/`notes`/`memory` in its initial `data` and returns recorded
+  notes in its output — the same dependency-injection style as the engine's
+  ontology. This keeps `workflow/` free of any chat-store import.
+- **Cap counts requests, not answers.** The question slot is consumed before the
+  run, so a provider failure still costs a slot; the 503 no-key path is checked
+  first and consumes nothing.
+- **No auth** (explicitly out of scope): sessions are trusted as-is.
+
+### Verification (green, 2026-10-15)
+
+- `bash init.sh` equivalent: `ruff check .` clean; `mypy src` "no issues found in
+  44 source files"; `pytest tests` **101 passed** — including the new
+  `test_chat_store` (roundtrip, cap, notes, `SessionMemory`/`call_memory_tool`) and
+  `test_sessions_api` (CRUD, turn persistence, 409 cap, memory reinjection, 404/503).
+- Frontend: `npx tsc --noEmit` clean; `npx vite build` succeeds.
+
+### What remains
+
+- **Browser visual pass** of the new sidebar / session-scoped chat (carried over
+  from previous entries, still the outstanding human check) — the backend paths are
+  covered by tests but the UI has not been clicked through.
+- **cicd** is still the only `not-started` feature.
+
 ## 2026-10-15 (2) — chat hard-fails instead of faking an answer; provider gateway headers
 
 ### What was accomplished

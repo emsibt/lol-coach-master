@@ -1,11 +1,23 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { api } from "./api";
-import type { AgentBoard, AgentChatResponse, Champion, EvaluateResponse, Health } from "./types";
+import { DdragonVersionContext } from "./ddragon";
+import type {
+  AgentBoard,
+  AgentChatResponse,
+  AgentImage,
+  Champion,
+  CoachMessage,
+  EvaluateResponse,
+  Health,
+  SessionDetail,
+  SessionSummary,
+} from "./types";
 import BoardSummary from "./components/BoardSummary";
 import ChatPanel from "./components/ChatPanel";
 import DraftBoard from "./components/DraftBoard";
 import Landing from "./components/Landing";
+import SessionSidebar from "./components/SessionSidebar";
 import TraceInspector from "./components/TraceInspector";
 
 type Tab = "coach" | "draft" | "traces";
@@ -17,6 +29,22 @@ const EMPTY_BOARD: AgentBoard = {
   enemy_bans: [],
   open_roles: [],
 };
+
+let nextMessageId = 1;
+
+function messagesFromSession(session: SessionDetail): CoachMessage[] {
+  return session.messages.map((message) => ({
+    id: nextMessageId++,
+    role: message.role === "user" ? "user" : "coach",
+    text: message.text,
+    mode: message.mode ?? undefined,
+    toolCalls: message.tool_calls,
+    counter: message.role === "assistant" ? message.counter : undefined,
+    synergy: message.role === "assistant" ? message.synergy : undefined,
+    executionId: message.execution_id ?? undefined,
+    error: message.error !== null,
+  }));
+}
 
 function TabButton({
   active,
@@ -50,25 +78,150 @@ function Coach() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [health, setHealth] = useState<Health | null>(null);
 
+  const [sessions, setSessions] = useState<SessionSummary[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<CoachMessage[]>([]);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const [maxQuestions, setMaxQuestions] = useState(0);
+  const [busy, setBusy] = useState(false);
+
+  const refreshSessions = useCallback(async (): Promise<SessionSummary[]> => {
+    const list = await api.sessions();
+    setSessions(list);
+    return list;
+  }, []);
+
+  const openSession = useCallback(async (sessionId: string) => {
+    const detail = await api.session(sessionId);
+    setActiveId(detail.session_id);
+    setMessages(messagesFromSession(detail));
+    setBoard(detail.board);
+    setUnresolved([]);
+    setRemaining(detail.remaining_questions);
+    setMaxQuestions(detail.max_questions);
+    setExecutionId(null);
+  }, []);
+
   useEffect(() => {
     api
       .champions()
       .then(setChampions)
       .catch((cause: unknown) => setLoadError(cause instanceof Error ? cause.message : String(cause)));
     api.health().then(setHealth).catch(() => setHealth(null));
-  }, []);
+    void refreshSessions().then((list) => {
+      if (list.length > 0) void openSession(list[0].session_id);
+    });
+  }, [refreshSessions, openSession]);
 
   const onEvaluated = useCallback((response: EvaluateResponse) => {
     setExecutionId(response.execution_id);
     setRefreshKey((key) => key + 1);
   }, []);
 
-  const onAgentResponse = useCallback((response: AgentChatResponse) => {
-    setBoard(response.board);
-    setUnresolved(response.unresolved);
-    setExecutionId(response.execution_id);
-    setRefreshKey((key) => key + 1);
-  }, []);
+  const onNewChat = useCallback(async () => {
+    const detail = await api.createSession(board);
+    await refreshSessions();
+    setActiveId(detail.session_id);
+    setMessages([]);
+    setUnresolved([]);
+    setRemaining(detail.remaining_questions);
+    setMaxQuestions(detail.max_questions);
+    setExecutionId(null);
+  }, [board, refreshSessions]);
+
+  const onDeleteSession = useCallback(
+    async (sessionId: string) => {
+      await api.deleteSession(sessionId);
+      const list = await refreshSessions();
+      if (sessionId === activeId) {
+        if (list.length > 0) await openSession(list[0].session_id);
+        else {
+          setActiveId(null);
+          setMessages([]);
+          setRemaining(null);
+          setMaxQuestions(0);
+        }
+      }
+    },
+    [activeId, openSession, refreshSessions],
+  );
+
+  const onRenameSession = useCallback(
+    async (sessionId: string, title: string) => {
+      await api.renameSession(sessionId, title);
+      await refreshSessions();
+    },
+    [refreshSessions],
+  );
+
+  const onSend = useCallback(
+    async (message: string, image: AgentImage | null, imagePreview: string | null) => {
+      let sessionId = activeId;
+      try {
+        if (sessionId === null) {
+          const created = await api.createSession(board);
+          sessionId = created.session_id;
+          setActiveId(sessionId);
+          setRemaining(created.remaining_questions);
+          setMaxQuestions(created.max_questions);
+        }
+      } catch (cause) {
+        const failure = cause instanceof Error ? cause.message : String(cause);
+        setMessages((prev) => [...prev, { id: nextMessageId++, role: "coach", text: failure, error: true }]);
+        return;
+      }
+
+      const displayText = message === "" ? "(draft image)" : message;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: nextMessageId++,
+          role: "user",
+          text: displayText,
+          imagePreview: imagePreview ?? undefined,
+        },
+      ]);
+      setBusy(true);
+      try {
+        const response: AgentChatResponse = await api.agentChat({
+          message,
+          board,
+          image,
+          session_id: sessionId,
+        });
+        const failed = response.status !== "succeeded";
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: nextMessageId++,
+            role: "coach",
+            text: response.reply || response.error || "(no answer)",
+            mode: response.mode,
+            toolCalls: response.tool_calls,
+            counter: response.counter,
+            synergy: response.synergy,
+            executionId: response.execution_id,
+            error: failed,
+          },
+        ]);
+        setBoard(response.board);
+        setUnresolved(response.unresolved);
+        setRemaining(response.remaining_questions);
+        setMaxQuestions(response.max_questions);
+        setExecutionId(response.execution_id);
+        setRefreshKey((key) => key + 1);
+      } catch (cause) {
+        const failure = cause instanceof Error ? cause.message : String(cause);
+        const limitReached = failure.includes("409");
+        if (limitReached) setRemaining(0);
+        setMessages((prev) => [...prev, { id: nextMessageId++, role: "coach", text: failure, error: true }]);
+      } finally {
+        setBusy(false);
+        await refreshSessions();
+      }
+    },
+    [activeId, board, refreshSessions],
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -99,34 +252,49 @@ function Coach() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-[1400px] flex-1 p-4">
-        {loadError !== null && (
-          <p className="mb-3 rounded border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
-            Could not load champions: {loadError}
-          </p>
-        )}
+      <DdragonVersionContext.Provider value={health?.ddragon ?? ""}>
+        <main className="mx-auto w-full max-w-[1400px] flex-1 p-4">
+          {loadError !== null && (
+            <p className="mb-3 rounded border border-rose-500/40 bg-rose-500/10 p-3 text-sm text-rose-200">
+              Could not load champions: {loadError}
+            </p>
+          )}
 
-        {tab === "coach" && (
-          <div className="grid h-[calc(100vh-7rem)] min-h-[28rem] grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="min-h-0">
-              <ChatPanel
-                board={board}
-                onResponse={onAgentResponse}
-                onOpenTrace={() => setTab("traces")}
-              />
+          {tab === "coach" && (
+            <div className="grid h-[calc(100vh-7rem)] min-h-[28rem] grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)_300px]">
+              <div className="min-h-0">
+                <SessionSidebar
+                  sessions={sessions}
+                  activeId={activeId}
+                  onSelect={(id) => void openSession(id)}
+                  onNew={() => void onNewChat()}
+                  onDelete={(id) => void onDeleteSession(id)}
+                  onRename={(id, title) => void onRenameSession(id, title)}
+                />
+              </div>
+              <div className="min-h-0">
+                <ChatPanel
+                  messages={messages}
+                  busy={busy}
+                  remaining={remaining}
+                  maxQuestions={maxQuestions}
+                  onSend={(message, image, preview) => void onSend(message, image, preview)}
+                  onOpenTrace={() => setTab("traces")}
+                />
+              </div>
+              <div className="min-h-0 overflow-y-auto">
+                <BoardSummary board={board} champions={champions} unresolved={unresolved} />
+              </div>
             </div>
-            <div className="min-h-0 overflow-y-auto">
-              <BoardSummary board={board} champions={champions} unresolved={unresolved} />
-            </div>
-          </div>
-        )}
+          )}
 
-        {tab === "draft" && <DraftBoard champions={champions} onEvaluated={onEvaluated} />}
+          {tab === "draft" && <DraftBoard champions={champions} onEvaluated={onEvaluated} />}
 
-        {tab === "traces" && (
-          <TraceInspector selectedId={executionId} onSelect={setExecutionId} refreshKey={refreshKey} />
-        )}
-      </main>
+          {tab === "traces" && (
+            <TraceInspector selectedId={executionId} onSelect={setExecutionId} refreshKey={refreshKey} />
+          )}
+        </main>
+      </DdragonVersionContext.Provider>
     </div>
   );
 }

@@ -49,10 +49,44 @@ _FINAL_SYSTEM_PROMPT = (
     "never add one from your own knowledge, and never recommend a pick that the "
     "suggest_pick result did not name. Do not quote a raw score on its own; give "
     "the evidence in words. Never mention engines, ontologies, models, or tools. "
+    "When you cite tips or a build, do not name another champion: the reference "
+    "text mentions other champions, but they are not part of this draft. "
     "If the tool results are silent, say plainly that there is nothing measured."
 )
 
 _NOTHING = "There's nothing measured for that yet - tell me the picks and I'll run it."
+
+# Tools whose payloads are *prose about* a champion rather than structured facts
+# about the draft. A tip can mention half the roster ("great against Yasuo"), so
+# walking these payloads would whitelist champions that have nothing to do with
+# this draft. They source exactly what they declare in ``ToolResult.sources``.
+_EXPLICIT_SOURCES = frozenset(
+    {
+        "get_summoner_profile",
+        "get_champion_tips",
+        "get_champion_build",
+        "get_lane_matchup_guide",
+    }
+)
+
+
+def allowed_champions(
+    ontology: Ontology, tool_results: Sequence[ToolStep], board: dict[str, list[str]]
+) -> set[str]:
+    """The champions a narration of these tool results is allowed to name.
+
+    Every other tool keeps the original behavior — its whole payload is walked
+    for known slugs, plus the board. The prose tools contribute ``step.sources``
+    only, so reference text can never widen the whitelist.
+    """
+    allowed: set[str] = set()
+    walked: list[object] = [board]
+    for step in tool_results:
+        if step.name in _EXPLICIT_SOURCES:
+            allowed.update(step.sources)
+        else:
+            walked.append(step.payload)
+    return allowed | champions_in_payloads(ontology, walked)
 
 
 @dataclass(frozen=True, slots=True)
@@ -109,9 +143,7 @@ def narrate_final(
         raise LlmUnavailableError("agent chat requires an LLM, but none is configured")
     text = _final_llm_text(model_client, question, tool_results, board)
     if ontology is not None:
-        allowed = champions_in_payloads(
-            ontology, [step.payload for step in tool_results] + [board]
-        )
+        allowed = allowed_champions(ontology, tool_results, board)
         invented = unsourced_champions(text, allowed, ontology)
         if invented:
             logger.warning(
@@ -170,6 +202,18 @@ def offline_final_text(
     champion = _last_payload(tool_results, "get_champion")
     if champion is not None:
         return _champion_block(champion, ontology)
+    tips = _last_payload(tool_results, "get_champion_tips")
+    if tips is not None:
+        return _tips_block(tips)
+    build = _last_payload(tool_results, "get_champion_build")
+    if build is not None:
+        return _build_block(build)
+    matchup_guide = _last_payload(tool_results, "get_lane_matchup_guide")
+    if matchup_guide is not None:
+        return _guide_block(matchup_guide)
+    profile = _last_payload(tool_results, "get_summoner_profile")
+    if profile is not None:
+        return _profile_block(profile)
     return fallback or _NOTHING
 
 
@@ -252,6 +296,107 @@ def _champion_block(payload: dict[str, object], ontology: Ontology) -> str:
         share = f"{win_rate:.1%}" if isinstance(win_rate, (int, float)) else "?"
         lines.append(f"  - {role}: {share} win rate")
     return "\n".join(lines)
+
+
+def _tips_block(payload: dict[str, object]) -> str:
+    name = as_str(payload.get("name")) or as_str(payload.get("slug"), "That champion")
+    if not payload.get("available", True):
+        return f"{name}: no tips are recorded for them yet."
+    lines = [f"{name}:"]
+    abilities = opt_list(payload.get("abilities"))
+    if abilities:
+        lines.append("  Abilities:")
+        for ability in abilities:
+            info = opt_dict(ability)
+            slot = as_str(info.get("slot"), "?")
+            lines.append(f"    - {slot} {as_str(info.get('name'))}")
+    for label, key in (("Playing as", "ally_tips"), ("Playing against", "enemy_tips")):
+        tips = [text for text in (as_str(item) for item in opt_list(payload.get(key))) if text]
+        if tips:
+            lines.append(f"  {label}:")
+            lines.extend(f"    - {tip}" for tip in tips)
+    return "\n".join(lines)
+
+
+def _build_block(payload: dict[str, object]) -> str:
+    name = as_str(payload.get("name")) or as_str(payload.get("slug"), "That champion")
+    if not payload.get("available", True):
+        return f"{name}: no build is recorded for them yet."
+    role = as_str(payload.get("position"))
+    lines = [f"{name} ({role}):" if role else f"{name}:"]
+    labels = {"starter": "Start", "boots": "Boots", "core": "Core"}
+    for item_set in opt_list(payload.get("items")):
+        info = opt_dict(item_set)
+        names = [text for text in (as_str(x) for x in opt_list(info.get("names"))) if text]
+        if names:
+            item_type = as_str(info.get("item_type"))
+            lines.append(f"  {labels.get(item_type, item_type)}: {', '.join(names)}")
+    for page in opt_list(payload.get("runes")):
+        info = opt_dict(page)
+        picks = [text for text in (as_str(x) for x in opt_list(info.get("picks"))) if text]
+        if picks:
+            lines.append(f"  Runes - {as_str(info.get('page'))}: {', '.join(picks)}")
+    order = [text for text in (as_str(x) for x in opt_list(payload.get("skill_order"))) if text]
+    if order:
+        lines.append(f"  Skill order: {' > '.join(order)}")
+    return "\n".join(lines)
+
+
+def _guide_block(payload: dict[str, object]) -> str:
+    champion = as_str(payload.get("champion"), "?")
+    opponent = as_str(payload.get("opponent"), "?")
+    role = as_str(payload.get("position"), "?")
+    lines = [f"{champion} vs {opponent} ({role}):"]
+    win_rate = payload.get("champion_win_rate")
+    games = payload.get("games")
+    if isinstance(win_rate, (int, float)) and win_rate > 0:
+        share = f"{win_rate:.1%}"
+        lines.append(f"  - {champion} wins {share} of this lane" + _over(games))
+    for label, key in (
+        ("Lane advantage", "lane_advantage"),
+        ("Solo-kill advantage", "solo_kill_advantage"),
+        ("Play style", "play_style"),
+    ):
+        value = as_str(payload.get(key))
+        if value:
+            lines.append(f"  - {label}: {value}")
+    tip = as_str(payload.get("tip"))
+    if tip:
+        lines.append(f"  - {tip}")
+    return "\n".join(lines)
+
+
+def _profile_block(payload: dict[str, object]) -> str:
+    riot_id = as_str(payload.get("riot_id"), "that player")
+    region = as_str(payload.get("region"))
+    queues = {"SOLORANKED": "Solo/Duo", "FLEXRANKED": "Flex"}
+    lines = [f"{riot_id}" + (f" ({region})" if region else "") + ":"]
+    entries = opt_list(payload.get("queues"))
+    if not entries:
+        lines.append("  no ranked record available.")
+    for entry in entries:
+        info = opt_dict(entry)
+        tier = as_str(info.get("tier"), "unranked")
+        division = info.get("division")
+        lp = info.get("lp")
+        placement = tier.title()
+        if isinstance(division, int) and division:
+            placement += f" {division}"
+        if isinstance(lp, int):
+            placement += f", {lp} LP"
+        wins, losses = info.get("wins"), info.get("losses")
+        record = (
+            f" ({wins}-{losses})"
+            if isinstance(wins, int) and isinstance(losses, int)
+            else ""
+        )
+        queue = as_str(info.get("queue"), "?")
+        lines.append(f"  - {queues.get(queue, queue)}: {placement}{record}")
+    return "\n".join(lines)
+
+
+def _over(games: object) -> str:
+    return f" over {games:,} games" if isinstance(games, int) and games else ""
 
 
 def _display(slug_value: object, ontology: Ontology) -> str:

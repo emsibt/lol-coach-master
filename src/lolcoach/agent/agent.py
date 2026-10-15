@@ -25,7 +25,7 @@ from lolcoach.agent.llm import (
 )
 from lolcoach.agent.tools import Board, tool_specs
 from lolcoach.config import Settings
-from lolcoach.values import as_str, opt_dict
+from lolcoach.values import as_str, opt_dict, opt_list
 
 logger = logging.getLogger(__name__)
 
@@ -44,20 +44,37 @@ Hard rules:
 - If the user asks what to pick, call `suggest_pick`. It is the ONLY source of a
   pick recommendation - never state a pick it did not return.
 - If the user asks how two champions interact, call `explain_matchup`.
+- If the user asks for a champion's tips, abilities, or lore, call
+  `get_champion_tips`. If they ask what to build (items, runes, skill order), call
+  `get_champion_build`. Both are reference material, not picks.
+- If the user asks about their own or someone else's rank, LP, or record, call
+  `get_summoner_profile` with their Riot ID ("Name#TAG"). Report rank, LP, and
+  win/loss only - it is never a reason to recommend a champion.
+- If the user asks how to lane a specific matchup, call `get_lane_matchup_guide`
+  for that pair and role. Its tip is evidence for the matchup they named.
 - Every champion, number, and matchup in your answer must come from a tool
   result. If the tools are silent on something, say so.
+- When you cite a tip or a build, do not name another champion: the reference
+  text mentions other champions, which does not make them part of this draft.
 - Never mention the engine, the knowledge graph, or "the model".
 """
 
 @dataclass(frozen=True, slots=True)
 class ToolStep:
-    """One completed tool call: the request, and its result."""
+    """One completed tool call: the request, and its result.
+
+    ``sources`` is deliberately *not* part of ``payload``: it is the set of
+    champion slugs the narrator may ground on for this step, and putting it in
+    the payload would ship it to the model (which might then echo it). It travels
+    with the step instead, through the workflow's execution data.
+    """
 
     call_id: str
     name: str
     arguments: dict[str, object]
     ok: bool
     payload: dict[str, object]
+    sources: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -67,6 +84,10 @@ class AgentContext:
     image: ImagePart | None = None
     history: tuple[ToolStep, ...] = ()
     turns: tuple[tuple[str, str], ...] = ()
+    notes: tuple[str, ...] = ()
+    memory: bool = False
+    reference_tools: bool = False
+    live_tools: bool = False
 
 
 def step_to_dict(step: ToolStep) -> dict[str, object]:
@@ -76,6 +97,7 @@ def step_to_dict(step: ToolStep) -> dict[str, object]:
         "arguments": step.arguments,
         "ok": step.ok,
         "payload": step.payload,
+        "sources": list(step.sources),
     }
 
 
@@ -87,6 +109,9 @@ def step_from_dict(value: object) -> ToolStep:
         arguments=opt_dict(raw.get("arguments")),
         ok=bool(raw.get("ok")),
         payload=opt_dict(raw.get("payload")),
+        sources=tuple(
+            source for source in (as_str(item) for item in opt_list(raw.get("sources"))) if source
+        ),
     )
 
 
@@ -123,6 +148,17 @@ def _llm_action(context: AgentContext, client: LlmClient, settings: Settings) ->
             f"{json.dumps(context.board, sort_keys=True)}",
         ),
     ]
+    if context.memory:
+        remembered = "\n".join(f"- {note}" for note in context.notes) or "(none yet)"
+        messages.append(
+            LlmMessage(
+                "system",
+                "Session memory. Notes you have kept this session:\n"
+                f"{remembered}\n"
+                "You can call `recall_history` to re-read earlier turns, and "
+                "`remember` to keep a new note for later turns in this session.",
+            )
+        )
     for role, text in context.turns:
         if role in ("user", "assistant") and text.strip():
             messages.append(LlmMessage(role, text))
@@ -140,7 +176,14 @@ def _llm_action(context: AgentContext, client: LlmClient, settings: Settings) ->
             LlmMessage("tool", json.dumps(step.payload, sort_keys=True), tool_call_id=step.call_id)
         )
 
-    reply = client.complete(messages, tool_specs())
+    reply = client.complete(
+        messages,
+        tool_specs(
+            include_memory=context.memory,
+            include_reference=context.reference_tools,
+            include_live=context.live_tools,
+        ),
+    )
     if reply.tool_calls:
         call = reply.tool_calls[0]
         return {"kind": "tool", "name": call.name, "arguments": call.arguments, "call_id": call.id}

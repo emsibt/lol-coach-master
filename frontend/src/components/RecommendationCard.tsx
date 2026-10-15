@@ -1,9 +1,11 @@
 import type { Pick } from "../types";
 import { KindBadge } from "./Badges";
+import ChampionAvatar from "./ChampionAvatar";
 
 interface Props {
   title: string;
   pick: Pick | null;
+  championKey?: string;
   empty: string;
 }
 
@@ -11,7 +13,7 @@ function formatDelta(value: number): string {
   return `${value >= 0 ? "+" : ""}${value.toFixed(4)}`;
 }
 
-export default function RecommendationCard({ title, pick, empty }: Props) {
+export default function RecommendationCard({ title, pick, championKey, empty }: Props) {
   return (
     <div className="flex-1 rounded-lg border border-edge bg-panel/60 p-4">
       <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">{title}</h3>
@@ -19,10 +21,11 @@ export default function RecommendationCard({ title, pick, empty }: Props) {
         <p className="text-sm text-slate-500">{empty}</p>
       ) : (
         <>
-          <div className="mb-3 flex items-baseline justify-between gap-2">
-            <div className="min-w-0">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <ChampionAvatar name={pick.name} championKey={championKey ?? ""} size="lg" />
               <span className="text-xl font-semibold text-slate-100">{pick.name}</span>
-              <span className="ml-2 rounded bg-ink/70 px-1.5 py-0.5 align-middle text-xs uppercase text-slate-400">
+              <span className="rounded bg-ink/70 px-1.5 py-0.5 text-xs uppercase text-slate-400">
                 {pick.role}
               </span>
             </div>

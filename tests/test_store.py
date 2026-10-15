@@ -50,3 +50,60 @@ def test_upsert_is_idempotent(tmp_path: Path) -> None:
     conn.commit()
     assert store.counts(conn)["matchups"] == 1
     conn.close()
+
+
+def test_reference_roundtrip(tmp_path: Path) -> None:
+    conn = store.connect(tmp_path / "snapshot.db")
+    store.init_db(conn)
+    store.upsert_champion(conn, 3, "Galio", "Galio", "galio")
+    store.upsert_champion_reference(
+        conn, 3, lore="lore", blurb="blurb", tags=["Mage"], ally_tips=["a"], enemy_tips=["e"],
+        abilities=[{"slot": "P", "name": "Passive", "description": "d"}], updated_at="now",
+    )
+    store.upsert_champion_build(conn, 3, "mid", "core", 0, item_id=6655, item_name="Luden's",
+                                play=100, win=60, pick_rate=0.3)
+    store.upsert_champion_rune(conn, 3, "mid", "Sorcery", 0, "Summon Aery")
+    store.upsert_item(conn, 6655, name="Luden's", description="dmg", gold_total=3000,
+                      builds_into=[6653], builds_from=[1056])
+    store.mark_reference_done(conn, 3)
+    conn.commit()
+
+    assert store.reference_done(conn, 3) is True
+    assert store.reference_done(conn, 1) is False
+    counted = store.counts(conn)
+    assert counted["champion_reference"] == 1
+    assert counted["champion_builds"] == 1
+    assert counted["champion_runes"] == 1
+    assert counted["items"] == 1
+    conn.close()
+
+
+def test_reference_upserts_are_idempotent(tmp_path: Path) -> None:
+    conn = store.connect(tmp_path / "snapshot.db")
+    store.init_db(conn)
+    store.upsert_champion(conn, 3, "Galio", "Galio", "galio")
+    for _ in range(2):
+        store.upsert_champion_reference(
+            conn, 3, lore="lore", blurb="blurb", tags=[], ally_tips=[], enemy_tips=[],
+            abilities=[], updated_at="now",
+        )
+        store.upsert_champion_build(conn, 3, "mid", "core", 0, item_name="Luden's")
+        store.upsert_champion_rune(conn, 3, "mid", "Sorcery", 0, "Summon Aery")
+        store.upsert_item(conn, 6655, name="Luden's", description="", gold_total=0,
+                          builds_into=[], builds_from=[])
+        store.mark_reference_done(conn, 3)
+    conn.commit()
+    counted = store.counts(conn)
+    assert counted["champion_reference"] == 1
+    assert counted["champion_builds"] == 1
+    assert counted["champion_runes"] == 1
+    assert counted["items"] == 1
+    conn.close()
+
+
+def test_decode_list_tolerates_garbage() -> None:
+    assert store.decode_list('[1, 2]') == [1, 2]
+    assert store.decode_list("") == []
+    assert store.decode_list(None) == []
+    assert store.decode_list("{not json") == []
+    assert store.decode_list('{"a": 1}') == []
