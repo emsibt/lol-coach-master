@@ -22,12 +22,19 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# AI observability (Langfuse). Optional: without it the app runs identically and
+# tracing is a no-op. Installed by the dev extra so the feature is usable out of
+# the box; enable it with LANGFUSE_* in .env (see docs/RELIABILITY.md).
+observability = [
+    "langfuse>=5.0",
+]
 dev = [
     "pytest>=8.0",
     "ruff>=0.4",
     "mypy>=1.10",
     "types-PyYAML>=6.0",
     "types-jsonschema>=4.20",
+    "langfuse>=5.0",
 ]
 
 [project.scripts]

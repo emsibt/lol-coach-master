@@ -16,6 +16,7 @@ Run this checklist before committing and at the end of the session.
 - [ ] only `dataprovider/**` writes `data/snapshot.db`
 - [ ] only `workflow/**` writes `data/executions.db`
 - [ ] the narrator asserts no fact/number absent from the engine traces
+- [ ] `observability/**` imports only `config` and is a no-op (no SDK import) without credentials
 - [ ] `configure_logging` is called only from `src/lolcoach/main.py` (no `basicConfig` in domain modules)
 
 ## Runtime
@@ -56,3 +57,4 @@ Run this checklist before committing and at the end of the session.
 - [ ] `bash scripts/cleanup-scanner.sh` reports no stale artifacts
 - [ ] `bash scripts/benchmark.sh` completes the full task suite
 - [ ] `bash init.sh` passes all verification steps
+- [ ] (optional, needs Docker) `bash scripts/langfuse.sh status` shows the stack healthy and a chat turn appears in the Langfuse UI

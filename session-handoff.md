@@ -1,5 +1,69 @@
 # Session Handoff
 
+## 2026-10-15 (6) — AI observability (Langfuse)
+
+### What was accomplished
+
+- **Optional Langfuse tracing at the model seam** (`src/lolcoach/observability/`).
+  `tracing.trace(settings, name=..., session_id=..., tags=..., metadata=...)` wraps
+  an `executor.run(...)`; it opens a Langfuse root span, sets trace-level attributes
+  (`propagate_attributes`), and publishes a LangChain `CallbackHandler` on a
+  `ContextVar`. `agent/llm.py::_LangChainClient.complete` reads
+  `current_callbacks()` and passes them as `runnable.invoke(..., config={"callbacks":
+  [...]})`, so every `Think`/narration call becomes a generation with **prompt,
+  completion, tool calls, token usage, and cost** (cost computed by Langfuse from the
+  model name). Because it is attached at the one seam, it is provider-neutral and
+  cannot influence a decision.
+- **Wired at every run boundary**: the agent-chat route (`session_id` = the chat
+  session, so a conversation groups in Langfuse Sessions; tags = provider; metadata =
+  provider/model/live/vision), `POST /api/chat` (narrate), the rerun route, and each
+  eval scenario (`eval:<id>`).
+- **Off is truly off.** Enabled only when both `LANGFUSE_PUBLIC_KEY` and
+  `LANGFUSE_SECRET_KEY` are set (`tracing.configured`). Without them `trace()` is a
+  no-op and the SDK is never imported; the package is an **optional** dependency
+  (`pyproject` extra `observability`, also in `dev`). A Langfuse setup failure is
+  logged at WARNING and skipped — observability can never fail a run.
+- **Local self-host stack** `ops/langfuse/docker-compose.yml` (langfuse web+worker:4,
+  postgres:17, clickhouse, redis, minio) with `LANGFUSE_INIT_*` auto-provisioning an
+  org/project/user and a **fixed** dev key (`pk-lf-lolcoach-local` /
+  `sk-lf-lolcoach-local`) that matches `.env.example`. Helper: `scripts/langfuse.sh
+  {up|down|stop|logs|status|reset}`.
+
+### What remains / blocker
+
+- **Docker is not installed on this machine** (no `docker`, `docker compose`,
+  `podman`, or WSL — verified), so the local Langfuse server **could not be started
+  here**. The stack and helper script are checked in; run `bash scripts/langfuse.sh
+  up` once Docker Desktop is installed, then set the `LANGFUSE_*` block in `.env` and
+  send a chat message to see the trace. Everything else (the integration, tests, and
+  a real-SDK smoke run) is verified without a server.
+- Cost figures require Langfuse to know the model; an arbitrary OpenRouter slug
+  records tokens but not cost until the model is priced.
+- The eval suite was committed this session as `c98c0af "feat: AI Evaluation"`.
+
+### Files modified
+
+- Added: `src/lolcoach/observability/{__init__,tracing}.py`,
+  `ops/langfuse/docker-compose.yml`, `scripts/langfuse.sh`,
+  `tests/test_observability_tracing.py`.
+- Changed: `src/lolcoach/agent/llm.py` (forward callbacks; Protocol `invoke(config)`),
+  `src/lolcoach/config.py` (`langfuse_*`), `src/lolcoach/server/app.py` (wrap agent-chat
+  / narrate / rerun), `src/lolcoach/eval/runner.py` (wrap each scenario),
+  `pyproject.toml` (extra `observability`), `.env.example`, `AGENTS.md`,
+  `docs/{ARCHITECTURE,PRODUCT,RELIABILITY}.md`, `README.md`, `feature_list.json`
+  (`ai-observability` -> pass), `clean-state-checklist.md`.
+
+### Verification
+
+- `bash init.sh` green on Python 3.14.7: ruff `All checks passed!`; mypy src
+  `Success: no issues found in 53 source files`; pytest `211 passed` (8 new).
+- Real-SDK smoke (no server): with credentials set and `LANGFUSE_HOST=http://localhost:3000`,
+  `tracing.trace(...)` constructed the client, opened the span, resolved the
+  `CallbackHandler` to our registered client, and attempted a span export — the
+  export timed out only because no server was listening.
+- `bash scripts/langfuse.sh up` prints the "docker not found → install Docker
+  Desktop" message and exits 1 (the honest state on this machine).
+
 ## 2026-10-15 (5) — agent evaluation suite
 
 ### What was accomplished

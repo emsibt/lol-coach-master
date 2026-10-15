@@ -56,6 +56,8 @@ src/lolcoach/
     workflow/     The in-house Step-Functions-style executor. The ONLY layer that
                   persists execution history.
     agent/        The tool surface, the tool-loop, and the grounded narrator.
+    observability/ Optional AI tracing (Langfuse) at the model seam. Imports only
+                  config; a no-op (and no SDK import) unless configured.
     server/       FastAPI. Wires the workflow + engine + tools to HTTP.
 ```
 
@@ -64,6 +66,11 @@ src/lolcoach/
 - `agent/**` must not import from `dataprovider`. Anything the agent needs from the
   network layer is declared as a `Protocol` in `agent/tools.py` (e.g.
   `LiveDataProvider`) and injected by the composition root (`server/app.py`).
+- `observability/**` must not import from `agent`, `server`, `workflow`,
+  `dataprovider`, or `knowledge` (it imports only `config`, so `agent/llm.py` can
+  depend on it without a cycle). It observes the model seam and must never change
+  behaviour: with no credentials it is a no-op, and any tracing failure is logged
+  and skipped rather than propagated.
 - The narrator may not assert any fact or number not present in the tool results. A
   tool result declares `sources` — the champions it is entitled to source — and the
   guard whitelists only those for prose tools (`get_champion_tips`,

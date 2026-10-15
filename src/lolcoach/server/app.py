@@ -23,6 +23,7 @@ from lolcoach.chat.store import ChatStore, Message, Session, SessionLimitReached
 from lolcoach.config import Settings, get_settings
 from lolcoach.knowledge.ontology import Ontology, OntologyError, get_ontology
 from lolcoach.knowledge.reference import get_reference
+from lolcoach.observability import tracing
 from lolcoach.server.schemas import (
     AgentChatRequest,
     AgentChatResponse,
@@ -348,7 +349,13 @@ def create_app() -> FastAPI:
         executor = WorkflowExecutor(
             built.workflow, tasks=built.tasks, predicates=built.predicates, store=store
         )
-        result = executor.run(initial)
+        with tracing.trace(
+            settings,
+            name=name,
+            tags=("rerun", name),
+            metadata={"execution_id": execution_id},
+        ):
+            result = executor.run(initial)
         return RerunResponse(
             execution_id=result.execution_id, status=result.status, error=result.error
         )
@@ -364,7 +371,13 @@ def create_app() -> FastAPI:
 
         output = opt_dict(record.get("output"))
         recommendation = opt_dict(output.get("recommendation"))
-        narration = narrate(recommendation, question=request.message)
+        with tracing.trace(
+            get_settings(),
+            name="narrate",
+            tags=("narrate",),
+            metadata={"execution_id": request.execution_id},
+        ):
+            narration = narrate(recommendation, question=request.message)
         return ChatResponse(reply=narration.text, mode=narration.mode)
 
     @app.post("/api/agent/chat")
@@ -435,16 +448,28 @@ def create_app() -> FastAPI:
         executor = WorkflowExecutor(
             built.workflow, tasks=built.tasks, predicates=built.predicates, store=store
         )
-        result = executor.run(
-            {
-                "question": question,
-                "board": board.model_dump(),
-                "image": image,
-                "turns": turns,
-                "notes": notes,
-                "memory": session is not None,
-            }
-        )
+        with tracing.trace(
+            settings,
+            name="agent-chat",
+            session_id=(session.session_id if session is not None else request.session_id),
+            tags=("agent-chat", settings.llm_provider),
+            metadata={
+                "provider": settings.llm_provider,
+                "model": settings.llm_model,
+                "live_tools": settings.enable_live_tools,
+                "vision": settings.enable_vision,
+            },
+        ):
+            result = executor.run(
+                {
+                    "question": question,
+                    "board": board.model_dump(),
+                    "image": image,
+                    "turns": turns,
+                    "notes": notes,
+                    "memory": session is not None,
+                }
+            )
 
         output = result.output
         reply = as_str(output.get("reply"))

@@ -73,11 +73,20 @@ curl -s http://127.0.0.1:8000/api/health      # {"status":"ok",...}
 
 # evaluate the agent (requires a model) — golden scenarios, rule-based scoring
 python -m lolcoach.cli eval                   # exits non-zero if any scenario fails
+
+# optional: AI observability — prompts, tokens, and cost per run (needs Docker)
+bash scripts/langfuse.sh up                   # Langfuse UI on http://localhost:3000
 ```
 
 The agent suite lives in `evals/scenarios.yaml` and drives the real chat
 tool-loop, scoring tool choice, board resolution, grounding, and engine fidelity.
 See [`docs/RELIABILITY.md`](docs/RELIABILITY.md#agent-evaluation).
+
+With a Langfuse server running and `LANGFUSE_*` set in `.env`, every chat turn is
+recorded as one trace — each model call's prompt, completion, tool calls, token
+usage, and cost — grouped by conversation. It is opt-in and side-effect-free: with
+no credentials it is a no-op and the app is unchanged. See
+[`docs/RELIABILITY.md`](docs/RELIABILITY.md#ai-observability-langfuse).
 
 ### Configure a model
 
@@ -191,6 +200,9 @@ prose never widens it.
   [OP.GG MCP server](https://github.com/opgginc/opgg-mcp) (Streamable HTTP, no auth).
 - **Workflow / observability** — in-house Step-Functions-style executor on SQLite;
   structured JSON logging; the Trace Inspector reads the persisted event history.
+- **AI observability** — optional Langfuse tracing at the model seam: one trace
+  per agent run with each call's prompt, completion, token usage, and cost. Lazy
+  and opt-in (no credentials ⇒ no-op, no import).
 - **Frontend** — React 18, Vite 6, TypeScript 5, Tailwind 3.
 - **Tooling** — `pytest`, `ruff`, and strict `mypy`, all wired through `init.sh`
   (CI and container packaging are planned, not yet wired).

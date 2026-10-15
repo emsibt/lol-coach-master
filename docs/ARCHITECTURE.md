@@ -65,6 +65,11 @@ is structurally forbidden from adding to it.
   → `workflow/workflows/agent_chat.py`), and **narrate** tool results
   (`narrator.narrate` / `narrate_final`). It reads the engine and knowledge layer
   through `agent/tools.py`; it may not assert any number absent from a tool result.
+- `observability/**` is optional, cross-cutting instrumentation for the model seam
+  (`agent/llm.py`), not a source of behaviour: it records what the agent *did* but
+  never changes what it decides. It imports only `config`, so any layer may wrap a
+  run in `tracing.trace(...)` without a cycle. The Langfuse SDK is imported lazily
+  and only when configured, so the package is not a hard dependency.
 
 ## Build & run
 
@@ -97,18 +102,19 @@ reads `os.environ`, which keeps it controllable under `monkeypatch` in tests.
 
 | Process | Command | Port | Talks to |
 |---------|---------|------|----------|
-| API | `uvicorn lolcoach.main:app` | 8000 | snapshot.db (read), executions.db (read/write), chat.db (read/write), OP.GG MCP (fetch + the two live lookups), LLM provider (orchestrate + narrate only) |
+| API | `uvicorn lolcoach.main:app` | 8000 | snapshot.db (read), executions.db (read/write), chat.db (read/write), OP.GG MCP (fetch + the two live lookups), LLM provider (orchestrate + narrate only), Langfuse (optional, traces) |
 | Web | `pnpm dev` (Vite) | 5173 | API via `VITE_API_BASE_URL`, the Data Dragon CDN (portraits) |
 | Fetch job | `python -m lolcoach.cli fetch` | — | OP.GG MCP → snapshot.db |
 | KG build | `python -m lolcoach.cli build-kg` | — | snapshot.db → `knowledge/seed/*.yaml` (graph + reference) |
 | KG report | `python -m lolcoach.cli kg-report` | — | `knowledge/seed/*.yaml` → `data/kg-report.html` (static, offline) |
+| Langfuse (optional) | `bash scripts/langfuse.sh up` | 3000 | receives the agent's traces; stores them in its own stack |
 
 `main.py` is the single entrypoint that calls `configure_logging()` exactly once,
 then constructs the FastAPI app. Domain modules only create module-level loggers.
 
 ## Data directory
 
-Everything runtime lives under `data/` (gitignored). Three SQLite databases with
+Everything runtime lives under `data/` (gitignored). Four SQLite databases with
 different lifecycles, deliberately kept apart:
 
 - `data/snapshot.db` — the OP.GG statistical snapshot. **Replaceable and
@@ -122,6 +128,8 @@ different lifecycles, deliberately kept apart:
 - `data/chat.db` — chat sessions and the agent's session memory. **Mutable**
   product state: create, rename, and delete freely. Tables: `sessions`,
   `session_messages`, `session_notes`. Written only by `chat/store.py`.
+- `data/eval.db` — agent-evaluation run history, so a failing golden scenario opens
+  in the Trace Inspector. **Disposable**; written only by the eval runner.
 
 Splitting them means "refresh the meta data", "keep the audit trail", and "delete
 a conversation" never have to negotiate.
@@ -387,7 +395,48 @@ all. The draft-eval `narrate` path is unchanged and still falls back to
 `offline_text`. In every case the engine, traces, and Trace Inspector keep
 working.
 
-## Trace Inspector (node-graph UI)
+## AI observability (Langfuse)
+
+The in-house Trace Inspector records what the *workflow* did — states, inputs,
+timings, logs. It deliberately does not record the model's traffic: the prompt
+sent, the completion returned, and the tokens and cost they consumed. Those live
+in **Langfuse**, attached at the one seam where a model is ever consulted.
+
+```
+server/app.py (agent-chat route)  ─┐   observability/tracing.py::trace(...)
+eval/runner.py (per scenario)      ─┼─►   sets trace attrs + publishes callbacks
+server/app.py (narrate, rerun)     ─┘         │
+                                              ▼  ContextVar
+                              agent/llm.py::_LangChainClient.complete
+                                              │  config={"callbacks":[...]}
+                                              ▼
+                              LangChain run ─► Langfuse (prompt/completion/tokens/cost)
+```
+
+- **The seam.** Every model call in the product — the agent's `Think` decisions and
+  its final narration — goes through `agent/llm.py::LlmClient.complete`. Tracing is
+  attached there and nowhere else, so what is captured is exactly what ships.
+- **One trace per run.** `tracing.trace(settings, name=..., session_id=..., ...)` wraps
+  an `executor.run(...)` call. It opens a root span, sets trace-level attributes
+  (the agent run's name, the chat `session_id` so a conversation groups in Langfuse's
+  Sessions view, tags, and dimensions), and publishes a LangChain callback handler on
+  a `ContextVar`. `llm.py` reads that ContextVar and passes the callbacks to
+  `runnable.invoke(...)`, so every generation under the span joins one trace. All
+  entry points that run the agent are wrapped: the agent-chat route, narration, the
+  rerun route, and each eval scenario.
+- **Provider-neutral and optional.** The seam carries a callback handler, not a
+  provider: the same trace works for Anthropic or an OpenAI-compatible endpoint.
+  Langfuse is enabled only when both `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`
+  are set (`tracing.configured`); with neither, `trace()` is a no-op and the SDK is
+  never imported. A Langfuse setup failure is logged and skipped — observability can
+  never fail a run, and the app runs unchanged without the `langfuse` package.
+- **No influence on decisions.** Tracing observes the seam; it does not gate, retry,
+  or alter a call. The engine still decides, the narrator still only rephrases, and
+  the grounding guard is untouched.
+
+Run a local server with `bash scripts/langfuse.sh up` (see `docs/RELIABILITY.md`).
+
+
 
 Every `POST /api/draft/evaluate` (and every `POST /api/agent/chat`) creates an
 execution. The workflow executor writes each transition through to

@@ -115,6 +115,12 @@ so its traceback is both printed and attached to the `STATE_FAILED` event.
 **eval** (`lolcoach.eval.runner`)
 - `INFO` scenario evaluated (scenario, passed, execution_id)
 
+**observability** (`lolcoach.observability.tracing`)
+- `WARNING` Langfuse is configured but the package is not installed — the run
+  proceeds untraced (module name)
+- `WARNING` + `exception` the Langfuse LangChain integration could not be created —
+  the run proceeds untraced
+
 ### Configuring Log Level
 
 Set the `LOG_LEVEL` environment variable:
@@ -211,3 +217,74 @@ Inspector like any other execution. `--json PATH` writes the full report
 (per-scenario checks and reply) for a CI artifact; `--live` additionally
 advertises the two network tools to the agent. A model is required — without one
 the command prints a message and exits 1 before running anything.
+
+## AI observability (Langfuse)
+
+The structured logs above and the Trace Inspector record what the *workflow* did.
+**Langfuse** records what the *model* did: the prompt, the completion, the tool
+calls, and the token usage and cost of every call. It is optional — the app runs
+identically without it.
+
+### What is captured
+
+Every agent run is one Langfuse **trace** (name `agent-chat`, `narrate`,
+`rerun`, or `eval:<scenario>`), and every model call inside it is a **generation**
+under that trace: input messages, output, tool calls, `usage` (tokens), and cost.
+Chat runs carry the session as the Langfuse `session_id`, so a conversation's
+turns group in the Sessions view; tags and metadata (provider, model, live-tools
+and vision flags) are attached for filtering.
+
+Cost is computed by Langfuse from the model name against its pricing table. A
+model it does not know (e.g. an arbitrary OpenRouter slug) still records token
+usage; only the cost figure is unavailable until the model is priced.
+
+### Run it locally
+
+The stack lives in `ops/langfuse/docker-compose.yml` (Langfuse web + worker,
+Postgres, ClickHouse, Redis, MinIO) and needs **Docker**:
+
+```bash
+bash scripts/langfuse.sh up       # start (detached); UI on http://localhost:3000
+bash scripts/langfuse.sh status   # container health
+bash scripts/langfuse.sh logs     # follow logs
+bash scripts/langfuse.sh down     # stop, keep data
+bash scripts/langfuse.sh reset    # stop and delete all data
+```
+
+On first boot Langfuse provisions a project and a fixed API key pair, so the
+block below matches the running server with nothing to copy from the UI. Log in
+at http://localhost:3000 as `dev@lolcoach.local` / `lolcoach`.
+
+```bash
+# .env
+LANGFUSE_PUBLIC_KEY=pk-lf-lolcoach-local
+LANGFUSE_SECRET_KEY=sk-lf-lolcoach-local
+LANGFUSE_HOST=http://localhost:3000
+# LANGFUSE_TRACING_ENVIRONMENT=local   # optional label for traces
+```
+
+Then run the app as usual (`uvicorn lolcoach.main:app`) and send a chat message;
+the trace appears in the Langfuse **Tracing** view within a few seconds. The eval
+suite traces too: `python -m lolcoach.cli eval`.
+
+### Off is truly off
+
+Tracing is enabled only when **both** keys are set (`tracing.configured`). With
+neither, `tracing.trace(...)` is a no-op on every run path, the `langfuse` SDK is
+never imported, and — since it is an optional dependency — the app runs without
+the package installed. If Langfuse is configured but unreachable, spans fail to
+export with a background warning (visible at `LANGFUSE_DEBUG=1` or in the
+exporter's own logs) and **the run still succeeds**; observability never gates a
+request. A setup failure (package or LangChain integration missing) is logged at
+`WARNING` and skipped.
+
+### Verification
+
+- `python -m pytest tests/test_observability_tracing.py -q` — the seam: a no-op
+  without credentials, callbacks published and cleared per run, flush on exit
+  (including on error), graceful degradation, and the model call forwarding the
+  callbacks.
+- With credentials set, `tests/test_observability_tracing.py` plus a live smoke
+  run against the local stack confirm a trace reaches the Langfuse UI.
+
+

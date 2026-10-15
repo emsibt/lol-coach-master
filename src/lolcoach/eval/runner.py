@@ -17,11 +17,12 @@ from pathlib import Path
 
 from lolcoach.agent.llm import LlmClient
 from lolcoach.agent.tools import LiveDataProvider, normalize_board
-from lolcoach.config import Settings
+from lolcoach.config import Settings, get_settings
 from lolcoach.eval.checks import CheckOutcome, evaluate
 from lolcoach.eval.scenarios import Scenario
 from lolcoach.knowledge.ontology import Ontology
 from lolcoach.knowledge.reference import ReferenceData
+from lolcoach.observability import tracing
 from lolcoach.values import as_str, opt_dict, opt_list
 from lolcoach.workflow.executor import WorkflowExecutor
 from lolcoach.workflow.store import ExecutionStore
@@ -136,7 +137,13 @@ def _run_scenario(
     initial: dict[str, object] = {"question": scenario.message, "board": scenario.board}
     if scenario.image is not None:
         initial["image"] = scenario.image
-    result = executor.run(initial)
+    with tracing.trace(
+        settings or get_settings(),
+        name=f"eval:{scenario.id}",
+        tags=("eval", scenario.id),
+        metadata={"scenario": scenario.id, "message": scenario.message},
+    ):
+        result = executor.run(initial)
 
     checks = evaluate(scenario, result, ontology)
     output = result.output

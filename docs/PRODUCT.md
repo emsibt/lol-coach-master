@@ -171,6 +171,29 @@ scenario fails, and persists each run to `data/eval.db` so a failing scenario
 opens in the Trace Inspector beside the rest. A model is required; without one
 the command says so and exits non-zero without running anything.
 
+### AI observability
+The Trace Inspector shows what the *workflow* did; it does not show what the
+*model* was asked or what it cost. **Langfuse** covers that gap. When it is
+configured, every chat turn — and every evaluation scenario — is recorded as one
+trace holding each model call's prompt, completion, tool calls, token usage, and
+cost, grouped by conversation in Langfuse's Sessions view. It answers "what
+prompt did we actually send?", "how many tokens was that?", and "what is this
+costing?", which the run history alone cannot.
+
+It is opt-in and side-effect-free. With no Langfuse credentials the feature is a
+no-op — the package is not even imported — and chat behaves exactly as before;
+a Langfuse outage or a misconfiguration can never fail a run. Enabling it is
+configuration only (`LANGFUSE_PUBLIC_KEY` / `LANGFUSE_SECRET_KEY` /
+`LANGFUSE_HOST`), and a self-hosted server runs locally:
+
+```bash
+bash scripts/langfuse.sh up     # http://localhost:3000
+```
+
+Tracing is attached at the single model seam, so it observes the agent without
+influencing it: it cannot change a decision, a tool call, or a pick. The engine
+still decides and the grounding guard still holds.
+
 ### Knowledge graph + statistical snapshot
 A YAML knowledge graph (champions, counter/synergy relations, patch) is generated
 from an OP.GG-derived SQLite snapshot. The graph is data-derived, not hand-authored:

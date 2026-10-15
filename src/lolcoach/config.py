@@ -105,6 +105,10 @@ class Settings:
     live_timeout: float = 15.0
     live_cache_ttl: float = 300.0
     live_min_interval: float = 0.25
+    langfuse_public_key: str = ""
+    langfuse_secret_key: str = ""
+    langfuse_host: str = ""
+    langfuse_environment: str = ""
     frontend_url: str = "http://localhost:5173"
 
 
@@ -139,5 +143,9 @@ def get_settings() -> Settings:
         live_timeout=float(_env("LOL_COACH_LIVE_TIMEOUT", "15")),
         live_cache_ttl=float(_env("LOL_COACH_LIVE_CACHE_TTL", "300")),
         live_min_interval=float(_env("LOL_COACH_LIVE_MIN_INTERVAL", "0.25")),
+        langfuse_public_key=_env("LANGFUSE_PUBLIC_KEY", ""),
+        langfuse_secret_key=_env("LANGFUSE_SECRET_KEY", ""),
+        langfuse_host=_env("LANGFUSE_HOST", ""),
+        langfuse_environment=_env("LANGFUSE_TRACING_ENVIRONMENT", ""),
         frontend_url=_env("LOL_COACH_FRONTEND_URL", "http://localhost:5173"),
     )

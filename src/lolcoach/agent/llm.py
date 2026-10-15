@@ -19,6 +19,7 @@ from typing import Protocol, cast
 from uuid import uuid4
 
 from lolcoach.config import Settings
+from lolcoach.observability.tracing import current_callbacks
 from lolcoach.values import as_str, opt_dict
 
 logger = logging.getLogger(__name__)
@@ -71,11 +72,11 @@ class LlmClient(Protocol):
 
 
 class _Runnable(Protocol):
-    def invoke(self, input: object) -> object: ...
+    def invoke(self, input: object, config: object = None) -> object: ...
 
 
 class _Model(Protocol):
-    def invoke(self, input: object) -> object: ...
+    def invoke(self, input: object, config: object = None) -> object: ...
     def bind_tools(self, tools: object) -> _Runnable: ...
 
 
@@ -174,7 +175,13 @@ class _LangChainClient:
         runnable: _Runnable | _Model = (
             self._model.bind_tools(list(tools)) if tools else self._model
         )
-        reply = runnable.invoke(langchain_messages)
+        callbacks = current_callbacks()
+        if callbacks:
+            reply = runnable.invoke(
+                langchain_messages, config={"callbacks": list(callbacks)}
+            )
+        else:
+            reply = runnable.invoke(langchain_messages)
         return LlmReply(
             text=_content_to_text(getattr(reply, "content", "")),
             tool_calls=_parse_tool_calls(reply),
