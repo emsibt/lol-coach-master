@@ -5,6 +5,10 @@ execution store, and never make a drafting decision themselves. ``POST
 /api/draft/evaluate`` runs the in-house draft-eval workflow (which owns every
 persisted transition); the ``/api/executions*`` routes read that history back
 for the Trace Inspector.
+
+The maintenance agents are operational tooling rather than part of the coach, so
+their runs and evaluation history are served from a separate ``/api/admin``
+namespace and rendered by the admin views, not by the coach UI.
 """
 
 from __future__ import annotations
@@ -17,10 +21,17 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from lolcoach import __version__
+from lolcoach.agent.fixer import ScriptedCoder
 from lolcoach.agent.llm import build_client
+from lolcoach.agent.publisher import RecordingPublisher
+from lolcoach.agent.reviewer import ScriptedReviewer
 from lolcoach.agent.tools import LiveDataProvider, normalize_board
+from lolcoach.agent.workspace import FakeWorkspace
 from lolcoach.chat.store import ChatStore, Message, Session, SessionLimitReached
 from lolcoach.config import Settings, get_settings
+from lolcoach.eval.store import EvalRunStore
+from lolcoach.eval.store import EvalRunSummary as StoredEvalRun
+from lolcoach.github.fake import FakeGitHubClient
 from lolcoach.knowledge.ontology import Ontology, OntologyError, get_ontology
 from lolcoach.knowledge.reference import get_reference
 from lolcoach.observability import tracing
@@ -32,7 +43,12 @@ from lolcoach.server.schemas import (
     ChatRequest,
     ChatResponse,
     CreateSessionRequest,
+    DraftHistoryOut,
     DraftRequest,
+    EvalCheckOut,
+    EvalRunDetail,
+    EvalRunSummary,
+    EvalScenarioOut,
     EvaluateResponse,
     EventOut,
     ExecutionDetail,
@@ -48,13 +64,17 @@ from lolcoach.server.schemas import (
     ToolCallOut,
     TraceOut,
 )
-from lolcoach.values import as_str, opt_dict, opt_list
+from lolcoach.values import as_bool, as_str, opt_dict, opt_list
 from lolcoach.workflow.executor import WorkflowExecutor
 from lolcoach.workflow.store import ExecutionStore
 from lolcoach.workflow.workflows.agent_chat import AgentChat, build_agent_chat
 from lolcoach.workflow.workflows.draft_eval import DraftEval, build_draft_eval
+from lolcoach.workflow.workflows.issue_fix import IssueFix, build_issue_fix
+from lolcoach.workflow.workflows.pr_review import PrReview, build_pr_review
 
 logger = logging.getLogger(__name__)
+
+_AGENT_WORKFLOWS = ("issue-fix", "pr-review")
 
 
 def _ontology() -> Ontology:
@@ -80,8 +100,16 @@ def _live(settings: Settings) -> LiveDataProvider | None:
 
 def _build_workflow(
     name: str, ontology: Ontology, *, with_client: bool
-) -> DraftEval | AgentChat | None:
-    """Build a workflow by name. ``with_client`` gates the LLM (unused for topology)."""
+) -> DraftEval | AgentChat | IssueFix | PrReview | None:
+    """Build a workflow by name. ``with_client`` gates the LLM (unused for topology).
+
+    The maintenance agents are built here only for their *topology* (so the Trace
+    Inspector can draw their graphs), with the fakes standing in for the seams.
+    A live agent needs an LLM, a checkout and ``gh``, which the API does not have,
+    so ``with_client=True`` — the rerun path — returns ``None`` for them and the
+    route refuses with a message pointing at the CLI. That keeps the UI from ever
+    pushing a branch.
+    """
     if name == "draft-eval":
         return build_draft_eval(ontology)
     if name == "agent-chat":
@@ -93,6 +121,23 @@ def _build_workflow(
             settings=settings,
             reference=get_reference(),
             live=_live(settings),
+        )
+    if name == "issue-fix":
+        if with_client:
+            return None
+        return build_issue_fix(
+            coder=ScriptedCoder(),
+            github=FakeGitHubClient(),
+            workspace=FakeWorkspace(),
+            publisher=RecordingPublisher(),
+        )
+    if name == "pr-review":
+        if with_client:
+            return None
+        return build_pr_review(
+            reviewer=ScriptedReviewer(),
+            github=FakeGitHubClient(),
+            workspace=FakeWorkspace(),
         )
     return None
 
@@ -120,6 +165,80 @@ def _chat_store() -> Iterator[ChatStore]:
         yield store
     finally:
         store.close()
+
+
+def _eval_store() -> Iterator[EvalRunStore]:
+    """The evaluation history, kept in the eval database with the eval executions."""
+    store = EvalRunStore.connect(get_settings().eval_db)
+    try:
+        yield store
+    finally:
+        store.close()
+
+
+def _eval_scenario(item: object) -> EvalScenarioOut:
+    """Render one scored scenario from a stored report (chat or agent shape)."""
+    data = opt_dict(item)
+    return EvalScenarioOut(
+        id=as_str(data.get("id")),
+        name=as_str(data.get("name")),
+        passed=as_bool(data.get("passed")),
+        execution_id=as_str(data.get("execution_id")),
+        status=as_str(data.get("status")),
+        kind=as_str(data.get("kind")),
+        mode=as_str(data.get("mode")),
+        error=as_str(data.get("error")) or None,
+        checks=[
+            EvalCheckOut(
+                name=as_str(opt_dict(check).get("name")),
+                ok=as_bool(opt_dict(check).get("ok")),
+                detail=as_str(opt_dict(check).get("detail")),
+            )
+            for check in opt_list(data.get("checks"))
+        ],
+    )
+
+
+def _eval_summary(record: StoredEvalRun) -> EvalRunSummary:
+    return EvalRunSummary(
+        run_id=record.run_id,
+        kind=record.kind,
+        provider=record.provider,
+        model=record.model,
+        started_at=record.started_at,
+        finished_at=record.finished_at,
+        total=record.total,
+        passed=record.passed,
+        failed=record.failed,
+        ok=record.ok,
+    )
+
+
+def _find_in_eval(
+    execution_id: str,
+) -> tuple[dict[str, object] | None, list[dict[str, object]]]:
+    """Look an execution up in the eval database, where eval runs persist.
+
+    Evaluation executions are stored next to their run history rather than in the
+    app's execution database; the drill-down from the Evaluation view needs them,
+    and the execution id is a uuid, so the two stores cannot collide.
+    """
+    store = ExecutionStore.connect(get_settings().eval_db)
+    try:
+        record = store.get_execution(execution_id)
+        events = store.events(execution_id) if record is not None else []
+    finally:
+        store.close()
+    return record, events
+
+
+def _execution_detail(
+    record: dict[str, object], events: list[dict[str, object]]
+) -> ExecutionDetail:
+    payload = dict(record)
+    payload["events"] = [EventOut.model_validate(event) for event in events]
+    payload["graph"] = _topology(as_str(record.get("workflow")))
+    return ExecutionDetail.model_validate(payload)
 
 
 _BOARD_CONTENT_KEYS = ("allies", "enemies", "ally_bans", "enemy_bans")
@@ -312,12 +431,40 @@ def create_app() -> FastAPI:
             traces=_traces(output.get("traces")),
         )
 
+    @app.get("/api/drafts")
+    def list_drafts(
+        store: Annotated[ExecutionStore, Depends(_store)],
+        limit: Annotated[int, Query(ge=1, le=500)] = 50,
+    ) -> list[DraftHistoryOut]:
+        """Past Draft-tab evaluations, newest first, with the board they scored."""
+        out: list[DraftHistoryOut] = []
+        for row in store.list_draft_evaluations(limit):
+            initial = opt_dict(row.get("input"))
+            output = opt_dict(row.get("output"))
+            recommendation = opt_dict(output.get("recommendation"))
+            out.append(
+                DraftHistoryOut(
+                    execution_id=as_str(row.get("execution_id")),
+                    status=as_str(row.get("status")),
+                    started_at=as_str(row.get("started_at")),
+                    finished_at=as_str(row.get("finished_at")) or None,
+                    error=as_str(row.get("error")) or None,
+                    draft=DraftRequest.model_validate(opt_dict(initial.get("draft"))),
+                    problems=[as_str(item) for item in opt_list(output.get("problems"))],
+                    counter=_pick(recommendation.get("counter")),
+                    synergy=_pick(recommendation.get("synergy")),
+                )
+            )
+        return out
+
     @app.get("/api/executions")
     def list_executions(
         store: Annotated[ExecutionStore, Depends(_store)],
         limit: Annotated[int, Query(ge=1, le=500)] = 50,
+        workflow: str | None = None,
     ) -> list[ExecutionSummary]:
-        return [ExecutionSummary.model_validate(row) for row in store.list_executions(limit)]
+        rows = store.list_executions(limit, workflow=workflow)
+        return [ExecutionSummary.model_validate(row) for row in rows]
 
     @app.get("/api/executions/{execution_id}")
     def get_execution(
@@ -326,11 +473,62 @@ def create_app() -> FastAPI:
         record = store.get_execution(execution_id)
         if record is None:
             raise HTTPException(status_code=404, detail=f"no execution {execution_id!r}")
-        events = [EventOut.model_validate(event) for event in store.events(execution_id)]
-        payload = dict(record)
-        payload["events"] = events
-        payload["graph"] = _topology(as_str(record.get("workflow")))
-        return ExecutionDetail.model_validate(payload)
+        return _execution_detail(record, store.events(execution_id))
+
+    # The maintenance-agent surface lives under /api/admin, apart from the app's
+    # own routes: the agent runs are operational tooling, not part of the coach.
+
+    @app.get("/api/admin/executions")
+    def list_admin_executions(
+        store: Annotated[ExecutionStore, Depends(_store)],
+        limit: Annotated[int, Query(ge=1, le=500)] = 50,
+        workflow: str | None = None,
+    ) -> list[ExecutionSummary]:
+        """Agent-loop executions: every issue-fix and pr-review run, newest first."""
+        wanted = (workflow,) if workflow in _AGENT_WORKFLOWS else _AGENT_WORKFLOWS
+        rows = [row for name in wanted for row in store.list_executions(limit, workflow=name)]
+        rows.sort(key=lambda row: as_str(row.get("started_at")), reverse=True)
+        return [ExecutionSummary.model_validate(row) for row in rows[:limit]]
+
+    @app.get("/api/admin/executions/{execution_id}")
+    def get_admin_execution(
+        execution_id: str, store: Annotated[ExecutionStore, Depends(_store)]
+    ) -> ExecutionDetail:
+        record = store.get_execution(execution_id)
+        events = store.events(execution_id) if record is not None else []
+        if record is None:
+            # An evaluation scenario's execution is persisted beside the eval run
+            # history rather than in the app database; the Evaluation view drills
+            # into it from here.
+            record, events = _find_in_eval(execution_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail=f"no execution {execution_id!r}")
+        return _execution_detail(record, events)
+
+    @app.get("/api/admin/evals")
+    def list_evals(
+        store: Annotated[EvalRunStore, Depends(_eval_store)],
+        limit: Annotated[int, Query(ge=1, le=500)] = 50,
+        kind: str | None = None,
+    ) -> list[EvalRunSummary]:
+        runs = store.list_runs(limit)
+        if kind:
+            runs = [run for run in runs if run.kind == kind]
+        return [_eval_summary(run) for run in runs]
+
+    @app.get("/api/admin/evals/{run_id}")
+    def get_eval(
+        run_id: str, store: Annotated[EvalRunStore, Depends(_eval_store)]
+    ) -> EvalRunDetail:
+        record = store.get_run(run_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail=f"no evaluation run {run_id!r}")
+        return EvalRunDetail(
+            **_eval_summary(record).model_dump(),
+            scenarios=[
+                _eval_scenario(item) for item in opt_list(record.report.get("scenarios"))
+            ],
+        )
 
     @app.post("/api/executions/{execution_id}/rerun")
     def rerun_execution(
@@ -340,6 +538,14 @@ def create_app() -> FastAPI:
         if record is None:
             raise HTTPException(status_code=404, detail=f"no execution {execution_id!r}")
         name = as_str(record.get("workflow"))
+        if name in _AGENT_WORKFLOWS:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"{name!r} needs a checkout, an LLM and gh; run it with the CLI "
+                    f"(`python -m lolcoach.cli agent-{'fix' if name == 'issue-fix' else 'review'}`)"
+                ),
+            )
         initial = record.get("input")
         if not isinstance(initial, dict):
             raise HTTPException(status_code=400, detail="execution has no replayable input")

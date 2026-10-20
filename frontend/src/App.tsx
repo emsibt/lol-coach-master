@@ -13,11 +13,13 @@ import type {
   SessionDetail,
   SessionSummary,
 } from "./types";
+import Admin from "./Admin";
 import BoardSummary from "./components/BoardSummary";
 import ChatPanel from "./components/ChatPanel";
 import DraftBoard from "./components/DraftBoard";
 import Landing from "./components/Landing";
 import SessionSidebar from "./components/SessionSidebar";
+import TabButton from "./components/TabButton";
 import TraceInspector from "./components/TraceInspector";
 
 type Tab = "coach" | "draft" | "traces";
@@ -44,28 +46,6 @@ function messagesFromSession(session: SessionDetail): CoachMessage[] {
     executionId: message.execution_id ?? undefined,
     error: message.error !== null,
   }));
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded px-3 py-1.5 text-sm font-medium transition ${
-        active ? "bg-cyan-500/15 text-cyan-300" : "text-slate-400 hover:text-slate-200"
-      }`}
-    >
-      {children}
-    </button>
-  );
 }
 
 function Coach() {
@@ -119,15 +99,16 @@ function Coach() {
   }, []);
 
   const onNewChat = useCallback(async () => {
-    const detail = await api.createSession(board);
+    const detail = await api.createSession();
     await refreshSessions();
     setActiveId(detail.session_id);
     setMessages([]);
+    setBoard(EMPTY_BOARD);
     setUnresolved([]);
     setRemaining(detail.remaining_questions);
     setMaxQuestions(detail.max_questions);
     setExecutionId(null);
-  }, [board, refreshSessions]);
+  }, [refreshSessions]);
 
   const onDeleteSession = useCallback(
     async (sessionId: string) => {
@@ -138,8 +119,11 @@ function Coach() {
         else {
           setActiveId(null);
           setMessages([]);
+          setBoard(EMPTY_BOARD);
+          setUnresolved([]);
           setRemaining(null);
           setMaxQuestions(0);
+          setExecutionId(null);
         }
       }
     },
@@ -157,11 +141,15 @@ function Coach() {
   const onSend = useCallback(
     async (message: string, image: AgentImage | null, imagePreview: string | null) => {
       let sessionId = activeId;
+      let requestBoard: AgentBoard = board;
       try {
         if (sessionId === null) {
-          const created = await api.createSession(board);
+          const created = await api.createSession();
           sessionId = created.session_id;
+          requestBoard = EMPTY_BOARD;
           setActiveId(sessionId);
+          setBoard(EMPTY_BOARD);
+          setUnresolved([]);
           setRemaining(created.remaining_questions);
           setMaxQuestions(created.max_questions);
         }
@@ -185,7 +173,7 @@ function Coach() {
       try {
         const response: AgentChatResponse = await api.agentChat({
           message,
-          board,
+          board: requestBoard,
           image,
           session_id: sessionId,
         });
@@ -288,7 +276,17 @@ function Coach() {
             </div>
           )}
 
-          {tab === "draft" && <DraftBoard champions={champions} onEvaluated={onEvaluated} />}
+          {tab === "draft" && (
+            <DraftBoard
+              champions={champions}
+              onEvaluated={onEvaluated}
+              onOpenTrace={(id) => {
+                setExecutionId(id);
+                setRefreshKey((key) => key + 1);
+                setTab("traces");
+              }}
+            />
+          )}
 
           {tab === "traces" && (
             <TraceInspector selectedId={executionId} onSelect={setExecutionId} refreshKey={refreshKey} />
@@ -300,6 +298,8 @@ function Coach() {
 }
 
 export default function App() {
-  if (window.location.pathname === "/") return <Landing />;
+  const path = window.location.pathname;
+  if (path.startsWith("/admin")) return <Admin />;
+  if (path === "/") return <Landing />;
   return <Coach />;
 }

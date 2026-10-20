@@ -33,7 +33,8 @@ services:
       NEXTAUTH_URL: http://localhost:3000
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/postgres
       SALT: lolcoach-local-salt
-      ENCRYPTION_KEY: 0000000000000000000000000000000000000000000000000000000000000000
+      # Quoted: an unquoted 64-zero scalar is parsed by YAML as the integer 0.
+      ENCRYPTION_KEY: "0000000000000000000000000000000000000000000000000000000000000000"
       TELEMETRY_ENABLED: "false"
       CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
       CLICKHOUSE_URL: http://clickhouse:8123
@@ -63,7 +64,8 @@ services:
     restart: unless-stopped
     depends_on: *langfuse-depends-on
     ports:
-      - 127.0.0.1:3000:3000
+      # 0.0.0.0 (not 127.0.0.1) so WSL2 forwards the port to Windows localhost.
+      - 3000:3000
     environment:
       <<: *langfuse-env
       NEXTAUTH_SECRET: lolcoach-local-nextauth-secret

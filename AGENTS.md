@@ -19,9 +19,10 @@ The `docs/` directory is organized for agent readability:
 
 ```
 docs/
-    ARCHITECTURE.md -- LoL Coach layers, data flow, state machine, full pipeline
-    PRODUCT.md      -- Feature requirements and user facing behavior
-    RELIABILITY.md  -- Logging, observability, clean state, benchmarking
+    ARCHITECTURE.md        -- LoL Coach layers, data flow, state machine, full pipeline
+    PRODUCT.md             -- Feature requirements and user facing behavior
+    RELIABILITY.md         -- Logging, observability, clean state, benchmarking
+    MAINTENANCE_AGENTS.md  -- the issue-fixer and PR-reviewer agents, guardrails, admin surface
 ```
 
 When adding new features, update the relevant doc before writing code.
@@ -55,7 +56,13 @@ src/lolcoach/
                   (live.py) for the two lookups the agent makes mid-run.
     workflow/     The in-house Step-Functions-style executor. The ONLY layer that
                   persists execution history.
-    agent/        The tool surface, the tool-loop, and the grounded narrator.
+    agent/        The tool surface, the tool-loop, and the grounded narrator. Also
+                  the maintenance agents' seams: the coding loop (coding.py), the
+                  fixer/reviewer brains, the workspace, and the publisher.
+    github/       The ONLY layer that talks to GitHub (the `gh` CLI). Types + client
+                  + fake; no policy, no persistence.
+    eval/         Rule-based scoring of a scenario suite + the run history. The
+                  maintenance suite is hermetic (all seams faked).
     observability/ Optional AI tracing (Langfuse) at the model seam. Imports only
                   config; a no-op (and no SDK import) unless configured.
     server/       FastAPI. Wires the workflow + engine + tools to HTTP.
@@ -71,6 +78,16 @@ src/lolcoach/
   depend on it without a cycle). It observes the model seam and must never change
   behaviour: with no credentials it is a no-op, and any tracing failure is logged
   and skipped rather than propagated.
+- `github/**` is the only layer that talks to GitHub, and it does so through the
+  `gh` CLI behind `GitHubClient`. Everything above it takes the client by
+  injection, so tests and the agent evaluation drive `FakeGitHubClient` instead.
+- **The maintenance agents' guardrails are deterministic and live in code, never in
+  a prompt.** A workflow task body may not call `open`, `Path.write_text`, or
+  `subprocess` directly — it goes through `agent/workspace.py` (confined paths, a
+  read/verify command allowlist) and `agent/publisher.py` (the only thing that may
+  commit or push, and it can only push the agent's own branch). Changes under
+  `.github/workflows` and `.env` are refused by an explicit check. If you add a
+  capability to the fixer, add the check that constrains it in the same change.
 - The narrator may not assert any fact or number not present in the tool results. A
   tool result declares `sources` — the champions it is entitled to source — and the
   guard whitelists only those for prose tools (`get_champion_tips`,
@@ -111,6 +128,11 @@ A feature is "done" when all of the following are true:
 6. Structured logging covers all service operations.
 7. `docs/ARCHITECTURE.md` and/or `docs/PRODUCT.md` are updated.
 8. `clean-state-checklist.md` passes all checks.
+
+A change to the maintenance agents or the eval harness is additionally done only
+when `python -m lolcoach.cli eval-agents` still passes — it is hermetic, so it runs
+anywhere, and CI gates it. A change to a workflow's states or guardrails should
+come with a scenario in `evals/agent_scenarios.yaml` that would fail without it.
 
 ## Working with the Feature List
 

@@ -70,6 +70,17 @@ is structurally forbidden from adding to it.
   never changes what it decides. It imports only `config`, so any layer may wrap a
   run in `tracing.trace(...)` without a cycle. The Langfuse SDK is imported lazily
   and only when configured, so the package is not a hard dependency.
+- `github/**` is the only layer that talks to GitHub (the `gh` CLI, via
+  `GitHubClient` / `GhCliClient`, with `FakeGitHubClient` for tests). It owns the
+  transport and the wire types (`Issue`, `PullRequest`, `Review`), nothing else.
+- `eval/**` scores a suite of scenarios by rules and persists the verdict. The chat
+  suite drives the agent tool-loop with an injected model client; the maintenance
+  suite drives the issue-fix/pr-review workflows entirely against fakes, so it is
+  hermetic. It is the only writer of the evaluation history (`data/eval.db`).
+
+The maintenance agents (`workflow/workflows/issue_fix.py`, `pr_review.py` plus the
+`agent/fixer.py`, `reviewer.py`, `coding.py`, `workspace.py`, `publisher.py` seams)
+are documented in `docs/MAINTENANCE_AGENTS.md`.
 
 ## Build & run
 
@@ -106,15 +117,22 @@ reads `os.environ`, which keeps it controllable under `monkeypatch` in tests.
 ### CI/CD
 
 `.github/workflows/ci.yml` runs on every push to `main`, every pull request, and
-on manual dispatch (with `cancel-in-progress`). Three jobs:
+on manual dispatch (with `cancel-in-progress`). Five jobs:
 
 - **backend** — matrix Python 3.11 + 3.12: `pip install -e ".[dev]"` →
   `ruff check .` → `mypy src` → `pytest tests -q`. The suite is hermetic (no
   model, no network), so CI needs no secrets.
+- **eval-agents** — `python -m lolcoach.cli eval-agents --json agent-eval.json`:
+  the maintenance-agent suite, which is hermetic too (every seam is scripted), so
+  the guardrails are gated on every change. Uploads the report, and `data/eval.db`
+  as `agent-eval-traces` on failure.
 - **frontend** — pnpm 12.9.1 + Node 22: `pnpm install --frozen-lockfile` →
   `pnpm typecheck` → `pnpm build`.
 - **docker** — needs both, builds the two images with buildx and a layer cache
   (`push: false`; CI builds, it does not publish).
+- **eval-live** — opt-in only (`Run workflow` → `live_eval`): the chat suite
+  against a real model, behind the `ANTHROPIC_API_KEY` secret. A missing secret
+  skips the job with a notice instead of failing it.
 
 The two Dockerfiles are the deployment unit. `Dockerfile` builds the API on
 `python:3.12-slim`, installs the package, drops to a non-root user, mounts

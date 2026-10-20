@@ -41,10 +41,18 @@ picture.
 |-------|---------|
 | `POST /api/agent/chat` | chat front door: `{message, board?, image?, session_id?}` → reply + tool calls + board |
 | `POST /api/draft/evaluate` | evaluate a board directly (the draft-eval workflow) |
+| `GET /api/drafts` | past Draft-tab evaluations, with the board and picks they scored |
 | `POST /api/chat` | narrate one execution's recommendation |
 | `GET /api/executions`, `GET /api/executions/{id}` | Trace Inspector history, including the agent's tool-loop |
 | `POST/GET /api/sessions`, `GET/PATCH/DELETE /api/sessions/{id}` | chat history: create, list, read, rename, delete |
 | `GET /api/champions`, `GET /api/health` | roster + liveness |
+| `GET /api/admin/executions`, `GET /api/admin/executions/{id}` | the maintenance agents' runs — issue-fix / pr-review, with their investigation, plan, change, and verification |
+| `GET /api/admin/evals`, `GET /api/admin/evals/{id}` | evaluation-run history: what each suite run scored, per scenario |
+
+The `/api/admin/*` routes back a separate admin surface at `/admin`, apart from the
+coach application at `/app` — the maintenance agents' runs at **/admin/agents** and
+the evaluation history at **/admin/evaluation**. They are deliberately not tabs in
+the coach UI.
 
 ## Quick start
 
@@ -65,7 +73,8 @@ cp .env.example .env
 uvicorn lolcoach.main:app --reload            # API on http://127.0.0.1:8000
 
 # frontend
-cd frontend && pnpm install && pnpm dev       # http://localhost:5173 (chat at /app)
+cd frontend && pnpm install && pnpm dev       # http://localhost:5173 (chat at /app,
+                                              #  agent tooling at /admin)
 
 # verify
 bash init.sh                                  # ruff + mypy + pytest
@@ -73,6 +82,11 @@ curl -s http://127.0.0.1:8000/api/health      # {"status":"ok",...}
 
 # evaluate the agent (requires a model) — golden scenarios, rule-based scoring
 python -m lolcoach.cli eval                   # exits non-zero if any scenario fails
+
+# maintenance agents: fix a labelled issue, or review a PR (needs a model + gh)
+python -m lolcoach.cli agent-fix --issue 12 --repo owner/name --workdir .
+python -m lolcoach.cli agent-review --pr 34 --repo owner/name --workdir .
+python -m lolcoach.cli eval-agents            # hermetic: no model, no network
 
 # optional: run the whole stack in containers (needs Docker)
 docker compose up --build                     # API on :8000, web on :8080
@@ -166,6 +180,28 @@ is replayed to the agent as context, and two memory tools — `recall_history` a
 `remember` — let it re-read earlier turns and keep durable notes for the session.
 No authentication: sessions are trusted as-is.
 
+## Maintenance agents
+
+Two agents work on this repository's own backlog, and both are workflows for the
+same reason chat is — so every phase is a persisted state output you can inspect:
+
+| Agent | Command | What it does | What it can never do |
+|-------|---------|--------------|----------------------|
+| Fixer | `agent-fix` | Investigates a labelled issue, plans, edits the checkout, verifies with `ruff`/`mypy`/`pytest`, opens a PR | Push to the base branch, touch a guarded path (CI, `.env`), open a PR that does not verify |
+| Reviewer | `agent-review` | Reviews a pull request and submits `APPROVE` or `REQUEST_CHANGES` | Merge — a human merges |
+
+The fixer only acts on an issue carrying `LOL_COACH_AGENT_ISSUE_LABEL`
+(`agent-fix` by default); **only a human applies that label**, which is the gate
+against acting on an untrusted issue body. The guardrails (label, guarded paths,
+secret files, a command allowlist with read-only git, no push from the model) are
+deterministic checks in the workflow's task bodies, not prompt instructions.
+
+Because both are ordinary workflows, a run shows up in the Trace Inspector and in
+Langfuse like any other; the admin surface at `/admin/agents` renders what the run
+*investigated, planned, and changed*, not just that it finished. Seven hermetic
+scenarios in `evals/agent_scenarios.yaml` gate all of it in CI — see
+[`docs/MAINTENANCE_AGENTS.md`](docs/MAINTENANCE_AGENTS.md).
+
 ## Tools
 
 The deterministic surface the agent orchestrates
@@ -208,13 +244,17 @@ prose never widens it.
   and opt-in (no credentials ⇒ no-op, no import).
 - **Frontend** — React 18, Vite 6, TypeScript 5, Tailwind 3.
 - **Tooling & delivery** — `pytest`, `ruff`, and strict `mypy`, all wired through
-  `init.sh` and enforced in CI (GitHub Actions: backend matrix 3.11/3.12,
-  frontend `tsc` + `vite build`, and both Docker image builds). The API and web
-  ship as two Docker images, run together with `docker compose up --build`.
+  `init.sh` and enforced in CI (GitHub Actions: backend matrix 3.11/3.12, the
+  hermetic maintenance-agent evaluation, frontend `tsc` + `vite build`, and both
+  Docker image builds; the live chat evaluation is an opt-in job behind a secret).
+  The API and web ship as two Docker images, run together with
+  `docker compose up --build`.
 
 ## Docs
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layers, state machine, data flow
 - [`docs/PRODUCT.md`](docs/PRODUCT.md) — features and non-goals
 - [`docs/RELIABILITY.md`](docs/RELIABILITY.md) — logging, clean state, benchmarking
+- [`docs/MAINTENANCE_AGENTS.md`](docs/MAINTENANCE_AGENTS.md) — the issue-fixer and
+  PR-reviewer agents, their guardrails, and how to monitor and evaluate them
 - [`AGENTS.md`](AGENTS.md) — boundaries and conventions for coding agents

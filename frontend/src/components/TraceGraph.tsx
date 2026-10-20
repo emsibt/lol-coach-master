@@ -635,11 +635,12 @@ function durationLabel(detail: ExecutionDetail): string {
 export default function TraceGraph({
   detail,
   onRerun,
-  rerunning,
+  rerunning = false,
 }: {
   detail: ExecutionDetail;
-  onRerun: () => void;
-  rerunning: boolean;
+  // Omitted where a rerun makes no sense (evaluation traces, agent runs the CLI owns).
+  onRerun?: () => void;
+  rerunning?: boolean;
 }) {
   const graph = useMemo(() => buildGraph(detail), [detail]);
   const [selected, setSelected] = useState<string | null>(null);
@@ -660,17 +661,19 @@ export default function TraceGraph({
           {detail.events.length} events · {detail.started_at.replace("T", " ").slice(0, 19)} · Duration:{" "}
           {durationLabel(detail)}
         </span>
-        <button
-          type="button"
-          onClick={onRerun}
-          disabled={rerunning}
-          className="ml-auto flex items-center gap-1.5 rounded border border-edge bg-panel/60 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-cyan-500/70 hover:text-cyan-200 disabled:opacity-50"
-        >
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12a9 9 0 11-3-6.7M21 4v4h-4" />
-          </svg>
-          {rerunning ? "Running…" : "Rerun"}
-        </button>
+        {onRerun && (
+          <button
+            type="button"
+            onClick={onRerun}
+            disabled={rerunning}
+            className="ml-auto flex items-center gap-1.5 rounded border border-edge bg-panel/60 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-cyan-500/70 hover:text-cyan-200 disabled:opacity-50"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12a9 9 0 11-3-6.7M21 4v4h-4" />
+            </svg>
+            {rerunning ? "Running…" : "Rerun"}
+          </button>
+        )}
       </div>
       <div className="relative min-h-0 flex-1 overflow-auto">
         <div className="relative" style={{ width: graph.width, height: graph.height }}>

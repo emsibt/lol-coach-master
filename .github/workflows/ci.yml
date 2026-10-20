@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      live_eval:
+        description: Also run the live-model evaluation suite (needs the model secret)
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -39,6 +44,46 @@ jobs:
       # eval scorer, and observability seam without a model or the network.
       - name: Tests (pytest)
         run: pytest tests -q
+
+  eval-agents:
+    name: agent evaluation (hermetic)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      # Every seam is scripted - the GitHub client, the workspace, the coder or
+      # reviewer, and the publisher - so the shipped issue-fix and pr-review
+      # workflows run with no model, token, network, or checkout. This is the
+      # gate that proves the guardrails (no write outside the tree, no PR when
+      # verification fails, no approval when a check fails) still hold.
+      - name: Evaluate the agent loop
+        run: python -m lolcoach.cli eval-agents --json agent-eval.json
+
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-eval-report
+          path: agent-eval.json
+          if-no-files-found: ignore
+
+      # A failing scenario is easiest to read as a trace. The executions are
+      # persisted beside the run history, so the database is the evidence.
+      - name: Upload the failing traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-eval-traces
+          path: data/eval.db
+          if-no-files-found: ignore
 
   frontend:
     name: frontend (tsc + vite build)
@@ -96,3 +141,54 @@ jobs:
           tags: lol-coach-frontend:ci
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,mode=max,scope=frontend
+
+  # The chat evaluation needs a real model, so it is never part of a normal
+  # build: opt in with `Run workflow` (live_eval), and it runs only when the
+  # model secret is actually configured. Everything it spends money on is
+  # behind that gate.
+  eval-live:
+    name: evaluation (live model, opt-in)
+    if: github.event_name == 'workflow_dispatch' && inputs.live_eval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # A missing secret skips the job instead of failing it: the secret is what
+      # makes the run possible, not what it asserts.
+      - name: Check for a model secret
+        id: gate
+        env:
+          MODEL_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$MODEL_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANTHROPIC_API_KEY is not set; skipping the live evaluation"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.configured == 'true'
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        if: steps.gate.outputs.configured == 'true'
+        run: pip install -e ".[dev]"
+
+      - name: Agent evaluation (live model)
+        if: steps.gate.outputs.configured == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LOL_COACH_LLM_PROVIDER: anthropic
+          LOL_COACH_LLM_MODEL: ${{ vars.LOL_COACH_LLM_MODEL || 'claude-sonnet-5' }}
+        run: python -m lolcoach.cli eval --json chat-eval.json
+
+      - name: Upload the report
+        if: always() && steps.gate.outputs.configured == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: chat-eval-report
+          path: chat-eval.json
+          if-no-files-found: ignore

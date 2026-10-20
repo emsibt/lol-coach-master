@@ -13,13 +13,20 @@ from lolcoach.constants import LANES
 
 
 class DraftRequest(BaseModel):
-    """A draft board submitted for evaluation."""
+    """A draft board submitted for evaluation.
+
+    ``ally_roles`` / ``enemy_roles`` map a lane to the champion picked there, so
+    the Draft history can restore a past board exactly as it was built. They are
+    display metadata only: the engine scores the slug lists, not the positions.
+    """
 
     allies: list[str] = Field(default_factory=list)
     enemies: list[str] = Field(default_factory=list)
     ally_bans: list[str] = Field(default_factory=list)
     enemy_bans: list[str] = Field(default_factory=list)
     open_roles: list[str] = Field(default_factory=lambda: list(LANES))
+    ally_roles: dict[str, str] = Field(default_factory=dict)
+    enemy_roles: dict[str, str] = Field(default_factory=dict)
 
 
 class TraceOut(BaseModel):
@@ -45,6 +52,20 @@ class EvaluateResponse(BaseModel):
     counter: PickOut | None = None
     synergy: PickOut | None = None
     traces: list[TraceOut] = Field(default_factory=list)
+
+
+class DraftHistoryOut(BaseModel):
+    """One past draft evaluation, read back from the execution history."""
+
+    execution_id: str
+    status: str
+    started_at: str
+    finished_at: str | None = None
+    error: str | None = None
+    draft: DraftRequest = Field(default_factory=DraftRequest)
+    problems: list[str] = Field(default_factory=list)
+    counter: PickOut | None = None
+    synergy: PickOut | None = None
 
 
 class PositionOut(BaseModel):
@@ -136,6 +157,51 @@ class RerunResponse(BaseModel):
     execution_id: str
     status: str
     error: str | None = None
+
+
+class EvalCheckOut(BaseModel):
+    """One named requirement's verdict inside an eval scenario."""
+
+    name: str
+    ok: bool
+    detail: str = ""
+
+
+class EvalScenarioOut(BaseModel):
+    """One scored scenario within an evaluation run.
+
+    Shared by both suites (chat and maintenance-agent); fields a suite does not
+    report are left at their defaults.
+    """
+
+    id: str
+    name: str = ""
+    passed: bool = False
+    execution_id: str = ""
+    status: str = ""
+    kind: str = ""
+    mode: str = ""
+    error: str | None = None
+    checks: list[EvalCheckOut] = Field(default_factory=list)
+
+
+class EvalRunSummary(BaseModel):
+    """One evaluation run in the history (``data/eval.db``)."""
+
+    run_id: str
+    kind: str
+    provider: str
+    model: str
+    started_at: str
+    finished_at: str | None = None
+    total: int
+    passed: int
+    failed: int
+    ok: bool
+
+
+class EvalRunDetail(EvalRunSummary):
+    scenarios: list[EvalScenarioOut] = Field(default_factory=list)
 
 
 class ChatRequest(BaseModel):

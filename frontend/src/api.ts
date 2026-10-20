@@ -5,7 +5,10 @@ import type {
   AgentTurn,
   Champion,
   ChatResponse,
+  DraftHistoryEntry,
   DraftRequest,
+  EvalRunDetail,
+  EvalRunSummary,
   EvaluateResponse,
   ExecutionDetail,
   ExecutionSummary,
@@ -50,12 +53,30 @@ export const api = {
       method: "POST",
       body: JSON.stringify(draft),
     }),
-  executions: (limit = 50): Promise<ExecutionSummary[]> =>
-    request<ExecutionSummary[]>(`/api/executions?limit=${limit}`),
+  drafts: (limit = 50): Promise<DraftHistoryEntry[]> =>
+    request<DraftHistoryEntry[]>(`/api/drafts?limit=${limit}`),
+  executions: (limit = 50, workflow?: string): Promise<ExecutionSummary[]> =>
+    request<ExecutionSummary[]>(
+      `/api/executions?limit=${limit}${workflow ? `&workflow=${encodeURIComponent(workflow)}` : ""}`,
+    ),
   execution: (id: string): Promise<ExecutionDetail> =>
     request<ExecutionDetail>(`/api/executions/${encodeURIComponent(id)}`),
   rerun: (id: string): Promise<RerunResponse> =>
     request<RerunResponse>(`/api/executions/${encodeURIComponent(id)}/rerun`, { method: "POST" }),
+  // The maintenance-agent surface: served from /api/admin, rendered by the admin
+  // views at /admin, deliberately apart from the coach application.
+  adminExecutions: (limit = 50, workflow?: string): Promise<ExecutionSummary[]> =>
+    request<ExecutionSummary[]>(
+      `/api/admin/executions?limit=${limit}${workflow ? `&workflow=${encodeURIComponent(workflow)}` : ""}`,
+    ),
+  adminExecution: (id: string): Promise<ExecutionDetail> =>
+    request<ExecutionDetail>(`/api/admin/executions/${encodeURIComponent(id)}`),
+  evals: (limit = 50, kind?: string): Promise<EvalRunSummary[]> =>
+    request<EvalRunSummary[]>(
+      `/api/admin/evals?limit=${limit}${kind ? `&kind=${encodeURIComponent(kind)}` : ""}`,
+    ),
+  eval: (runId: string): Promise<EvalRunDetail> =>
+    request<EvalRunDetail>(`/api/admin/evals/${encodeURIComponent(runId)}`),
   chat: (executionId: string, message: string): Promise<ChatResponse> =>
     request<ChatResponse>("/api/chat", {
       method: "POST",

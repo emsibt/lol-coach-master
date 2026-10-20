@@ -138,6 +138,46 @@ def test_invalid_draft_is_recorded_as_failed(client: TestClient) -> None:
     assert any(e["type"] == "STATE_FAILED" for e in detail["events"])
 
 
+def test_draft_history_lists_evaluations_newest_first(client: TestClient) -> None:
+    first = _evaluate(client, {"allies": ["jinx"], "enemies": ["ahri"], "open_roles": ["mid"]})
+    second = _evaluate(client, {"allies": ["vi"], "enemies": ["zeri"], "open_roles": ["top"]})
+
+    history = client.get("/api/drafts").json()
+    ids = [row["execution_id"] for row in history]
+    assert ids[:2] == [second["execution_id"], first["execution_id"]]
+
+    newest = history[0]
+    assert newest["status"] == "succeeded"
+    assert newest["draft"]["allies"] == ["vi"]
+    assert newest["draft"]["enemies"] == ["zeri"]
+    assert newest["counter"] == second["counter"]
+    assert newest["synergy"] == second["synergy"]
+
+
+def test_draft_history_restores_roles_and_failed_runs(client: TestClient) -> None:
+    body = _evaluate(
+        client,
+        {
+            "allies": ["jinx"],
+            "enemies": ["ahri"],
+            "ally_roles": {"adc": "jinx"},
+            "enemy_roles": {"mid": "ahri"},
+            "open_roles": ["top", "jungle", "mid", "support"],
+        },
+    )
+    failed = _evaluate(client, {"allies": ["jinx"], "ally_bans": ["jinx"], "open_roles": ["mid"]})
+
+    history = {row["execution_id"]: row for row in client.get("/api/drafts").json()}
+    restored = history[body["execution_id"]]
+    assert restored["draft"]["ally_roles"] == {"adc": "jinx"}
+    assert restored["draft"]["enemy_roles"] == {"mid": "ahri"}
+
+    rejected = history[failed["execution_id"]]
+    assert rejected["status"] == "failed"
+    assert rejected["problems"]
+    assert rejected["counter"] is None and rejected["synergy"] is None
+
+
 def test_unknown_execution_is_404(client: TestClient) -> None:
     assert client.get("/api/executions/nope").status_code == 404
 

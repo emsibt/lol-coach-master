@@ -64,6 +64,13 @@ are still open on your side. Champion entry resolves forgivingly (names, aliases
 case) against the knowledge graph. What the agent parses out of a chat message is
 reflected here, so you can see the board state it is working from.
 
+Every evaluation is kept as **draft history** in the left-hand list: the board,
+when it ran, whether it was accepted, and the counter/synergy picks it produced.
+Selecting an entry restores that exact board — picks in their lanes and bans — so
+you can review an old draft, compare it with the current one, or branch from it.
+Each entry links to its run in the Trace Inspector. History is the execution
+record itself (`GET /api/drafts`), so it has the same retention as any other run.
+
 ### Recommendations: one counter, one synergy
 On evaluate, the engine returns:
 - **one counter-pick** — the best available champion against the enemy team,

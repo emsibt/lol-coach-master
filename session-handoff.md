@@ -1,5 +1,123 @@
 # Session Handoff
 
+## 2026-10-15 (8) — the maintenance agents (issue-fixer + PR-reviewer) and the admin surface
+
+### What was accomplished
+
+- **Two agents, as workflows.** `issue-fix` (`LoadIssue -> Investigate -> Assess ->
+  Plan -> Implement -> Verify -> Verified -> OpenPullRequest -> Succeeded`, one
+  `Blocked` terminal) and `pr-review` (`LoadPullRequest -> Review -> Gate -> Approve
+  -> Succeeded` / `RequestChanges -> ChangesRequested`). Their phases are states in
+  the in-house executor, so every result is a persisted state output the trace UI
+  and admin view render — no separate observability path.
+- **Every side effect behind a seam** (`github/`, `agent/{workspace,publisher,fixer,
+  reviewer,coding}.py`): `GitHubClient`/`GhCliClient`/`FakeGitHubClient`,
+  `Workspace`/`RepoWorkspace`/`FakeWorkspace`, `Coder`/`LlmCoder`/`ScriptedCoder`,
+  `Reviewer`/`LlmReviewer`/`ScriptedReviewer`,
+  `RepoPublisher`/`GitPublisher`/`RecordingPublisher`. One shared coding tool-loop
+  (`agent/coding.py`) drives investigate/plan/implement/review.
+- **Guardrails are deterministic checks, not prompt text.** Opt-in by the
+  human-applied `agent-fix` label (LoadIssue refuses otherwise — the
+  prompt-injection gate); guarded paths refused (`Implement` aborts on
+  `.github/workflows` / `.env`); confined `RepoWorkspace` writes (no path escaping
+  the root, no secret names `.env*`/`*.pem`/`*.key` anywhere); a command allowlist
+  with `git` limited to read-only subcommands (no commit/push reachable by the
+  model); the publisher only ever pushes the agent's own `agent/issue-<n>` branch.
+- **The reviewer approves; a human merges.** An "approve" verdict carrying a failing
+  check is sent back as `REQUEST_CHANGES`. Auto-merge is an explicit opt-in
+  (`LOL_COACH_AGENT_AUTO_MERGE=false` by default) and logs a WARNING when it fires.
+- **CLI**: `agent-fix` (`--issue | --all --limit`, `--repo`, `--workdir`) and
+  `agent-review --pr`; both build a model client via the app's provider config and
+  exit non-zero if a target did not succeed.
+- **Admin separation (user directive: "do not push it together with the main
+  application"; scope = *UI routes + API namespace*).** `/admin` shell in the
+  frontend (`Admin.tsx`, `Agents.tsx`, `Evaluation.tsx`, `TabButton.tsx`) over a new
+  `GET /api/admin/executions`, `/api/admin/executions/{id}`,
+  `/api/admin/evals`, `/api/admin/evals/{run_id}`. Nothing was added to the coach
+  app's own tabs. The agents are ordinary workflows, so they also render in the
+  existing Trace Inspector — but rerun from there returns `400` (it cannot supply
+  the checkout, model, and `gh`).
+- **Evaluation history** (`eval/store.py`, `EvalRunStore`, `eval_runs` in
+  `data/eval.db`): one row per suite run — kind (`chat`/`agent`), provider, model,
+  timestamps, pass/fail tally, full report JSON — with the run's executions
+  persisted beside it, so any scenario (pass or fail) opens as a trace. This is what
+  `/admin/evaluation` lists and trends across commits.
+- **The agent eval suite** (`eval/{agent_scenarios,agent_checks,agent_runner}.py`,
+  `evals/agent_scenarios.yaml`, 7 scenarios): **hermetic** — the *shipped* state
+  machine, task bodies, and guardrails run against the fakes with no model, token,
+  network, or checkout, so CI gates it and `python -m lolcoach.cli eval-agents`
+  passes anywhere. Scenarios: clean fix, vague request refused, failing tests,
+  guarded-path touch, clean approval, change sent back, approve-with-failing-check
+  still sent back.
+- **CI** gained three jobs: `eval-agents` (uploads the report, and the eval DB as
+  `agent-eval-traces` on failure), `frontend` (pnpm 12 / Node 22), `docker`;
+  `eval-live` stays opt-in behind `workflow_dispatch` + `ANTHROPIC_API_KEY`.
+- **Docs**: new `docs/MAINTENANCE_AGENTS.md` (both state machines, the seam table,
+  every guardrail, the admin route table, and a per-concern Verification table);
+  `ARCHITECTURE.md`, `PRODUCT.md`, `RELIABILITY.md` (+ the maintenance-agent suite,
+  evaluation history, new log points), `README.md`, `AGENTS.md` (Definition of Done
+  now requires `eval-agents` to pass), `.env.example` (the agent block), and
+  `feature_list.json` (`maintenance-agents`, `agent-admin-surface` -> pass).
+- **Tests** (11 new files): `test_github_seam`, `test_agent_workspace`,
+  `test_agent_coding`, `test_issue_fix_workflow`, `test_pr_review_workflow`,
+  `test_eval_agent_{scenarios,checks,runner}`, `test_eval_store`,
+  `test_admin_api`, `test_agent_cli`.
+
+### Decisions
+
+- **The agents are operational tooling, not product** — hence `/api/admin/*` and
+  `/admin`, kept out of the coach UI's tabs entirely.
+- **Rule-based scoring, and a hermetic suite.** The chat eval needs a model; the
+  agent eval deliberately does not, because that is what lets it be a CI gate
+  rather than an opt-in run.
+- **A `Blocked` failure terminal, not per-error states** — one place to read why a
+  run refused.
+- **A separate `eval_runs` table** from the executions: the execution store keeps
+  what one scenario *did*, the run history keeps how the suite *scored*.
+
+### What remains / open decisions
+
+- **Two deferred calls for the user:** (a) four `GitHubClient` protocol methods
+  (`comment_issue`, `add_labels`, `remove_label`, `pull_request_files`) have **no
+  call sites** in `src/` — delete them, or keep them as the seam's declared
+  contract? Removal cascades into `PullFile`, the `github/__init__.py` exports, and
+  the new tests, so it was left alone. (b) Two smoke-test servers from an earlier
+  session (backend `127.0.0.1:8000`, Vite `localhost:5173`, both against
+  `/tmp/lolcoach-smoke/`) may still be running — stop them?
+- **No live run of either agent** against real GitHub (would need a `gh`-authed
+  checkout and spend tokens). The workflows, guards, and seams are covered by the
+  hermetic suite and unit tests; the model-driven path has not been exercised end to
+  end here.
+- **Browser visual pass** of `/admin/agents` and `/admin/evaluation` — not done
+  (user: "skip the browser please"). The routes are covered by `test_admin_api.py`;
+  the React components are typechecked and built but not clicked through.
+- Pre-existing mypy errors in `tests/test_{narrator,agent_loop,live,sessions_api}.py`
+  predate this work and are untouched — `init.sh` only runs `mypy src`.
+
+### Files modified
+
+- Added: `src/lolcoach/github/` (`types.py`, `client.py`, `fake.py`, `__init__.py`),
+  `src/lolcoach/agent/{coding,fixer,reviewer,workspace,publisher}.py`,
+  `src/lolcoach/workflow/workflows/{issue_fix,pr_review}.py`,
+  `src/lolcoach/eval/{agent_scenarios,agent_checks,agent_runner,store}.py`,
+  `evals/agent_scenarios.yaml`, `docs/MAINTENANCE_AGENTS.md`,
+  `frontend/src/Admin.tsx`,
+  `frontend/src/components/{Agents,Evaluation,TabButton}.tsx`, and the 11 test files
+  listed above.
+- Changed: `src/lolcoach/cli.py`, `config.py`, `values.py`,
+  `server/{app,schemas}.py`, `workflow/store.py`, `frontend/src/{App.tsx,api.ts,
+  types.ts}`, `frontend/src/components/TraceGraph.tsx`, `.github/workflows/ci.yml`,
+  `AGENTS.md`, `.env.example`, `README.md`,
+  `docs/{ARCHITECTURE,PRODUCT,RELIABILITY}.md`, `feature_list.json`.
+
+### Verification
+
+- `ruff check .` → All checks passed!; `mypy src` → Success: no issues found in 68
+  source files; `pytest tests` → **354 passed** (up from 211).
+- `python -m lolcoach.cli eval-agents` → 7/7, exit 0 — the same command CI runs.
+- `npm run typecheck` (tsc --noEmit) clean and `npm run build` (vite) emitted
+  `dist/` — 45 modules, 210 kB JS / 20 kB CSS.
+
 ## 2026-10-15 (7) — CI/CD
 
 ### What was accomplished

@@ -20,7 +20,7 @@ WORKDIR /app
 # Dependencies first (cached layer), then the package itself.
 COPY pyproject.toml README.md ./
 COPY src ./src
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir ".[observability]"
 
 RUN useradd --create-home --uid 10001 app \
     && mkdir -p /data \

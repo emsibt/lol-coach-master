@@ -1,9 +1,16 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { api } from "../api";
-import { LANES, type Champion, type DraftRequest, type EvaluateResponse } from "../types";
+import {
+  LANES,
+  type Champion,
+  type DraftHistoryEntry,
+  type DraftRequest,
+  type EvaluateResponse,
+} from "../types";
 import ChampionAvatar from "./ChampionAvatar";
 import ChampionGrid from "./ChampionGrid";
+import DraftHistory from "./DraftHistory";
 import RecommendationCard from "./RecommendationCard";
 
 type Target =
@@ -15,6 +22,33 @@ type Target =
 interface Props {
   champions: Champion[];
   onEvaluated: (response: EvaluateResponse) => void;
+  onOpenTrace: (executionId: string) => void;
+}
+
+/** Lay the recorded role map over the slug list, filling any gaps in lane order. */
+function mergeRoles(
+  slugs: string[],
+  explicit: Record<string, string> | undefined,
+  fallbackLanes: readonly string[],
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const role of LANES) {
+    const slug = explicit?.[role];
+    if (slug !== undefined && slugs.includes(slug) && !Object.values(out).includes(slug)) {
+      out[role] = slug;
+    }
+  }
+  const placed = new Set(Object.values(out));
+  const free = fallbackLanes.filter((role) => out[role] === undefined);
+  let index = 0;
+  for (const slug of slugs) {
+    if (placed.has(slug)) continue;
+    if (index >= free.length) break;
+    out[free[index]] = slug;
+    placed.add(slug);
+    index += 1;
+  }
+  return out;
 }
 
 function targetLabel(target: Target): string {
@@ -30,7 +64,7 @@ function targetLabel(target: Target): string {
   }
 }
 
-export default function DraftBoard({ champions, onEvaluated }: Props) {
+export default function DraftBoard({ champions, onEvaluated, onOpenTrace }: Props) {
   const [allyPicks, setAllyPicks] = useState<Record<string, string>>({});
   const [enemyPicks, setEnemyPicks] = useState<Record<string, string>>({});
   const [allyBans, setAllyBans] = useState<string[]>([]);
@@ -39,6 +73,27 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
   const [result, setResult] = useState<EvaluateResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [history, setHistory] = useState<DraftHistoryEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  const [activeHistoryId, setActiveHistoryId] = useState<string | null>(null);
+
+  const refreshHistory = useCallback(async () => {
+    setHistoryLoading(true);
+    try {
+      setHistory(await api.drafts(100));
+      setHistoryError(null);
+    } catch (cause) {
+      setHistoryError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshHistory();
+  }, [refreshHistory]);
 
   const nameBySlug = useMemo(() => {
     const map = new Map<string, string>();
@@ -87,6 +142,35 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
     setTarget(null);
     setResult(null);
     setError(null);
+    setActiveHistoryId(null);
+  }
+
+  function restoreDraft(entry: DraftHistoryEntry) {
+    const draft = entry.draft;
+    const openRoles = draft.open_roles ?? [];
+    const filled = LANES.filter((role) => !openRoles.includes(role));
+    setAllyPicks(
+      mergeRoles(
+        draft.allies,
+        draft.ally_roles,
+        filled.length >= draft.allies.length ? filled : LANES,
+      ),
+    );
+    setEnemyPicks(mergeRoles(draft.enemies, draft.enemy_roles, LANES));
+    setAllyBans(draft.ally_bans);
+    setEnemyBans(draft.enemy_bans);
+    setTarget(null);
+    setError(null);
+    setResult({
+      execution_id: entry.execution_id,
+      status: entry.status,
+      error: entry.error,
+      problems: entry.problems,
+      counter: entry.counter,
+      synergy: entry.synergy,
+      traces: [],
+    });
+    setActiveHistoryId(entry.execution_id);
   }
 
   async function evaluate() {
@@ -99,12 +183,16 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
       ally_bans: allyBans,
       enemy_bans: enemyBans,
       open_roles: openRoles.length > 0 ? [...openRoles] : [...LANES],
+      ally_roles: allyPicks,
+      enemy_roles: enemyPicks,
     };
     try {
       const response = await api.evaluate(draft);
       setResult(response);
       setTarget(null);
+      setActiveHistoryId(response.execution_id);
       onEvaluated(response);
+      await refreshHistory();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -194,58 +282,73 @@ export default function DraftBoard({ champions, onEvaluated }: Props) {
   );
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]">
-        {teamPanel("ally", "Our team", allyPicks, allyBans)}
-        <ChampionGrid
-          champions={champions}
-          targetLabel={target === null ? null : targetLabel(target)}
-          onPick={assign}
+    <div className="grid h-[calc(100vh-7rem)] min-h-[28rem] grid-cols-1 gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
+      <div className="min-h-0">
+        <DraftHistory
+          entries={history}
+          activeId={activeHistoryId}
+          loading={historyLoading}
+          error={historyError}
+          nameOf={nameOf}
+          onSelect={restoreDraft}
+          onNew={clearBoard}
+          onOpenTrace={onOpenTrace}
         />
-        {teamPanel("enemy", "Enemy team", enemyPicks, enemyBans)}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => void evaluate()}
-          disabled={busy}
-          className="rounded bg-cyan-500 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-cyan-400 disabled:opacity-50"
-        >
-          {busy ? "Evaluating…" : "Evaluate draft"}
-        </button>
-        <button
-          type="button"
-          onClick={clearBoard}
-          className="rounded border border-edge px-3 py-2 text-sm text-slate-300 transition hover:border-slate-500"
-        >
-          Clear board
-        </button>
-        {error !== null && <span className="text-sm text-rose-300">{error}</span>}
-        {result !== null && result.status === "failed" && (
-          <span className="text-sm text-rose-300">
-            Draft rejected: {result.error ?? "invalid board"}
-            {result.problems.length > 0 && ` (${result.problems.join("; ")})`}
-          </span>
+      <div className="flex min-h-0 flex-col gap-4 overflow-y-auto">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1fr)]">
+          {teamPanel("ally", "Our team", allyPicks, allyBans)}
+          <ChampionGrid
+            champions={champions}
+            targetLabel={target === null ? null : targetLabel(target)}
+            onPick={assign}
+          />
+          {teamPanel("enemy", "Enemy team", enemyPicks, enemyBans)}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void evaluate()}
+            disabled={busy}
+            className="rounded bg-cyan-500 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-cyan-400 disabled:opacity-50"
+          >
+            {busy ? "Evaluating…" : "Evaluate draft"}
+          </button>
+          <button
+            type="button"
+            onClick={clearBoard}
+            className="rounded border border-edge px-3 py-2 text-sm text-slate-300 transition hover:border-slate-500"
+          >
+            Clear board
+          </button>
+          {error !== null && <span className="text-sm text-rose-300">{error}</span>}
+          {result !== null && result.status === "failed" && (
+            <span className="text-sm text-rose-300">
+              Draft rejected: {result.error ?? "invalid board"}
+              {result.problems.length > 0 && ` (${result.problems.join("; ")})`}
+            </span>
+          )}
+        </div>
+
+        {result !== null && (
+          <div className="flex flex-col gap-3 md:flex-row">
+            <RecommendationCard
+              title="Counter-pick"
+              pick={result.counter}
+              championKey={result.counter ? keyOf(result.counter.slug) : undefined}
+              empty="No counter-pick: add an enemy champion to score against."
+            />
+            <RecommendationCard
+              title="Synergy-pick"
+              pick={result.synergy}
+              championKey={result.synergy ? keyOf(result.synergy.slug) : undefined}
+              empty="No synergy-pick: add an ally champion to pair with."
+            />
+          </div>
         )}
       </div>
-
-      {result !== null && (
-        <div className="flex flex-col gap-3 md:flex-row">
-          <RecommendationCard
-            title="Counter-pick"
-            pick={result.counter}
-            championKey={result.counter ? keyOf(result.counter.slug) : undefined}
-            empty="No counter-pick: add an enemy champion to score against."
-          />
-          <RecommendationCard
-            title="Synergy-pick"
-            pick={result.synergy}
-            championKey={result.synergy ? keyOf(result.synergy.slug) : undefined}
-            empty="No synergy-pick: add an ally champion to pair with."
-          />
-        </div>
-      )}
     </div>
   );
 }

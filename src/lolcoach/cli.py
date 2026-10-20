@@ -6,6 +6,9 @@
     python -m lolcoach.cli kg-report [--out PATH]
     python -m lolcoach.cli reset (--all | --executions | --chat)
     python -m lolcoach.cli eval [--suite PATH] [--json PATH] [--live]
+    python -m lolcoach.cli eval-agents [--suite PATH] [--json PATH]
+    python -m lolcoach.cli agent-fix (--issue N | --all) [--repo OWNER/NAME] [--workdir PATH]
+    python -m lolcoach.cli agent-review --pr N [--repo OWNER/NAME] [--workdir PATH]
     python -m lolcoach.cli demo
     python -m lolcoach.cli benchmark --n 200
     python -m lolcoach.cli scan-executions
@@ -18,13 +21,20 @@ failing obscurely.
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import re
 from collections.abc import Sequence
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from lolcoach.config import get_settings, load_env
+from lolcoach.config import Settings, get_settings, load_env
 from lolcoach.logging_setup import configure_logging
+
+if TYPE_CHECKING:
+    from lolcoach.github.client import GitHubClient
+    from lolcoach.github.types import RepoRef
+    from lolcoach.workflow.executor import ExecutionResult
 
 logger = logging.getLogger(__name__)
 
@@ -158,7 +168,7 @@ def _cmd_reset(args: argparse.Namespace) -> int:
 
 def _cmd_eval(args: argparse.Namespace) -> int:
     from lolcoach.agent.llm import build_client
-    from lolcoach.eval.report import format_summary, write_json
+    from lolcoach.eval.report import format_summary, to_dict, write_json
     from lolcoach.eval.runner import EvalError, run_suite
     from lolcoach.eval.scenarios import ScenarioError, load_scenarios
     from lolcoach.knowledge.ontology import OntologyError, load_ontology
@@ -200,6 +210,8 @@ def _cmd_eval(args: argparse.Namespace) -> int:
         return 1
 
     print(format_summary(report))
+    _record_eval_run(settings.eval_db, kind="chat", provider=report.provider,
+                     model=report.model, report=to_dict(report))
     if args.json_out:
         out = Path(args.json_out)
         write_json(report, out)
@@ -207,6 +219,193 @@ def _cmd_eval(args: argparse.Namespace) -> int:
     print(f"executions persisted to {settings.eval_db} (Trace Inspector)")
     return _EXIT_OK if report.ok else 1
 
+
+def _cmd_eval_agents(args: argparse.Namespace) -> int:
+    """Run the hermetic maintenance-agent suite (no model, no network, no disk)."""
+    from lolcoach.eval.agent_runner import format_agent_summary, run_agent_suite
+    from lolcoach.eval.agent_scenarios import AgentScenarioError, load_agent_scenarios
+
+    settings = get_settings()
+    try:
+        scenarios = load_agent_scenarios(Path(args.suite) if args.suite else None)
+    except AgentScenarioError as exc:
+        print(str(exc))
+        return 1
+
+    logger.info(
+        "Running maintenance-agent evaluation", extra={"data": {"scenarios": len(scenarios)}}
+    )
+    report = run_agent_suite(scenarios, store_path=settings.eval_db, settings=settings)
+    print(format_agent_summary(report))
+    _record_eval_run(
+        settings.eval_db,
+        kind="agent",
+        provider=report.provider,
+        model=report.model,
+        report=report.to_dict(),
+    )
+    if args.json_out:
+        out = Path(args.json_out)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(
+            json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        print(f"report written to {out}")
+    return _EXIT_OK if report.ok else 1
+
+
+def _record_eval_run(
+    eval_db: Path, *, kind: str, provider: str, model: str, report: dict[str, object]
+) -> None:
+    """Persist a suite verdict to the evaluation history (``data/eval.db``)."""
+    from lolcoach.eval.store import EvalRunStore
+
+    history = EvalRunStore.connect(eval_db)
+    try:
+        run_id = history.record(kind=kind, provider=provider, model=model, report=report)
+    finally:
+        history.close()
+    print(f"recorded as eval run {run_id} (Evaluation view)")
+
+
+def _resolve_repo(args: argparse.Namespace, settings: Settings) -> RepoRef:
+    """The repository to act on: ``--repo``, else ``LOL_COACH_GITHUB_REPO``."""
+    from lolcoach.github.types import RepoRef
+
+    slug = args.repo or settings.github_repo
+    owner, _, name = slug.partition("/")
+    if not owner or not name:
+        raise SystemExit(
+            "no repository configured; pass --repo owner/name or set LOL_COACH_GITHUB_REPO"
+        )
+    return RepoRef(owner=owner, name=name)
+
+
+def _worktree(args: argparse.Namespace) -> Path:
+    root = Path(args.workdir).resolve() if args.workdir else Path.cwd()
+    if not (root / ".git").exists():
+        raise SystemExit(f"{root} is not a git checkout; the agent needs a working tree")
+    return root
+
+
+def _issue_numbers(
+    args: argparse.Namespace, github: GitHubClient, settings: Settings
+) -> list[int]:
+    """The issues to act on: the one named, or every open one carrying the label."""
+    if args.issue:
+        return [args.issue]
+    numbers = [issue.number for issue in github.list_issues(label=settings.agent_issue_label)]
+    return numbers[: args.limit] if args.limit is not None else numbers
+
+
+def _print_agent_run(workflow: str, target: int, result: ExecutionResult) -> None:
+    outcome = "ok" if result.status == "succeeded" else "stopped"
+    print(f"{workflow} #{target}: {outcome} ({result.status}) execution {result.execution_id}")
+    if result.error:
+        print(f"  {result.error}")
+
+
+def _cmd_agent_fix(args: argparse.Namespace) -> int:
+    from lolcoach.agent.fixer import LlmCoder
+    from lolcoach.agent.llm import build_client
+    from lolcoach.agent.publisher import GitPublisher
+    from lolcoach.agent.workspace import RepoWorkspace
+    from lolcoach.github.client import GhCliClient
+    from lolcoach.observability import tracing
+    from lolcoach.workflow.executor import WorkflowExecutor
+    from lolcoach.workflow.store import ExecutionStore
+    from lolcoach.workflow.workflows.issue_fix import build_issue_fix
+
+    settings = get_settings()
+    ref = _resolve_repo(args, settings)
+    root = _worktree(args)
+    github = GhCliClient(ref)
+    client = build_client(settings)
+    if client is None:
+        print("no LLM is configured: set LOL_COACH_LLM_PROVIDER and its API key")
+        return 1
+
+    numbers = _issue_numbers(args, github, settings)
+    if not numbers:
+        print(f"no open issues labelled {settings.agent_issue_label!r}")
+        return _EXIT_OK
+
+    built = build_issue_fix(
+        coder=LlmCoder(client, settings),
+        github=github,
+        workspace=RepoWorkspace(root),
+        publisher=GitPublisher(root),
+        settings=settings,
+    )
+    store = ExecutionStore.connect(settings.executions_db)
+    failures = 0
+    try:
+        executor = WorkflowExecutor(
+            built.workflow, tasks=built.tasks, predicates=built.predicates, store=store
+        )
+        for number in numbers:
+            with tracing.trace(
+                settings,
+                name="issue-fix",
+                tags=("agent", "issue-fix", settings.llm_provider),
+                metadata={"issue": number, "repo": ref.slug},
+            ):
+                result = executor.run({"issue_number": number})
+            _print_agent_run("issue-fix", number, result)
+            if result.status != "succeeded":
+                failures += 1
+    finally:
+        store.close()
+    if failures:
+        print(f"{failures} issue(s) were not fixed; see the Agent runs view")
+    return _EXIT_OK if failures == 0 else 1
+
+
+def _cmd_agent_review(args: argparse.Namespace) -> int:
+    from lolcoach.agent.llm import build_client
+    from lolcoach.agent.reviewer import LlmReviewer
+    from lolcoach.agent.workspace import RepoWorkspace
+    from lolcoach.github.client import GhCliClient
+    from lolcoach.observability import tracing
+    from lolcoach.workflow.executor import WorkflowExecutor
+    from lolcoach.workflow.store import ExecutionStore
+    from lolcoach.workflow.workflows.pr_review import build_pr_review
+
+    settings = get_settings()
+    ref = _resolve_repo(args, settings)
+    root = _worktree(args)
+    github = GhCliClient(ref)
+
+    client = build_client(settings)
+    if client is None:
+        print("no LLM is configured: set LOL_COACH_LLM_PROVIDER and its API key")
+        return 1
+
+    built = build_pr_review(
+        reviewer=LlmReviewer(client, settings),
+        github=github,
+        workspace=RepoWorkspace(root),
+        settings=settings,
+    )
+    store = ExecutionStore.connect(settings.executions_db)
+    try:
+        executor = WorkflowExecutor(
+            built.workflow, tasks=built.tasks, predicates=built.predicates, store=store
+        )
+        with tracing.trace(
+            settings,
+            name="pr-review",
+            tags=("agent", "pr-review", settings.llm_provider),
+            metadata={"pr": args.pr, "repo": ref.slug, "auto_merge": settings.agent_auto_merge},
+        ):
+            result = executor.run({"pull_request_number": args.pr})
+    finally:
+        store.close()
+
+    _print_agent_run("pr-review", args.pr, result)
+    if result.status == "succeeded" and not settings.agent_auto_merge:
+        print("  approved; a human merges (set LOL_COACH_AGENT_AUTO_MERGE=true to opt in)")
+    return _EXIT_OK if result.status == "succeeded" else 1
 
 def _not_implemented(command: str) -> int:
     logger.warning("Command not implemented yet", extra={"data": {"command": command}})
@@ -259,6 +458,38 @@ def _build_parser() -> argparse.ArgumentParser:
     p_eval.add_argument("--json", dest="json_out", default=None, help="write the report as JSON")
     p_eval.add_argument("--live", action="store_true", help="enable the live (network) tools")
     p_eval.set_defaults(func=_cmd_eval)
+
+    p_eval_agents = sub.add_parser(
+        "eval-agents", help="run the hermetic maintenance-agent evaluation (no model needed)"
+    )
+    p_eval_agents.add_argument(
+        "--suite", default=None, help="scenario YAML (default evals/agent_scenarios.yaml)"
+    )
+    p_eval_agents.add_argument(
+        "--json", dest="json_out", default=None, help="write the report as JSON"
+    )
+    p_eval_agents.set_defaults(func=_cmd_eval_agents)
+
+    p_fix = sub.add_parser(
+        "agent-fix", help="fix labelled GitHub issues and open a pull request for each"
+    )
+    fix_target = p_fix.add_mutually_exclusive_group(required=True)
+    fix_target.add_argument("--issue", type=int, help="the issue number to fix")
+    fix_target.add_argument(
+        "--all", action="store_true", help="every open issue carrying the configured label"
+    )
+    p_fix.add_argument("--repo", default=None, help="owner/name (default LOL_COACH_GITHUB_REPO)")
+    p_fix.add_argument("--workdir", default=None, help="the checkout to work in (default: cwd)")
+    p_fix.add_argument("--limit", type=int, default=None, help="cap the issues handled by --all")
+    p_fix.set_defaults(func=_cmd_agent_fix)
+
+    p_review = sub.add_parser(
+        "agent-review", help="review a pull request and approve or request changes"
+    )
+    p_review.add_argument("--pr", type=int, required=True, help="the pull request number")
+    p_review.add_argument("--repo", default=None, help="owner/name (default LOL_COACH_GITHUB_REPO)")
+    p_review.add_argument("--workdir", default=None, help="the checkout to read (default: cwd)")
+    p_review.set_defaults(func=_cmd_agent_review)
 
     p_demo = sub.add_parser("demo", help="run the flagship draft scenario in the terminal")
     p_demo.set_defaults(func=lambda _a: _not_implemented("demo"))

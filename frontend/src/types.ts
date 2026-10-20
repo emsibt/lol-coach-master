@@ -48,6 +48,21 @@ export interface DraftRequest {
   ally_bans: string[];
   enemy_bans: string[];
   open_roles: string[];
+  // Lane -> champion slug. Present on new evaluations; older history may omit it.
+  ally_roles?: Record<string, string>;
+  enemy_roles?: Record<string, string>;
+}
+
+export interface DraftHistoryEntry {
+  execution_id: string;
+  status: string;
+  started_at: string;
+  finished_at: string | null;
+  error: string | null;
+  draft: DraftRequest;
+  problems: string[];
+  counter: Pick | null;
+  synergy: Pick | null;
 }
 
 export interface EvaluateResponse {
@@ -125,6 +140,45 @@ export interface RerunResponse {
   execution_id: string;
   status: string;
   error: string | null;
+}
+
+// Mirrors lolcoach/server/schemas.py::EvalCheckOut.
+export interface EvalCheck {
+  name: string;
+  ok: boolean;
+  detail: string;
+}
+
+// Mirrors lolcoach/server/schemas.py::EvalScenarioOut.
+export interface EvalScenario {
+  id: string;
+  name: string;
+  passed: boolean;
+  execution_id: string;
+  status: string;
+  kind: string;
+  mode: string;
+  error: string | null;
+  checks: EvalCheck[];
+}
+
+// Mirrors lolcoach/server/schemas.py::EvalRunSummary.
+export interface EvalRunSummary {
+  run_id: string;
+  kind: string;
+  provider: string;
+  model: string;
+  started_at: string;
+  finished_at: string | null;
+  total: number;
+  passed: number;
+  failed: number;
+  ok: boolean;
+}
+
+// Mirrors lolcoach/server/schemas.py::EvalRunDetail.
+export interface EvalRunDetail extends EvalRunSummary {
+  scenarios: EvalScenario[];
 }
 
 export interface ChatResponse {

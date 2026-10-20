@@ -1,0 +1,350 @@
+# lol-coach -- maintenance-agent evaluation suite.
+#
+# These scenarios drive the *real* issue-fix and pr-review workflows, but with
+# every seam replaced by its fake: the GitHub client, the workspace, the coder,
+# and the publisher. A scenario therefore runs hermetically -- no network, no
+# token, no git, no disk -- and still exercises the production state machine,
+# its guardrails, and its PR/review side effects. What is scored is the outcome:
+# which states ran, what the agent changed, whether a PR opened, whether it
+# linked the issue, which review event was submitted.
+#
+# Run it with:
+#   python -m lolcoach.cli eval-agents
+#   python -m lolcoach.cli eval-agents --suite evals/agent_scenarios.yaml
+#   python -m lolcoach.cli eval-agents --json data/agent-eval-report.json
+#
+# No model is required (the seams are scripted), so this suite runs in CI on
+# every change -- unlike `eval`, which needs a live LLM.
+#
+# A scenario is `kind: issue_fix` or `kind: pr_review`.
+#
+# issue_fix fields:
+#   issue           {number, title, body, labels: [...]}
+#   repo            {path: contents} -- the fake checkout the agent starts from
+#   investigation   what the coder reports: {summary, findings, files, reproduces,
+#                   confidence, is_real_issue}
+#   plan            {summary, steps, files, test_plan}
+#   implementation  {summary, notes, writes: {path: contents}}
+#   verify          {command: exit_code} -- overrides; unlisted verify commands
+#                   pass. The commands themselves are the fixed default set.
+#   expect.status           "succeeded" | "failed"
+#   expect.states           state names that must run, in this order
+#   expect.branch           the branch the PR must come from
+#   expect.files_changed    the exact set of files that must end up changed
+#   expect.pr_opened        true -> a pull request was created
+#   expect.pr_links_issue   true -> the PR body carries "Closes #N"
+#   expect.published        true -> a branch was published before the PR
+#   expect.verification_passed  true | false | omitted (don't check)
+#   expect.no_writes        true -> the agent wrote no file at all
+#   expect.error_contains   substring the failure message must carry
+#
+# pr_review fields:
+#   pull_request    {number, title, body, head, base, state}
+#   diff            the unified diff the reviewer reads
+#   repo            {path: contents} -- what the reviewer can read
+#   review          the scripted verdict: {decision, summary, comments, checks}
+#   expect.status           "succeeded" (approved) | "failed" (changes requested)
+#   expect.states           state names that must run, in this order
+#   expect.review_event     "APPROVE" | "REQUEST_CHANGES"
+#   expect.merged           true | false (default false -- a human merges)
+#   expect.error_contains   substring the failure message must carry
+
+scenarios:
+  - id: fix-real-bug
+    name: A real defect is fixed, verified, and opened as a PR that closes the issue
+    kind: issue_fix
+    issue:
+      number: 12
+      title: "add() subtracts instead of adding"
+      body: |
+        Calling add(2, 3) returns -1. It should return 5.
+        Seen on main. Steps: `python -c "from app import add; print(add(2, 3))"`.
+      labels: [agent-fix]
+      author: reporter
+    repo:
+      src/app.py: |
+        def add(a, b):
+            return a - b
+    investigation:
+      summary: "src/app.py subtracts where it should add"
+      findings:
+        - "src/app.py:2 -- the operator is `-`, not `+`"
+      files: [src/app.py]
+      reproduces: true
+      confidence: 0.95
+      is_real_issue: true
+    plan:
+      summary: "Flip the operator in add()"
+      steps: ["Replace `-` with `+` on line 2"]
+      files: [src/app.py]
+      test_plan: "ruff check . && python -m pytest -q"
+    implementation:
+      summary: "Corrected add() to sum its arguments"
+      notes: ["one-character change"]
+      writes:
+        src/app.py: |
+          def add(a, b):
+              return a + b
+    verify: {}
+    expect:
+      status: succeeded
+      states: [LoadIssue, Investigate, Assess, Plan, Implement, Verify, Verified, OpenPullRequest, Succeeded]
+      branch: agent/issue-12
+      files_changed: [src/app.py]
+      pr_opened: true
+      pr_links_issue: true
+      published: true
+      verification_passed: true
+
+  - id: fix-vague-request
+    name: A request that is not a substantiated defect is refused without touching the tree
+    kind: issue_fix
+    issue:
+      number: 13
+      title: "The bot should be more fun"
+      body: "It would be nice if the coach were funnier. Just an idea."
+      labels: [agent-fix]
+      author: dreamer
+    repo:
+      src/app.py: |
+        def add(a, b):
+            return a + b
+    investigation:
+      summary: "A subjective feature idea, not a defect; nothing in the repo is wrong"
+      findings:
+        - "No code is inconsistent with the request; it asks for a new, unspecified behaviour"
+      files: []
+      reproduces: false
+      confidence: 0.8
+      is_real_issue: false
+    plan:
+      summary: ""
+      steps: []
+      files: []
+      test_plan: ""
+    implementation:
+      summary: ""
+      writes: {}
+    verify: {}
+    expect:
+      status: failed
+      states: [LoadIssue, Investigate, Assess, Blocked]
+      pr_opened: false
+      no_writes: true
+      error_contains: "not actionable"
+
+  - id: fix-verification-fails
+    name: A change whose tests fail is blocked before any PR
+    kind: issue_fix
+    issue:
+      number: 14
+      title: "add() subtracts instead of adding"
+      body: "add(2, 3) returns -1; it should return 5."
+      labels: [agent-fix]
+      author: reporter
+    repo:
+      src/app.py: |
+        def add(a, b):
+            return a - b
+    investigation:
+      summary: "src/app.py subtracts where it should add"
+      findings:
+        - "src/app.py:2 -- the operator is `-`, not `+`"
+      files: [src/app.py]
+      reproduces: true
+      confidence: 0.9
+      is_real_issue: true
+    plan:
+      summary: "Flip the operator in add()"
+      steps: ["Replace `-` with `+` on line 2"]
+      files: [src/app.py]
+      test_plan: "python -m pytest -q"
+    implementation:
+      summary: "Attempted a fix"
+      writes:
+        src/app.py: |
+          def add(a, b):
+              return a + b
+    verify:
+      "python -m pytest -q": 1
+    expect:
+      status: failed
+      states: [LoadIssue, Investigate, Assess, Plan, Implement, Verify, Verified, Blocked]
+      files_changed: [src/app.py]
+      pr_opened: false
+      verification_passed: false
+
+  - id: fix-guarded-path
+    name: A change to a guarded path (CI) is refused even when the fix is correct
+    kind: issue_fix
+    issue:
+      number: 15
+      title: "add() subtracts instead of adding"
+      body: "add(2, 3) returns -1; it should return 5."
+      labels: [agent-fix]
+      author: reporter
+    repo:
+      src/app.py: |
+        def add(a, b):
+            return a - b
+    investigation:
+      summary: "src/app.py subtracts where it should add"
+      findings:
+        - "src/app.py:2 -- the operator is `-`, not `+`"
+      files: [src/app.py]
+      reproduces: true
+      confidence: 0.9
+      is_real_issue: true
+    plan:
+      summary: "Fix the operator and relax the CI runner"
+      steps: ["Replace `-` with `+`", "Loosen the CI workflow"]
+      files: [src/app.py, .github/workflows/ci.yml]
+      test_plan: "ruff check ."
+    implementation:
+      summary: "Changed the operator and the CI workflow"
+      writes:
+        src/app.py: |
+          def add(a, b):
+              return a + b
+        .github/workflows/ci.yml: |
+          name: ci
+          on: [push]
+          jobs: {}
+    verify: {}
+    expect:
+      status: failed
+      # The guard fires inside Implement, so the run aborts there -- it never
+      # reaches the Verified choice or the Blocked terminal.
+      states: [LoadIssue, Investigate, Assess, Plan, Implement]
+      pr_opened: false
+      error_contains: "guarded paths"
+
+  - id: review-approves-a-clean-change
+    name: A correct, in-scope change is approved (and left for a human to merge)
+    kind: pr_review
+    pull_request:
+      number: 501
+      title: "fix: add() subtracts instead of adding"
+      body: "Closes #12"
+      head: agent/issue-12
+      base: main
+      state: open
+    diff: |
+      --- a/src/app.py
+      +++ b/src/app.py
+      @@ -1,2 +1,2 @@
+       def add(a, b):
+      -    return a - b
+      +    return a + b
+    repo:
+      src/app.py: |
+        def add(a, b):
+            return a + b
+    review:
+      decision: approve
+      summary: "The one-line fix matches the issue and is covered by the suite"
+      comments:
+        - path: src/app.py
+          line: 2
+          body: Correct; minimal and in scope.
+      checks:
+        - name: correctness
+          ok: true
+          detail: "add() now returns the sum"
+        - name: scope
+          ok: true
+          detail: "single line, no unrelated edits"
+        - name: tests
+          ok: true
+          detail: "existing suite covers add()"
+    expect:
+      status: succeeded
+      states: [LoadPullRequest, Review, Gate, Approve, Succeeded]
+      review_event: APPROVE
+      merged: false
+
+  - id: review-requests-changes
+    name: A change that fails a check is sent back, never approved
+    kind: pr_review
+    pull_request:
+      number: 502
+      title: "fix: add() subtracts instead of adding"
+      body: "Closes #12"
+      head: agent/issue-12
+      base: main
+      state: open
+    diff: |
+      --- a/src/app.py
+      +++ b/src/app.py
+      @@ -1,2 +1,5 @@
+       def add(a, b):
+      -    return a - b
+      +    return a + b
+      +
+      +
+      +def helper():  # unrelated
+      +    return 42
+    repo:
+      src/app.py: |
+        def add(a, b):
+            return a + b
+
+
+        def helper():  # unrelated
+            return 42
+    review:
+      decision: request_changes
+      summary: "The fix is right but the change adds an unrelated helper"
+      comments:
+        - path: src/app.py
+          line: 5
+          body: "Unrelated to the issue; drop it."
+      checks:
+        - name: correctness
+          ok: true
+          detail: "add() is correct"
+        - name: scope
+          ok: false
+          detail: "adds an unrelated helper"
+    expect:
+      status: failed
+      states: [LoadPullRequest, Review, Gate, RequestChanges, ChangesRequested]
+      review_event: REQUEST_CHANGES
+      merged: false
+
+  - id: review-refuses-an-approve-with-a-failing-check
+    name: An approve verdict carrying a failing check is still sent back
+    kind: pr_review
+    pull_request:
+      number: 503
+      title: "fix: add() subtracts instead of adding"
+      body: "Closes #12"
+      head: agent/issue-12
+      base: main
+      state: open
+    diff: |
+      --- a/src/app.py
+      +++ b/src/app.py
+      @@ -1,2 +1,2 @@
+       def add(a, b):
+      -    return a - b
+      +    return a + b
+    repo:
+      src/app.py: |
+        def add(a, b):
+            return a + b
+    review:
+      decision: approve
+      summary: "Looks fine, but I could not run the tests"
+      checks:
+        - name: correctness
+          ok: true
+          detail: "add() is correct"
+        - name: tests
+          ok: false
+          detail: "test runner unavailable in this environment"
+    expect:
+      status: failed
+      states: [LoadPullRequest, Review, Gate, RequestChanges, ChangesRequested]
+      review_event: REQUEST_CHANGES
+      merged: false

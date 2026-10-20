@@ -53,6 +53,16 @@ def as_float(value: object, default: float = 0.0) -> float:
     return default
 
 
+def as_bool(value: object, default: bool = False) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in ("1", "true", "yes", "on")
+    if isinstance(value, int):
+        return value != 0
+    return default
+
+
 def opt_int(value: object) -> int | None:
     if isinstance(value, bool):
         return None

@@ -115,11 +115,14 @@ class ExecutionStore:
         )
         self._conn.commit()
 
-    def list_executions(self, limit: int = 50) -> list[dict[str, object]]:
+    def list_executions(
+        self, limit: int = 50, *, workflow: str | None = None
+    ) -> list[dict[str, object]]:
+        where, params = ("WHERE workflow = ?", [workflow]) if workflow else ("", [])
         rows = self._conn.execute(
             "SELECT execution_id, workflow, version, status, started_at, finished_at, error"
-            " FROM executions ORDER BY started_at DESC, rowid DESC LIMIT ?",
-            (limit,),
+            f" FROM executions {where} ORDER BY started_at DESC, rowid DESC LIMIT ?",
+            (*params, limit),
         ).fetchall()
         return [dict(row) for row in rows]
 
@@ -133,6 +136,27 @@ class ExecutionStore:
         record["input"] = _load(row["input"])
         record["output"] = _load(row["output"])
         return record
+
+    def list_draft_evaluations(self, limit: int = 50) -> list[dict[str, object]]:
+        """Past ``draft-eval`` runs with their board and result, newest first.
+
+        Draft history is not a separate store: an evaluation *is* an execution,
+        so reading it back here keeps one source of truth and lets each entry
+        open in the Trace Inspector like any other run.
+        """
+        rows = self._conn.execute(
+            "SELECT execution_id, status, started_at, finished_at, error, input, output"
+            " FROM executions WHERE workflow = 'draft-eval'"
+            " ORDER BY started_at DESC, rowid DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+        out: list[dict[str, object]] = []
+        for row in rows:
+            record = dict(row)
+            record["input"] = _load(row["input"])
+            record["output"] = _load(row["output"])
+            out.append(record)
+        return out
 
     def events(self, execution_id: str) -> list[dict[str, object]]:
         rows = self._conn.execute(

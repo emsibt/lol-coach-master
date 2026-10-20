@@ -78,6 +78,14 @@ def _env_int(name: str, default: int) -> int:
         return default
 
 
+def _env_tuple(name: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    """Parse a comma-separated env var into a tuple (empty/unset -> ``default``)."""
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return default
+    return tuple(item.strip() for item in raw.split(",") if item.strip())
+
+
 @dataclass(frozen=True, slots=True)
 class Settings:
     """Immutable process settings."""
@@ -110,6 +118,19 @@ class Settings:
     langfuse_host: str = ""
     langfuse_environment: str = ""
     frontend_url: str = "http://localhost:5173"
+    # --- maintenance agents (issue-fix / pr-review) ---
+    github_repo: str = ""
+    agent_base_branch: str = "main"
+    agent_issue_label: str = "agent-fix"
+    agent_branch_prefix: str = "agent/issue"
+    agent_loop_rounds: int = 12
+    agent_verify_commands: tuple[str, ...] = (
+        "ruff check .",
+        "mypy src",
+        "python -m pytest -q",
+    )
+    agent_auto_merge: bool = False
+    agent_denied_paths: tuple[str, ...] = (".github/workflows", ".env")
 
 
 @lru_cache(maxsize=1)
@@ -148,4 +169,17 @@ def get_settings() -> Settings:
         langfuse_host=_env("LANGFUSE_HOST", ""),
         langfuse_environment=_env("LANGFUSE_TRACING_ENVIRONMENT", ""),
         frontend_url=_env("LOL_COACH_FRONTEND_URL", "http://localhost:5173"),
+        github_repo=_env("LOL_COACH_GITHUB_REPO", ""),
+        agent_base_branch=_env("LOL_COACH_AGENT_BASE_BRANCH", "main"),
+        agent_issue_label=_env("LOL_COACH_AGENT_ISSUE_LABEL", "agent-fix"),
+        agent_branch_prefix=_env("LOL_COACH_AGENT_BRANCH_PREFIX", "agent/issue"),
+        agent_loop_rounds=_env_int("LOL_COACH_AGENT_LOOP_ROUNDS", 12),
+        agent_verify_commands=_env_tuple(
+            "LOL_COACH_AGENT_VERIFY_COMMANDS",
+            ("ruff check .", "mypy src", "python -m pytest -q"),
+        ),
+        agent_auto_merge=_env_bool("LOL_COACH_AGENT_AUTO_MERGE", False),
+        agent_denied_paths=_env_tuple(
+            "LOL_COACH_AGENT_DENIED_PATHS", (".github/workflows", ".env")
+        ),
     )
