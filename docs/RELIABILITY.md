@@ -342,6 +342,16 @@ Then run the app as usual (`uvicorn lolcoach.main:app`) and send a chat message;
 the trace appears in the Langfuse **Tracing** view within a few seconds. The eval
 suite traces too: `python -m lolcoach.cli eval`.
 
+### Maintenance agents use a separate project
+
+The issue fixer, PR reviewer, and the agent evaluation suite (`eval:agent:*`)
+trace to their own Langfuse project, selected by `LANGFUSE_AGENT_PUBLIC_KEY` /
+`LANGFUSE_AGENT_SECRET_KEY`. They never fall back to the app's keys, so the app
+project contains only coach-product traces; with no agent keys those runs are
+untraced and log a `WARNING`. `LANGFUSE_AGENT_HOST` and
+`LANGFUSE_AGENT_TRACING_ENVIRONMENT` default to the app's values. Create the
+second project in the Langfuse UI and copy its key pair into `.env`.
+
 ### Off is truly off
 
 Tracing is enabled only when **both** keys are set (`tracing.configured`). With

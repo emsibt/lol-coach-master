@@ -137,7 +137,9 @@ model, and `gh` a run needs, so it points at the CLI instead.
 A run is traced in Langfuse under the workflow's name (`issue-fix` /
 `pr-review`), tagged `agent`, the workflow name, and the provider, with the issue
 or PR number and repo in the metadata — so the model's calls for one run group
-together.
+together. These traces go to the **agents' own Langfuse project**
+(`LANGFUSE_AGENT_*`), not the coach app's, so the two never mix; agent evaluation
+runs (`eval:agent:*`) land there too.
 
 ## Evaluating it
 
@@ -201,3 +203,12 @@ per concern:
 | `LOL_COACH_AGENT_DENIED_PATHS` | `.github/workflows`, `.env` | `Implement`'s guard |
 | `LOL_COACH_AGENT_LOOP_ROUNDS` | `12` | the coder's tool-loop budget |
 | `LOL_COACH_AGENT_AUTO_MERGE` | `false` | whether an approval also merges |
+| `LANGFUSE_AGENT_PUBLIC_KEY` / `LANGFUSE_AGENT_SECRET_KEY` | — | the agents' own Langfuse project |
+| `LANGFUSE_AGENT_HOST` | app's `LANGFUSE_HOST` | the agents' Langfuse server |
+| `LANGFUSE_AGENT_TRACING_ENVIRONMENT` | app's `LANGFUSE_TRACING_ENVIRONMENT` | the agents' environment label |
+
+Agent traces (`issue-fix`, `pr-review`, `eval:agent:*`) are sent to the project
+identified by `LANGFUSE_AGENT_*`, never the app's. The keys do not fall back: with
+no agent keys, agent runs are untraced and log a `WARNING`, so the coach app's
+project holds only coach-product traces. Create the second project in the
+Langfuse UI and copy its key pair into `.env`.

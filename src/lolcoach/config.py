@@ -117,6 +117,12 @@ class Settings:
     langfuse_secret_key: str = ""
     langfuse_host: str = ""
     langfuse_environment: str = ""
+    # Maintenance agents trace to their own Langfuse project (own keys), so the
+    # app's project holds only coach-product traces.
+    langfuse_agent_public_key: str = ""
+    langfuse_agent_secret_key: str = ""
+    langfuse_agent_host: str = ""
+    langfuse_agent_environment: str = ""
     frontend_url: str = "http://localhost:5173"
     # --- maintenance agents (issue-fix / pr-review) ---
     github_repo: str = ""
@@ -168,6 +174,10 @@ def get_settings() -> Settings:
         langfuse_secret_key=_env("LANGFUSE_SECRET_KEY", ""),
         langfuse_host=_env("LANGFUSE_HOST", ""),
         langfuse_environment=_env("LANGFUSE_TRACING_ENVIRONMENT", ""),
+        langfuse_agent_public_key=_env("LANGFUSE_AGENT_PUBLIC_KEY", ""),
+        langfuse_agent_secret_key=_env("LANGFUSE_AGENT_SECRET_KEY", ""),
+        langfuse_agent_host=_env("LANGFUSE_AGENT_HOST", ""),
+        langfuse_agent_environment=_env("LANGFUSE_AGENT_TRACING_ENVIRONMENT", ""),
         frontend_url=_env("LOL_COACH_FRONTEND_URL", "http://localhost:5173"),
         github_repo=_env("LOL_COACH_GITHUB_REPO", ""),
         agent_base_branch=_env("LOL_COACH_AGENT_BASE_BRANCH", "main"),

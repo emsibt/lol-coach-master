@@ -235,6 +235,7 @@ def _execute(
     with tracing.trace(
         settings,
         name=f"eval:agent:{scenario.id}",
+        scope="agent",
         tags=("eval", "agent", scenario.id),
         metadata={"scenario": scenario.id, "kind": kind_of(scenario)},
     ):

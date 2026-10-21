@@ -22,7 +22,10 @@ services:
       - path: .env
         required: false
     volumes:
-      - lol-coach-data:/data
+      # Shared with the host so `lolcoach.cli agent-fix` executions and evals
+      # show up in /admin. The named volume is gone; the old one is left intact
+      # on disk if you need to switch back.
+      - ./data:/data
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -35,6 +38,3 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
-
-volumes:
-  lol-coach-data:

@@ -347,6 +347,7 @@ def _cmd_agent_fix(args: argparse.Namespace) -> int:
             with tracing.trace(
                 settings,
                 name="issue-fix",
+                scope="agent",
                 tags=("agent", "issue-fix", settings.llm_provider),
                 metadata={"issue": number, "repo": ref.slug},
             ):
@@ -395,6 +396,7 @@ def _cmd_agent_review(args: argparse.Namespace) -> int:
         with tracing.trace(
             settings,
             name="pr-review",
+            scope="agent",
             tags=("agent", "pr-review", settings.llm_provider),
             metadata={"pr": args.pr, "repo": ref.slug, "auto_merge": settings.agent_auto_merge},
         ):

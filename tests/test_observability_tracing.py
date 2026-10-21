@@ -56,18 +56,24 @@ class _StubSdk:
     """
 
     def __init__(self) -> None:
-        self.client = _FakeClient()
+        self.clients: list[_FakeClient] = []
         self.attributes: list[dict[str, object]] = []
+        self.handler_kwargs: list[dict[str, object]] = []
         self.missing: set[str] = set()
 
-    def install(self, monkeypatch: pytest.MonkeyPatch) -> _FakeClient:
+    def install(self, monkeypatch: pytest.MonkeyPatch) -> _StubSdk:
         def langfuse(**kwargs: object) -> _FakeClient:
-            self.client.kwargs = kwargs
-            return self.client
+            client = _FakeClient(**kwargs)
+            self.clients.append(client)
+            return client
 
         def propagate(**kwargs: object) -> _FakeSpan:
             self.attributes.append(kwargs)
             return _FakeSpan()
+
+        def handler(**kwargs: object) -> str:
+            self.handler_kwargs.append(kwargs)
+            return "handler"
 
         def fake_import(name: str) -> ModuleType:
             if name in self.missing:
@@ -75,12 +81,12 @@ class _StubSdk:
             if name == "langfuse":
                 return _module(name, Langfuse=langfuse, propagate_attributes=propagate)
             if name == "langfuse.langchain":
-                return _module(name, CallbackHandler=lambda **kwargs: "handler")
+                return _module(name, CallbackHandler=handler)
             raise ImportError(name)
 
         monkeypatch.setattr(tracing, "_import_module", fake_import)
-        monkeypatch.setattr(tracing, "_client", None)
-        return self.client
+        monkeypatch.setattr(tracing, "_clients", {})
+        return self
 
 
 def _settings() -> Settings:
@@ -91,11 +97,29 @@ def _settings() -> Settings:
     )
 
 
+def _settings_with_agent_project() -> Settings:
+    return Settings(
+        langfuse_public_key="pk-lf-app",
+        langfuse_secret_key="sk-lf-app",
+        langfuse_host="http://localhost:3000",
+        langfuse_agent_public_key="pk-lf-agent",
+        langfuse_agent_secret_key="sk-lf-agent",
+        langfuse_agent_host="http://agents.example:3000",
+    )
+
+
 def test_configured_requires_both_keys() -> None:
     assert not tracing.configured(Settings())
     assert not tracing.configured(Settings(langfuse_public_key="pk"))
     assert not tracing.configured(Settings(langfuse_secret_key="sk"))
     assert tracing.configured(_settings())
+
+    assert not tracing.configured(Settings(), scope="agent")
+    assert not tracing.configured(Settings(langfuse_public_key="pk"), scope="agent")
+    assert tracing.configured(
+        Settings(langfuse_agent_public_key="pk", langfuse_agent_secret_key="sk"),
+        scope="agent",
+    )
 
 
 def test_trace_is_a_noop_without_credentials() -> None:
@@ -109,8 +133,7 @@ def test_trace_is_a_noop_without_credentials() -> None:
 
 
 def test_trace_publishes_callbacks_and_flushes(monkeypatch: pytest.MonkeyPatch) -> None:
-    stub = _StubSdk()
-    client = stub.install(monkeypatch)
+    stub = _StubSdk().install(monkeypatch)
 
     with tracing.trace(
         _settings(),
@@ -122,6 +145,7 @@ def test_trace_publishes_callbacks_and_flushes(monkeypatch: pytest.MonkeyPatch) 
         assert tracing.current_callbacks() == ("handler",)
 
     assert tracing.current_callbacks() == ()
+    client = stub.clients[0]
     assert client.spans == [("agent-chat", "agent")]
     assert client.flushes == 1
     assert stub.attributes == [
@@ -134,17 +158,66 @@ def test_trace_publishes_callbacks_and_flushes(monkeypatch: pytest.MonkeyPatch) 
     ]
     assert client.kwargs["base_url"] == "http://localhost:3000"
     assert client.kwargs["public_key"] == "pk-lf-local"
+    assert stub.handler_kwargs == [{"public_key": "pk-lf-local"}]
+
+
+def test_agent_scope_uses_its_own_langfuse_project(monkeypatch: pytest.MonkeyPatch) -> None:
+    stub = _StubSdk().install(monkeypatch)
+
+    with tracing.trace(_settings_with_agent_project(), name="issue-fix", scope="agent"):
+        assert tracing.current_callbacks() == ("handler",)
+
+    client = stub.clients[0]
+    assert client.kwargs == {
+        "public_key": "pk-lf-agent",
+        "secret_key": "sk-lf-agent",
+        "base_url": "http://agents.example:3000",
+        "environment": None,
+    }
+    assert stub.handler_kwargs == [{"public_key": "pk-lf-agent"}]
+
+
+def test_agent_scope_never_falls_back_to_the_app_project(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stub = _StubSdk().install(monkeypatch)
+
+    # App credentials alone must not send maintenance traces to the app project.
+    ran = False
+    with tracing.trace(_settings(), name="issue-fix", scope="agent"):
+        assert tracing.current_callbacks() == ()
+        ran = True
+
+    assert ran
+    assert stub.clients == []
+    assert stub.handler_kwargs == []
+
+
+def test_scopes_reuse_one_client_each(monkeypatch: pytest.MonkeyPatch) -> None:
+    stub = _StubSdk().install(monkeypatch)
+    settings = _settings_with_agent_project()
+
+    with tracing.trace(settings, name="chat"):
+        pass
+    with tracing.trace(settings, name="issue-fix", scope="agent"):
+        pass
+    with tracing.trace(settings, name="chat-again"):
+        pass
+
+    assert [client.kwargs["public_key"] for client in stub.clients] == [
+        "pk-lf-app",
+        "pk-lf-agent",
+    ]
 
 
 def test_callbacks_are_reset_even_when_the_run_raises(monkeypatch: pytest.MonkeyPatch) -> None:
-    stub = _StubSdk()
-    client = stub.install(monkeypatch)
+    stub = _StubSdk().install(monkeypatch)
 
     with pytest.raises(RuntimeError), tracing.trace(_settings(), name="agent-chat"):
         raise RuntimeError("boom")
 
     assert tracing.current_callbacks() == ()
-    assert client.flushes == 1  # a partial trace is still shipped
+    assert stub.clients[0].flushes == 1  # a partial trace is still shipped
 
 
 def test_trace_degrades_when_langfuse_is_not_installed(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -165,7 +238,7 @@ def test_trace_degrades_when_the_langchain_integration_is_missing(
 ) -> None:
     stub = _StubSdk()
     stub.missing.add("langfuse.langchain")
-    client = stub.install(monkeypatch)
+    stub.install(monkeypatch)
 
     ran = False
     with tracing.trace(_settings(), name="agent-chat"):
@@ -173,7 +246,7 @@ def test_trace_degrades_when_the_langchain_integration_is_missing(
         ran = True
 
     assert ran
-    assert client.flushes == 0  # no trace was opened
+    assert stub.clients[0].flushes == 0  # no trace was opened
 
 
 class _Reply:
