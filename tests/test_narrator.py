@@ -137,7 +137,13 @@ def test_narrate_final_propagates_a_model_failure() -> None:
     class _BoomClient:
         provider = "boom"
 
-        def complete(self, _messages: object, _tools: object) -> object:
+        def complete(
+            self,
+            _messages: object,
+            _tools: object,
+            *,
+            tool_choice: str | None = None,
+        ) -> object:
             raise RuntimeError("upstream 500")
 
     with pytest.raises(RuntimeError, match="upstream 500"):
@@ -167,7 +173,13 @@ class _TextClient:
     def __init__(self, text: str) -> None:
         self._text = text
 
-    def complete(self, _messages: object, _tools: object) -> _Reply:
+    def complete(
+        self,
+        _messages: object,
+        _tools: object,
+        *,
+        tool_choice: str | None = None,
+    ) -> _Reply:
         return _Reply(self._text)
 
 

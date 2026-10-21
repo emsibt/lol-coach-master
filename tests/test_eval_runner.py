@@ -32,7 +32,11 @@ class _ScriptedClient:
         self._narration = narration
 
     def complete(
-        self, _messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+        self,
+        _messages: Sequence[LlmMessage],
+        tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply:
         if tools:
             if self._actions:

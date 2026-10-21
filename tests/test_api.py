@@ -62,7 +62,11 @@ class _FakeClient:
         self._narration = narration
 
     def complete(
-        self, _messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+        self,
+        _messages: Sequence[LlmMessage],
+        tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply:
         if tools:
             name, args = self._actions.pop(0) if self._actions else (None, {})
@@ -230,7 +234,13 @@ def test_agent_chat_fails_when_the_model_errors(
     class _BoomClient:
         provider = "boom"
 
-        def complete(self, _messages: object, _tools: object) -> object:
+        def complete(
+            self,
+            _messages: object,
+            _tools: object,
+            *,
+            tool_choice: str | None = None,
+        ) -> object:
             raise RuntimeError("upstream 500")
 
     monkeypatch.setattr("lolcoach.server.app.build_client", lambda _settings: _BoomClient())

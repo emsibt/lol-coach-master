@@ -52,7 +52,11 @@ class _FakeClient:
         self.offered: list[set[str]] = []
 
     def complete(
-        self, messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+        self,
+        messages: Sequence[LlmMessage],
+        tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply:
         self.offered.append({str(_dict(_dict(spec)["function"])["name"]) for spec in tools})
         if tools:
@@ -134,7 +138,11 @@ class _BoomClient:
     provider = "boom"
 
     def complete(
-        self, _messages: Sequence[LlmMessage], _tools: Sequence[dict[str, object]]
+        self,
+        _messages: Sequence[LlmMessage],
+        _tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply:
         raise RuntimeError("upstream 500")
 

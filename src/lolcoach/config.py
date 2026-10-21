@@ -103,6 +103,7 @@ class Settings:
     llm_model: str = "claude-sonnet-5"
     llm_base_url: str = ""
     llm_extra_headers: dict[str, str] = field(default_factory=dict)
+    llm_max_tokens: int = 16384
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     max_tool_calls: int = 8
@@ -129,7 +130,7 @@ class Settings:
     agent_base_branch: str = "main"
     agent_issue_label: str = "agent-fix"
     agent_branch_prefix: str = "agent/issue"
-    agent_loop_rounds: int = 12
+    agent_loop_rounds: int = 20
     agent_verify_commands: tuple[str, ...] = (
         "ruff check .",
         "mypy src",
@@ -160,6 +161,7 @@ def get_settings() -> Settings:
         llm_model=_env("LOL_COACH_LLM_MODEL", default_model),
         llm_base_url=_env("LOL_COACH_LLM_BASE_URL", ""),
         llm_extra_headers=_env_json_object("LOL_COACH_LLM_EXTRA_HEADERS"),
+        llm_max_tokens=_env_int("LOL_COACH_LLM_MAX_TOKENS", 16384),
         anthropic_api_key=_env("ANTHROPIC_API_KEY", ""),
         openai_api_key=_env("OPENAI_API_KEY", ""),
         max_tool_calls=_env_int("LOL_COACH_MAX_TOOL_CALLS", 8),
@@ -183,7 +185,7 @@ def get_settings() -> Settings:
         agent_base_branch=_env("LOL_COACH_AGENT_BASE_BRANCH", "main"),
         agent_issue_label=_env("LOL_COACH_AGENT_ISSUE_LABEL", "agent-fix"),
         agent_branch_prefix=_env("LOL_COACH_AGENT_BRANCH_PREFIX", "agent/issue"),
-        agent_loop_rounds=_env_int("LOL_COACH_AGENT_LOOP_ROUNDS", 12),
+        agent_loop_rounds=_env_int("LOL_COACH_AGENT_LOOP_ROUNDS", 20),
         agent_verify_commands=_env_tuple(
             "LOL_COACH_AGENT_VERIFY_COMMANDS",
             ("ruff check .", "mypy src", "python -m pytest -q"),

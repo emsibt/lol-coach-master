@@ -30,7 +30,7 @@ LoadIssue -> Investigate -> Assess(Choice) --not actionable--> Blocked(Fail)
 |-------|------|------------------|
 | `LoadIssue` | `load_issue` | the issue, the branch to create, the base branch |
 | `Investigate` | `investigate` | `{is_real_issue, confidence, summary, findings[], files[]}` |
-| `Assess` | *choice* | `issue_actionable`: a real issue with confidence ≥ `0.5` |
+| `Assess` | *choice* | `issue_actionable`: a real issue with evidence confidence ≥ `0.5` (a reproduction is not required) |
 | `Plan` | `plan` | `{summary, steps[], files[], test_plan}` |
 | `Implement` | `implement` | `{summary, files_changed[], notes[]}` |
 | `Verify` | `verify` | `{passed, commands: [{command, exit_code, ...}]}` |
@@ -201,7 +201,8 @@ per concern:
 | `LOL_COACH_AGENT_BRANCH_PREFIX` | `agent/issue` | the agent's branch name |
 | `LOL_COACH_AGENT_VERIFY_COMMANDS` | `ruff check .`, `mypy src`, `python -m pytest -q` | `Verify` |
 | `LOL_COACH_AGENT_DENIED_PATHS` | `.github/workflows`, `.env` | `Implement`'s guard |
-| `LOL_COACH_AGENT_LOOP_ROUNDS` | `12` | the coder's tool-loop budget |
+| `LOL_COACH_AGENT_LOOP_ROUNDS` | `20` | the coder's tool-loop budget |
+| `LOL_COACH_LLM_MAX_TOKENS` | `16384` | completion budget per model call; reasoning models spend part of it before emitting a tool call |
 | `LOL_COACH_AGENT_AUTO_MERGE` | `false` | whether an approval also merges |
 | `LANGFUSE_AGENT_PUBLIC_KEY` / `LANGFUSE_AGENT_SECRET_KEY` | — | the agents' own Langfuse project |
 | `LANGFUSE_AGENT_HOST` | app's `LANGFUSE_HOST` | the agents' Langfuse server |

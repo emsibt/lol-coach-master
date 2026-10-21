@@ -144,7 +144,14 @@ Rules:
 - `is_real_issue` is true only when you can point to code that is genuinely
   wrong, missing, or inconsistent with what the issue claims. A vague feature
   request, a question, or a report you cannot substantiate is NOT a real issue.
+- `confidence` rates the code evidence, not whether you reproduced the defect:
+  a specific defect you can point to in the code is 0.7-1.0 even when you could
+  not run a reproduction. Reserve values below 0.5 for a finding you cannot tie
+  to concrete code. The workflow proceeds only at 0.5 or higher, so do not
+  downrate a substantiated defect just because the environment cannot reproduce it.
 - `reproduces` is true only if you ran something that demonstrated the defect.
+- Submit as soon as the evidence is sufficient: read the files the issue names and
+  their immediate call sites, then stop. Do not survey the whole repository.
 - When done, call `submit_investigation`. Do not write prose outside the tool call.
 """
 

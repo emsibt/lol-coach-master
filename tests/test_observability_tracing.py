@@ -270,7 +270,7 @@ class _FakeModel:
     def invoke(self, input: object, config: object = None) -> object:
         return self.recorder.invoke(input, config)
 
-    def bind_tools(self, tools: object) -> _Recorder:
+    def bind_tools(self, tools: object, **kwargs: object) -> _Recorder:
         return self.recorder
 
 

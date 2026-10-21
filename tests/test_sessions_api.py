@@ -35,7 +35,11 @@ class _FakeClient:
         self.seen: list[list[LlmMessage]] = []
 
     def complete(
-        self, messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+        self,
+        messages: Sequence[LlmMessage],
+        tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply:
         self.seen.append(list(messages))
         if tools:

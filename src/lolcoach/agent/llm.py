@@ -62,12 +62,21 @@ class LlmReply:
 
 
 class LlmClient(Protocol):
-    """The one thing the agent needs from a model."""
+    """The one thing the agent needs from a model.
+
+    ``tool_choice`` names a tool the model must call instead of choosing freely;
+    it is how a loop makes the final submission round a function call rather
+    than prose.
+    """
 
     provider: str
 
     def complete(
-        self, messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+        self,
+        messages: Sequence[LlmMessage],
+        tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply: ...
 
 
@@ -77,7 +86,7 @@ class _Runnable(Protocol):
 
 class _Model(Protocol):
     def invoke(self, input: object, config: object = None) -> object: ...
-    def bind_tools(self, tools: object) -> _Runnable: ...
+    def bind_tools(self, tools: object, **kwargs: object) -> _Runnable: ...
 
 
 def _content_to_text(content: object) -> str:
@@ -135,6 +144,11 @@ class _LangChainClient:
             },
         }
 
+    def _tool_choice(self, name: str) -> dict[str, object]:
+        if self.provider == "anthropic":
+            return {"type": "tool", "name": name}
+        return {"type": "function", "function": {"name": name}}
+
     def _to_langchain(self, messages: Sequence[LlmMessage]) -> list[object]:
         messages_module = importlib.import_module("langchain_core.messages")
         system_cls = getattr(messages_module, "SystemMessage")  # noqa: B009 - dynamic module
@@ -169,12 +183,21 @@ class _LangChainClient:
         return out
 
     def complete(
-        self, messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+        self,
+        messages: Sequence[LlmMessage],
+        tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply:
         langchain_messages = self._to_langchain(messages)
-        runnable: _Runnable | _Model = (
-            self._model.bind_tools(list(tools)) if tools else self._model
-        )
+        runnable: _Runnable | _Model
+        if tools:
+            bind_kwargs: dict[str, object] = {}
+            if tool_choice is not None:
+                bind_kwargs["tool_choice"] = self._tool_choice(tool_choice)
+            runnable = self._model.bind_tools(list(tools), **bind_kwargs)
+        else:
+            runnable = self._model
         callbacks = current_callbacks()
         if callbacks:
             reply = runnable.invoke(
@@ -202,6 +225,7 @@ def _build_langchain_client(
     api_key: str,
     base_url: str,
     extra_headers: dict[str, str],
+    max_tokens: int,
 ) -> LlmClient | None:
     try:
         module = importlib.import_module(module_name)
@@ -219,7 +243,7 @@ def _build_langchain_client(
         api_key=api_key,
         base_url=base_url,
         temperature=0,
-        max_tokens=1024,
+        max_tokens=max_tokens,
         default_headers=dict(extra_headers),
     )
     return _LangChainClient(provider, model)
@@ -239,7 +263,7 @@ def build_client(settings: Settings) -> LlmClient | None:
         return _build_langchain_client(
             "langchain_anthropic", "ChatAnthropic", "anthropic", settings.llm_model,
             settings.anthropic_api_key, base_url or _DEFAULT_BASE_URLS["anthropic"],
-            settings.llm_extra_headers,
+            settings.llm_extra_headers, settings.llm_max_tokens,
         )
     if settings.llm_provider == "openai":
         if not settings.openai_api_key:
@@ -247,7 +271,7 @@ def build_client(settings: Settings) -> LlmClient | None:
         return _build_langchain_client(
             "langchain_openai", "ChatOpenAI", "openai", settings.llm_model,
             settings.openai_api_key, base_url or _DEFAULT_BASE_URLS["openai"],
-            settings.llm_extra_headers,
+            settings.llm_extra_headers, settings.llm_max_tokens,
         )
     logger.warning(
         "Unknown LLM provider; agent runs offline",

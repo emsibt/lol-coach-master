@@ -27,18 +27,26 @@ from lolcoach.github.types import Issue
 
 
 class _ScriptedClient:
-    """Returns canned replies in order; records the messages it was shown."""
+    """Returns canned replies in order; records what it was shown and offered."""
 
     provider = "scripted"
 
     def __init__(self, replies: list[LlmReply]) -> None:
         self._replies = list(replies)
         self.seen: list[LlmMessage] = []
+        self.offered: list[list[str]] = []
+        self.forced: list[str | None] = []
 
     def complete(
-        self, messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+        self,
+        messages: Sequence[LlmMessage],
+        tools: Sequence[dict[str, object]],
+        *,
+        tool_choice: str | None = None,
     ) -> LlmReply:
         self.seen = list(messages)
+        self.offered.append([_name(spec) for spec in tools])
+        self.forced.append(tool_choice)
         return self._replies.pop(0)
 
 
@@ -108,6 +116,64 @@ def test_the_loop_returns_the_terminal_call_arguments() -> None:
     assert any(message.role == "tool" for message in client.seen)
 
 
+def test_every_tool_call_in_a_round_is_executed() -> None:
+    workspace = FakeWorkspace()
+    workspace.seed({"a.py": "A", "b.py": "B"})
+    client = _ScriptedClient(
+        [
+            _reply(_call("read_file", path="a.py"), _call("read_file", path="b.py")),
+            _reply(_call("submit_investigation", summary="done")),
+        ]
+    )
+
+    args = run_coding_loop(
+        client,
+        get_settings(),
+        system="sys",
+        user="user",
+        tools=[*workspace_tools(writable=False), _terminal("submit_investigation")],
+        terminal="submit_investigation",
+        workspace=workspace,
+    )
+
+    assert args == {"summary": "done"}
+    assert workspace.reads == ["a.py", "b.py"]
+    tool_messages = [message for message in client.seen if message.role == "tool"]
+    assert [message.text for message in tool_messages] == [
+        '{"content": "A"}',
+        '{"content": "B"}',
+    ]
+
+
+def test_the_last_round_offers_only_the_terminal_tool() -> None:
+    client = _ScriptedClient(
+        [
+            _reply(_call("list_files")),
+            _reply(_call("submit_investigation", summary="done")),
+        ]
+    )
+
+    run_coding_loop(
+        client,
+        get_settings(),
+        system="sys",
+        user="user",
+        tools=[*workspace_tools(writable=False), _terminal("submit_investigation")],
+        terminal="submit_investigation",
+        workspace=FakeWorkspace(),
+        max_rounds=2,
+    )
+
+    assert client.offered == [
+        ["read_file", "list_files", "run_command", "submit_investigation"],
+        ["submit_investigation"],
+    ]
+    assert client.forced == [None, "submit_investigation"]
+    assert any(
+        message.role == "user" and "tool budget" in message.text for message in client.seen
+    )
+
+
 def test_the_loop_raises_without_a_client() -> None:
     with pytest.raises(AgentLoopError, match="no LLM client"):
         run_coding_loop(
@@ -156,7 +222,11 @@ def test_the_loop_wraps_a_model_failure() -> None:
         provider = "boom"
 
         def complete(
-            self, messages: Sequence[LlmMessage], tools: Sequence[dict[str, object]]
+            self,
+            messages: Sequence[LlmMessage],
+            tools: Sequence[dict[str, object]],
+            *,
+            tool_choice: str | None = None,
         ) -> LlmReply:
             raise RuntimeError("provider down")
 

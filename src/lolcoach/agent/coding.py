@@ -116,48 +116,102 @@ def run_coding_loop(
     tools: list[dict[str, object]],
     terminal: str,
     workspace: Workspace,
-    max_rounds: int = 12,
+    max_rounds: int = 20,
 ) -> dict[str, object]:
     """Loop until the model calls ``terminal``; return that call's arguments.
 
     ``tools`` must include ``terminal``. Every other call is executed against
-    ``workspace``. Raises :class:`AgentLoopError` when no client is configured or
-    the model never submits within ``max_rounds``.
+    ``workspace``. A model turn may contain several tool calls; all of them are
+    executed and fed back, so a batch of reads costs one round, not several.
+    The last round offers only the terminal tool and asks the model to submit,
+    so a long investigation ends with a verdict instead of an empty budget.
+    Raises :class:`AgentLoopError` when no client is configured or the model
+    never submits within ``max_rounds``.
     """
     if client is None:
         raise AgentLoopError("no LLM client is configured for the coding agent")
 
     messages: list[LlmMessage] = [LlmMessage("system", system), LlmMessage("user", user)]
     for round_index in range(max_rounds):
+        final_round = round_index == max_rounds - 1
+        offered = tools
+        if final_round:
+            messages.append(
+                LlmMessage(
+                    "user",
+                    f"You have used your tool budget. Do not call another tool; "
+                    f"call {terminal!r} now with the best-supported answer.",
+                )
+            )
+            offered = [spec for spec in tools if _tool_name(spec) == terminal] or tools
+        forced = (
+            terminal
+            if final_round and any(_tool_name(spec) == terminal for spec in offered)
+            else None
+        )
         try:
-            reply = client.complete(messages, tools)
+            if forced is not None:
+                try:
+                    reply = client.complete(messages, offered, tool_choice=forced)
+                except Exception:  # noqa: BLE001 - a provider may reject forced tools
+                    logger.warning(
+                        "Provider rejected the forced terminal tool; retrying unforced",
+                        exc_info=True,
+                    )
+                    reply = client.complete(messages, offered)
+            else:
+                reply = client.complete(messages, offered)
         except Exception as exc:  # noqa: BLE001 - any provider failure ends the loop
             logger.exception("Coding agent model call failed")
             raise AgentLoopError(f"model call failed: {type(exc).__name__}: {exc}") from exc
-        if not reply.tool_calls:
+        calls = list(reply.tool_calls)
+        if not calls:
+            empty = not reply.text.strip()
             logger.warning(
                 "Coding agent stopped without submitting",
-                extra={"data": {"terminal": terminal, "round": round_index}},
+                extra={
+                    "data": {
+                        "terminal": terminal,
+                        "round": round_index,
+                        "text": reply.text[:1000],
+                    }
+                },
             )
-            raise AgentLoopError(f"the agent returned prose instead of calling {terminal!r}")
-        call = reply.tool_calls[0]
-        if call.name == terminal:
-            return dict(call.arguments)
-        result = execute_tool(call, workspace)
-        messages.append(
-            LlmMessage(
-                "assistant",
-                tool_calls=(LlmToolCall(id=call.id, name=call.name, arguments=call.arguments),),
+            reason = (
+                "an empty reply (its token budget was likely consumed by reasoning)"
+                if empty
+                else "prose"
             )
+            raise AgentLoopError(f"the agent returned {reason} instead of calling {terminal!r}")
+        terminal_call = next((call for call in calls if call.name == terminal), None)
+        if terminal_call is not None:
+            return dict(terminal_call.arguments)
+        logger.info(
+            "Coding agent tool calls",
+            extra={
+                "data": {
+                    "round": round_index,
+                    "tools": [call.name for call in calls],
+                }
+            },
         )
-        messages.append(
-            LlmMessage(
-                "tool",
-                json.dumps(result, sort_keys=True, default=str),
-                tool_call_id=call.id,
+        messages.append(LlmMessage("assistant", text=reply.text, tool_calls=tuple(calls)))
+        for call in calls:
+            result = execute_tool(call, workspace)
+            messages.append(
+                LlmMessage(
+                    "tool",
+                    json.dumps(result, sort_keys=True, default=str),
+                    tool_call_id=call.id,
+                )
             )
-        )
     raise AgentLoopError(f"the agent did not submit {terminal!r} within {max_rounds} rounds")
+
+
+def _tool_name(spec: dict[str, object]) -> str:
+    function = spec.get("function")
+    return str(function.get("name", "")) if isinstance(function, dict) else ""
+
 
 
 @dataclass(frozen=True, slots=True)
