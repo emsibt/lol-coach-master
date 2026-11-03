@@ -1,58 +1,184 @@
 # LoL Coach
 
-LoL Coach is a neurosymbolic drafting coach for League of Legends: a deterministic
-Python engine reads a live pick/ban state and returns exactly one counter-pick and
-one synergy-pick, each carrying source-tagged evidence. Every number comes from a
-YAML knowledge graph and an OP.GG-derived SQLite snapshot, so a recommendation is
-never invented. An LLM agent sits in front of the engine — resolving loose human
-input, calling the engine's tools, and narrating the results — but it never decides
-a pick.
+## What is a League of Legends draft?
 
-> **The core design decision, stated out loud:** the LLM never decides picks. The
-> model may only rephrase what a tool returned.
+League of Legends is a 5v5 game where two teams take turns picking and banning
+champions before the match. Skills make some matchups favourable (**counters**)
+and some allies combine well (**synergies**), so the order of picks matters.
+
+## What is LoL Coach?
+
+LoL Coach answers one question during a draft: **what should I pick, and why?**
+It returns exactly two recommendations — one **counter-pick** against the enemy
+team and one **synergy-pick** to fit your allies — each with evidence you can
+inspect down to the raw statistic.
+
+## What makes it different?
+
+The design separates the **data** from the **agent**, and puts a deterministic
+engine between them.
+
+- **A separate data pipeline.** Real, aggregated match statistics are pulled from
+  OP.GG into a SQLite snapshot. `build-kg` turns that snapshot into a versioned
+  YAML knowledge graph: 173 champions and 3,052 measured relations (998 counters,
+  2,054 synergies). Each edge is weighted by win-rate delta × sample size and
+  carries a statistical reason. Counter direction is **derived from the measured
+  win rate**, not hand-labelled.
+- **A deterministic engine, not a guess.** The engine scores every legal champion
+  from the knowledge graph and returns one counter-pick and one synergy-pick.
+  Every point carries a `TraceLine(source, text, delta)`, so any recommendation
+  can be explained and debugged.
+- **The agent does everything else.** An LLM (Claude by default) adapts loose
+  input ("jinx vs zeri", or a screenshot), orchestrates the tools, and writes the
+  coach answer. It is structurally forbidden from deciding: picks come only from
+  `suggest_pick`, and a grounding guard drops any reply that names a champion no
+  tool produced.
+
+**Why this matters:** a general LLM answers from training data that is frozen
+months behind the live patch, and it can invent a matchup that does not exist.
+Here the numbers come from a versioned snapshot you can refresh, and every number
+is traceable to its source.
+
+## Why not just use ChatGPT or Gemini?
+
+| | ChatGPT / Gemini | LoL Coach |
+|---|---|---|
+| Data | frozen at the model's training cut-off | a versioned snapshot you can refresh |
+| Picks | a list of options, may be invented | exactly one counter + one synergy, computed |
+| Evidence | prose, unauditable | every point source-tagged and inspectable |
+| Consistency | varies per prompt | same board → same answer, deterministic |
+| Hallucination | possible | structurally blocked by the grounding guard |
+
+A general assistant can *talk* about League. LoL Coach can *show its work* on a
+pinned, versioned patch.
 
 ## Architecture
 
 Layered, with one invariant: the only route from the language model to a draft
 fact is through a tool result.
 
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"fontFamily":"ui-monospace, SFMono-Regular, Menlo, Consolas, monospace","fontSize":"13px","background":"#0c0f13","primaryColor":"#12161c","primaryTextColor":"#e7eaee","primaryBorderColor":"#232a34","lineColor":"#5c646e","textColor":"#8b939e","clusterBkg":"#0e1218","clusterBorder":"#232a34","edgeLabelBackground":"#171c24"},"flowchart":{"curve":"basis","nodeSpacing":40,"rankSpacing":55}}}%%
+flowchart TB
+    subgraph frontend["Frontend · React + Vite + TypeScript"]
+        landing["Landing page at /"]
+        board["Draft board + draft history"]
+        chatui["Chat rail: sessions, markdown,<br/>screenshot paste"]
+    end
+
+    subgraph server["Backend · FastAPI"]
+        rest["REST: draft eval, knowledge, champions<br/>works with no LLM key"]
+        chat["POST /api/agent/chat<br/>stateful chat"]
+        admin["Admin at /admin<br/>maintenance-agent runs + eval history"]
+    end
+
+    subgraph wf["Workflow engine · in-house, Step-Functions style"]
+        exec["Executor on SQLite<br/>persists every state transition"]
+        draftwf["draft-eval workflow"]
+        agentwf["agent-chat workflow<br/>ParseInput → Think ⇄ RunTool → Finalize"]
+    end
+
+    subgraph agent["Agent · LangChain"]
+        llm["Chat model<br/>Claude by default, provider swappable"]
+        tools["8 deterministic tools<br/>+ 2 session-memory tools"]
+        guard["Grounding guard<br/>drops any unsourced champion"]
+    end
+
+    subgraph core["Deterministic core · pure Python, no LLM"]
+        engine["Engine: counter score + synergy score<br/>one pick each, every point traced"]
+        kg["Knowledge graph · YAML + JSON Schema<br/>173 champions, 3,052 measured relations"]
+    end
+
+    subgraph data["Data · offline-first"]
+        snapshot["SQLite snapshot (OP.GG)<br/>win / pick / ban, matchups, synergies"]
+        reference["Reference YAML<br/>tips, abilities, builds, 315 items"]
+        history["SQLite history<br/>executions.db · chat.db · eval.db"]
+    end
+
+    subgraph external["External services"]
+        opgg["OP.GG MCP server"]
+        model["LLM provider<br/>Claude / OpenAI-compatible"]
+        ddragon["Data Dragon CDN · portraits"]
+        langfuse["Langfuse · optional<br/>prompts, tokens, cost"]
+    end
+
+    landing --> rest
+    board --> rest
+    chatui -->|"message + board + session"| chat
+    rest --> draftwf
+    chat --> agentwf
+    draftwf --> engine
+    draftwf --> exec
+    agentwf --> llm
+    agentwf --> exec
+    llm <-->|"tool calls / results"| tools
+    llm --- model
+    tools -->|"picks come from here"| engine
+    tools -->|"reference evidence"| reference
+    tools -->|"live lookups"| opgg
+    tools --> guard
+    engine -->|"reads"| kg
+    exec --> history
+    exec -.->|"optional traces"| langfuse
+    opgg -->|"resumable fetch"| snapshot
+    snapshot -->|"build-kg"| kg
+    snapshot -->|"build-kg"| reference
+    chatui -.->|"portraits"| ddragon
+    admin --> history
+
+    classDef node fill:#12161c,stroke:#232a34,color:#e7eaee
+    classDef goldcore fill:#171c24,stroke:#d9a44a,color:#e7eaee
+    classDef dimgold fill:#171c24,stroke:#8a6a34,color:#e7eaee
+    classDef ext fill:#0c0f13,stroke:#232a34,color:#8b939e,stroke-dasharray:4 3
+
+    class landing,board,chatui,rest,chat,admin,snapshot,reference,history node
+    class engine,kg goldcore
+    class exec,draftwf,agentwf,llm,tools,guard dimgold
+    class opgg,model,ddragon,langfuse ext
+
+    style core stroke:#8a6a34,stroke-width:1.5px
 ```
-  AGENT      LangChain (OpenAI-compatible or Claude)   adapt · orchestrate · narrate
-    │        tools in, traces out                      NEVER decides
-  ENGINE     pure Python, deterministic                one counter-pick, one synergy-pick
-    │        reads                                     every point source-tagged
-  DATA       YAML knowledge graph                      champions, counter/synergy edges, patch
-             SQLite snapshot (OP.GG)                   win/pick/ban, head-to-head, synergies
-  WORKFLOW   in-house, Step-Functions-style            runs the draft pipeline AND the
-                                                       agent's tool-loop, persisting every
-                                                       transition to an inspectable history
+
+### Request flow
+
+One chat turn, end to end. The model is consulted only for orchestration and
+wording; every pick comes from the engine.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as User
+    participant UI as Chat UI (/app)
+    participant API as FastAPI
+    participant S as Session store (chat.db)
+    participant WF as Agent workflow
+    participant LLM as LLM (Think)
+    participant T as Tools
+    participant E as Engine + KG
+    participant X as Trace store (executions.db)
+
+    U->>UI: "jinx vs their zeri"
+    UI->>API: POST /api/agent/chat (message + session_id)
+    API->>S: load transcript + board + notes
+    API->>WF: run agent-chat workflow
+    WF->>LLM: Think: adapt input, choose a tool
+    LLM-->>WF: action: set_board
+    WF->>T: RunTool set_board
+    T-->>WF: resolved board + unresolved
+    WF->>LLM: Think again (with tool result)
+    LLM-->>WF: action: suggest_pick
+    WF->>T: RunTool suggest_pick
+    T->>E: evaluate_draft(board)
+    E-->>T: 1 counter + 1 synergy, with traces
+    T-->>WF: picks + evidence
+    WF->>LLM: Finalize: narrate tool results
+    WF->>WF: grounding guard drops unsourced names
+    WF-->>API: answer + tool calls + board
+    API->>S: persist reply + notes
+    API->>X: persist every state transition
+    API-->>UI: 200: reply + board + execution_id
+    UI-->>U: coach answer + updated board
 ```
-
-The chat is the front door: you type `jinx vs their zeri` (or paste a draft
-screenshot) and the agent resolves it to the engine's strict input, calls the
-deterministic tools, and answers in coach voice. It can also answer the questions
-*around* the pick — a champion's tips, abilities, and build (materialized offline),
-and a player's rank or one specific lane matchup (fetched live). A grounding check
-then discards any reply that names a champion no tool produced, so prose cannot
-smuggle in a fact the engine never measured. `docs/ARCHITECTURE.md` has the full
-picture.
-
-| Route | Purpose |
-|-------|---------|
-| `POST /api/agent/chat` | chat front door: `{message, board?, image?, session_id?}` → reply + tool calls + board |
-| `POST /api/draft/evaluate` | evaluate a board directly (the draft-eval workflow) |
-| `GET /api/drafts` | past Draft-tab evaluations, with the board and picks they scored |
-| `POST /api/chat` | narrate one execution's recommendation |
-| `GET /api/executions`, `GET /api/executions/{id}` | Trace Inspector history, including the agent's tool-loop |
-| `POST/GET /api/sessions`, `GET/PATCH/DELETE /api/sessions/{id}` | chat history: create, list, read, rename, delete |
-| `GET /api/champions`, `GET /api/health` | roster + liveness |
-| `GET /api/admin/executions`, `GET /api/admin/executions/{id}` | the maintenance agents' runs — issue-fix / pr-review, with their investigation, plan, change, and verification |
-| `GET /api/admin/evals`, `GET /api/admin/evals/{id}` | evaluation-run history: what each suite run scored, per scenario |
-
-The `/api/admin/*` routes back a separate admin surface at `/admin`, apart from the
-coach application at `/app` — the maintenance agents' runs at **/admin/agents** and
-the evaluation history at **/admin/evaluation**. They are deliberately not tabs in
-the coach UI.
 
 ## Quick start
 
@@ -135,6 +261,10 @@ never depend on the model.
 
 ## Agents
 
+This is a **disciplined agent design**: it never decides
+(picks come only from the engine), its loop is a first-class workflow rather than a
+framework black box, and every step is persisted and inspectable.
+
 The agent is the orchestration layer, and it is deliberately narrow — it exists for
 the three jobs the engine cannot do:
 
@@ -181,6 +311,13 @@ is replayed to the agent as context, and two memory tools — `recall_history` a
 No authentication: sessions are trusted as-is.
 
 ## Maintenance agents
+
+These are an **in-house, self-hosted coding agent** — the same category of tool as
+GitHub Copilot's coding agent (read an issue, edit a checkout, verify, open a PR;
+review a PR), built here instead of rented. The value is not raw control but
+**guardrails, evaluation, and audit**: deterministic gates in code, a hermetic
+scenario suite gated in CI, and a full trace of what each run investigated, planned,
+and changed. The trade-off: ưe own the sandbox and operations so we need to optimize this.
 
 Two agents work on this repository's own backlog, and both are workflows for the
 same reason chat is — so every phase is a persisted state output you can inspect:
@@ -250,11 +387,52 @@ prose never widens it.
   The API and web ship as two Docker images, run together with
   `docker compose up --build`.
 
+## AI harness
+
+This project was built with coding agents. The harness is the set of files and
+checks that keeps them effective across sessions and keeps their work reviewable.
+
+| Concern | Harness | What it guarantees |
+|---|---|---|
+| Contract | [`AGENTS.md`](AGENTS.md) | Startup order, layer boundaries, conventions, and the definition of done. Read before any code. |
+| Progress | [`feature_list.json`](feature_list.json) | Every feature has a status and **evidence** — commands, tests, outputs. "Done" needs proof. |
+| Continuity | [`session-handoff.md`](session-handoff.md) | What was accomplished, decisions, what remains, files, verification. The next session starts from this, not a blank prompt. |
+| Quality gate | `bash init.sh` | ruff + strict mypy + pytest — the same gate CI runs. |
+| Behavioural gate | `eval` / `eval-agents` | Golden scenarios scored by rules, not by taste. The maintenance suite is hermetic. |
+| Review | [`clean-state-checklist.md`](clean-state-checklist.md) | End-of-session checklist: build, architecture, runtime, logging, data, performance, repo. |
+| Process | Trace Inspector, `/admin`, Langfuse | Every state, tool call, and model call persisted, with Input / Output / Logs and Rerun. |
+
+How a session runs:
+
+1. Read `AGENTS.md`, the docs, `feature_list.json`, and `session-handoff.md`.
+2. Run `bash init.sh` to confirm the baseline is green.
+3. Implement, and update the docs + the feature's evidence in the same change.
+4. Re-run `init.sh` and `eval-agents`; walk `clean-state-checklist.md`.
+5. Append a handoff entry: accomplished, decisions, remains, files, verification.
+6. CI runs the same gates on the PR.
+
+The maintenance agents (`issue-fix`, `pr-review`) work under the same harness:
+their guardrails are deterministic checks in code, and every phase is a persisted
+state, so a run can be inspected after the fact rather than trusted.
+
+Why this works: context survives the session boundary, results are backed by
+evidence instead of claims, and the process itself is replayable — the Trace
+Inspector and Langfuse show what actually ran.
+
 ## Docs
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — layers, state machine, data flow
+- [`docs/walkthrough.md`](docs/walkthrough.md) — scene-by-scene demo notes + screenshots
 - [`docs/PRODUCT.md`](docs/PRODUCT.md) — features and non-goals
 - [`docs/RELIABILITY.md`](docs/RELIABILITY.md) — logging, clean state, benchmarking
 - [`docs/MAINTENANCE_AGENTS.md`](docs/MAINTENANCE_AGENTS.md) — the issue-fixer and
   PR-reviewer agents, their guardrails, and how to monitor and evaluate them
 - [`AGENTS.md`](AGENTS.md) — boundaries and conventions for coding agents
+
+## Demo
+
+A 2m46s walkthrough recorded from the running app and its real history.
+Scene-by-scene notes: [`docs/walkthrough.md`](docs/walkthrough.md).
+
+<video src="docs/demo/lol-coach-demo.mp4" controls width="100%"></video>
+
